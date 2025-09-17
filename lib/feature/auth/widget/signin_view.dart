@@ -95,12 +95,12 @@ class _SigninViewState extends State<SigninView> {
             isMainAxisSizeMin: true,
             padding: EdgeInsets.symmetric(horizontal: 50),
             onPressed: () {
-              if (formKey.currentState!.validate()) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const BottomNavBar()),
-                );
-              }
+              // if (formKey.currentState!.validate()) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const BottomNavBar()),
+              );
+              // }
             },
           ),
         ],

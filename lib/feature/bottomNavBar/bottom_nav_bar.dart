@@ -1,5 +1,8 @@
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
+import 'package:cctv_app/feature/home/pages/home_page.dart';
+import 'package:cctv_app/feature/pending/pages/pending_page.dart';
+import 'package:cctv_app/feature/profile/pages/profile_page.dart';
 import 'package:flutter/material.dart';
 
 class BottomNavBar extends StatefulWidget {
@@ -13,10 +16,10 @@ class _BottomNavBarState extends State<BottomNavBar> {
   int selectedIndex = 0;
 
   final List<Widget> pages = [
-    Center(child: Text("Home Page")),
+    HomePage(),
     Center(child: Text("Search Page")),
-    Center(child: Text("Pending Page")),
-    Center(child: Text("Profile Page")),
+    PendingPage(),
+    ProfilePage(),
   ];
 
   void onItemTapped(int index) {
@@ -28,7 +31,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: pages[selectedIndex],
+      body: SafeArea(bottom: false, child: pages[selectedIndex]),
       backgroundColor: kWhiteColor,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -45,9 +48,12 @@ class _BottomNavBarState extends State<BottomNavBar> {
           data: Theme.of(context).copyWith(
             splashColor: Colors.transparent,
             highlightColor: Colors.transparent,
+            scaffoldBackgroundColor: kWhiteColor,
           ),
           child: BottomNavigationBar(
+            showUnselectedLabels: true,
             backgroundColor: kWhiteColor,
+            type: BottomNavigationBarType.fixed,
             items: [
               BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
               BottomNavigationBarItem(
