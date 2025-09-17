@@ -42,9 +42,15 @@ class HighlightItem {
   });
 }
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int selectedIndex = 0;
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -60,95 +66,202 @@ class HomePage extends StatelessWidget {
               'Divorce',
               'Neighborhood conflicts',
             ],
-            selectedItem: 0,
+            selectedItem: selectedIndex,
             onTap: (index) {
-              // Handle item tap
+              setState(() {
+                selectedIndex = index;
+              });
             },
           ),
           Space.vertical(20),
           Expanded(
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: highlights.length,
-              separatorBuilder: (_, __) => SizedBox(width: 16),
-              itemBuilder: (context, index) {
-                final item = highlights[index];
-                return Column(
-                  children: [
-                    Stack(
-                      alignment: Alignment.center,
-                      clipBehavior: Clip.none,
-                      children: [
-                        Container(
-                          width: 100,
-                          height: 120,
-                          decoration: BoxDecoration(
-                            color: kWhiteColor,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: kBlackColor.withOpacity(0.08),
-                                blurRadius: 12,
-                                offset: Offset(0, 4),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  SizedBox(
+                    height: 170,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: highlights.length,
+                      separatorBuilder: (_, __) => SizedBox(width: 16),
+                      itemBuilder: (context, index) {
+                        final item = highlights[index];
+                        return Column(
+                          children: [
+                            Stack(
+                              alignment: Alignment.center,
+                              clipBehavior: Clip.none,
+                              children: [
+                                Container(
+                                  width: 100,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    color: kWhiteColor,
+                                    borderRadius: BorderRadius.circular(24),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: kBlackColor.withOpacity(0.08),
+                                        blurRadius: 12,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
+                                    image: DecorationImage(
+                                      image: AssetImage(item.highlightImage!),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                  // child: item.userImage == null
+                                  //     ? Icon(Icons.add, size: 48, color: kBlackColor)
+                                  //     : null,
+                                ),
+                                item.isAdd
+                                    ? Positioned(
+                                        bottom: -20,
+                                        child: CircleAvatar(
+                                          radius: 24,
+                                          backgroundColor: kBlackColor,
+                                          child: Icon(
+                                            Icons.add,
+                                            color: kWhiteColor,
+                                            size: 32,
+                                          ),
+                                        ),
+                                      )
+                                    : Positioned(
+                                        bottom: -20,
+                                        child: CircleAvatar(
+                                          radius: 24,
+                                          backgroundColor: kWhiteColor,
+                                          child: Image.asset(
+                                            item.userImage!,
+                                            width: 50,
+                                            height: 50,
+                                            fit: BoxFit.cover,
+                                          ),
+                                        ),
+                                      ),
+                              ],
+                            ),
+                            Space.vertical(24),
+                            Text(item.label, style: context.normal),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                  Space.vertical(20),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: kWhiteColor,
+                      borderRadius: BorderRadius.circular(20.0),
+                      border: Border.all(color: kGreyColor),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 30,
+                                    backgroundImage: AssetImage(
+                                      Assets.pngUser1Image,
+                                    ),
+                                  ),
+                                  Space.horizontal(10),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Hannah Flores",
+                                        style: context.semiBold,
+                                      ),
+                                      Text(
+                                        "2 mints ago",
+                                        style: context.normal,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: kGreyColor),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: EdgeInsets.all(8.0),
+                                child: Icon(Icons.more_horiz),
                               ),
                             ],
-                            image: DecorationImage(
-                              image: AssetImage(item.highlightImage!),
-                              fit: BoxFit.cover,
-                            ),
                           ),
-                          // child: item.userImage == null
-                          //     ? Icon(Icons.add, size: 48, color: kBlackColor)
-                          //     : null,
-                        ),
-                        item.isAdd
-                            ? Positioned(
-                                bottom: -20,
-                                child: CircleAvatar(
-                                  radius: 24,
-                                  backgroundColor: kBlackColor,
-                                  child: Icon(
-                                    Icons.add,
-                                    color: kWhiteColor,
-                                    size: 32,
-                                  ),
-                                ),
-                              )
-                            : Positioned(
-                                bottom: -20,
-                                child: CircleAvatar(
-                                  radius: 24,
-                                  backgroundColor: kWhiteColor,
-                                  child: Image.asset(
-                                    item.userImage!,
-                                    width: 50,
-                                    height: 50,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                              ),
-                      ],
+                          Space.vertical(20),
+                          Image.asset(Assets.pngPost1Image),
+                        ],
+                      ),
                     ),
-                    Space.vertical(24),
-                    Text(item.label, style: context.normal),
-                  ],
-                );
-              },
-            ),
-          ),
-          Space.vertical(20),
-          Container(
-            decoration: BoxDecoration(
-              color: kWhiteColor,
-              borderRadius: BorderRadius.circular(20.0),
-              boxShadow: [
-                BoxShadow(
-                  color: kBlackColor.withOpacity(0.1),
-                  spreadRadius: 2,
-                  blurRadius: 3,
-                  offset: Offset(0, 4),
-                ),
-              ],
+                  ),
+                  Space.vertical(20),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: kWhiteColor,
+                      borderRadius: BorderRadius.circular(20.0),
+                      border: Border.all(color: kGreyColor),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  CircleAvatar(
+                                    radius: 30,
+                                    backgroundImage: AssetImage(
+                                      Assets.pngUser1Image,
+                                    ),
+                                  ),
+                                  Space.horizontal(10),
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Hannah Flores",
+                                        style: context.semiBold,
+                                      ),
+                                      Text(
+                                        "2 mints ago",
+                                        style: context.normal,
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: kGreyColor),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                padding: EdgeInsets.all(8.0),
+                                child: Icon(Icons.more_horiz),
+                              ),
+                            ],
+                          ),
+                          Space.vertical(20),
+                          Image.asset(Assets.pngPost1Image),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Space.vertical(20),
+                ],
+              ),
             ),
           ),
         ],

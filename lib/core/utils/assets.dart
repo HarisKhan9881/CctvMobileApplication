@@ -16,4 +16,8 @@ class Assets {
   static const String pngUser2Image = 'assets/images/user2.png';
   static const String pngHighlight1Image = 'assets/images/highlight1.png';
   static const String pngHighlight2Image = 'assets/images/highlight2.png';
+  static const String pngPost1Image = 'assets/images/post1.png';
+
+  ///SVG Images
+  static const String svgNotificationImage = 'assets/images/notification.svg';
 }

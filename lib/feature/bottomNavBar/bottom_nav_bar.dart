@@ -1,5 +1,7 @@
+import 'package:cctv_app/core/components/custom_drawer.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
+import 'package:cctv_app/feature/case/pages/create_case_page.dart';
 import 'package:cctv_app/feature/home/pages/home_page.dart';
 import 'package:cctv_app/feature/pending/pages/pending_page.dart';
 import 'package:cctv_app/feature/profile/pages/profile_page.dart';
@@ -17,7 +19,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
 
   final List<Widget> pages = [
     HomePage(),
-    Center(child: Text("Search Page")),
+    CreateCasePage(),
     PendingPage(),
     ProfilePage(),
   ];
@@ -31,6 +33,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: CustomDrawer(),
       body: SafeArea(bottom: false, child: pages[selectedIndex]),
       backgroundColor: kWhiteColor,
       bottomNavigationBar: Container(
