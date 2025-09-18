@@ -4,7 +4,8 @@ import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/validators.dart';
-import 'package:cctv_app/feature/bottomNavBar/bottom_nav_bar.dart';
+import 'package:cctv_app/feature/bottomNavBar/admin_bottom_nav_bar.dart';
+import 'package:cctv_app/feature/bottomNavBar/user_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/forgotPassword/pages/forgot_pasword.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -96,10 +97,22 @@ class _SigninViewState extends State<SigninView> {
             padding: EdgeInsets.symmetric(horizontal: 50),
             onPressed: () {
               if (formKey.currentState!.validate()) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const BottomNavBar()),
-                );
+                if (emailController.text.trim() == "admin@gmail.com" &&
+                    passwordController.text.trim() == "12345678") {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AdminBottomNavBar(),
+                    ),
+                  );
+                } else {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const UserBottomNavBar(),
+                    ),
+                  );
+                }
               }
             },
           ),

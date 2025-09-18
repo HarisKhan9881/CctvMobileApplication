@@ -1,27 +1,27 @@
 import 'package:cctv_app/core/components/custom_drawer.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
-import 'package:cctv_app/feature/case/pages/create_case_page.dart';
+import 'package:cctv_app/feature/adminHome/pages/admin_home_page.dart';
+import 'package:cctv_app/feature/announcement/pages/announcement_page.dart';
 import 'package:cctv_app/feature/home/pages/home_page.dart';
-import 'package:cctv_app/feature/pending/pages/pending_page.dart';
-import 'package:cctv_app/feature/profile/pages/profile_page.dart';
+import 'package:cctv_app/feature/profile/pages/notification_page.dart';
 import 'package:flutter/material.dart';
 
-class BottomNavBar extends StatefulWidget {
-  const BottomNavBar({super.key});
+class AdminBottomNavBar extends StatefulWidget {
+  const AdminBottomNavBar({super.key});
 
   @override
-  State<BottomNavBar> createState() => _BottomNavBarState();
+  State<AdminBottomNavBar> createState() => _AdminBottomNavBarState();
 }
 
-class _BottomNavBarState extends State<BottomNavBar> {
+class _AdminBottomNavBarState extends State<AdminBottomNavBar> {
   int selectedIndex = 0;
 
   final List<Widget> pages = [
+    AdminHomePage(),
     HomePage(),
-    CreateCasePage(),
-    PendingPage(),
-    ProfilePage(),
+    AnnouncementPage(),
+    NotificationPage(),
   ];
 
   void onItemTapped(int index) {
@@ -60,16 +60,16 @@ class _BottomNavBarState extends State<BottomNavBar> {
             items: [
               BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
               BottomNavigationBarItem(
-                icon: Icon(Icons.add_circle_outline),
-                label: 'Create',
+                icon: Icon(Icons.commute),
+                label: 'Community',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.note_alt),
-                label: 'Pending',
+                icon: Icon(Icons.announcement),
+                label: 'Announce',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.person),
-                label: 'Profile',
+                icon: Icon(Icons.notifications),
+                label: 'Notify',
               ),
             ],
             currentIndex: selectedIndex,

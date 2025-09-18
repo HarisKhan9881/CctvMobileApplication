@@ -13,7 +13,6 @@ class PlainSelectionWidget extends StatelessWidget {
     required this.subTitle,
     this.textFontWeight = FontWeight.w500,
     this.textFontSize = 14,
-    this.showDividerOnText = true,
     this.bottomPadding = 12,
   });
   final VoidCallback onChange;
@@ -22,7 +21,6 @@ class PlainSelectionWidget extends StatelessWidget {
   final String subTitle;
   final FontWeight textFontWeight;
   final double textFontSize;
-  final bool showDividerOnText;
   final double bottomPadding;
 
   @override
@@ -58,9 +56,6 @@ class PlainSelectionWidget extends StatelessWidget {
                     style: context.semiBold.copyWith(
                       fontSize: textFontSize,
                       fontWeight: textFontWeight,
-                      decoration: (isSelected && showDividerOnText)
-                          ? TextDecoration.lineThrough
-                          : TextDecoration.none,
                       decorationColor: kDarkGreyColor,
                     ),
                     children: <TextSpan>[
@@ -70,9 +65,6 @@ class PlainSelectionWidget extends StatelessWidget {
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
                           color: kDarkGreyColor,
-                          decoration: (isSelected && showDividerOnText)
-                              ? TextDecoration.lineThrough
-                              : TextDecoration.none,
                           decorationColor: kDarkGreyColor,
                         ),
                       ),

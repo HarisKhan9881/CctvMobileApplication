@@ -3,7 +3,7 @@ import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/validators.dart';
-import 'package:cctv_app/feature/bottomNavBar/bottom_nav_bar.dart';
+import 'package:cctv_app/feature/bottomNavBar/user_bottom_nav_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -132,7 +132,9 @@ class _SignupViewState extends State<SignupView> {
               if (formKey.currentState!.validate()) {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const BottomNavBar()),
+                  MaterialPageRoute(
+                    builder: (context) => const UserBottomNavBar(),
+                  ),
                 );
               }
             },
