@@ -1,11 +1,14 @@
 import 'package:cctv_app/core/components/custom_drawer.dart';
 import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
+import 'package:cctv_app/core/utils/utils.dart';
 import 'package:cctv_app/feature/case/pages/create_case_page.dart';
 import 'package:cctv_app/feature/home/pages/home_page.dart';
 import 'package:cctv_app/feature/pending/pages/pending_page.dart';
 import 'package:cctv_app/feature/profile/pages/profile_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class UserBottomNavBar extends StatefulWidget {
   const UserBottomNavBar({super.key});
@@ -18,7 +21,7 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
   int selectedIndex = 0;
 
   final List<Widget> pages = [
-    HomePage(),
+    HomePage(isAdmin: false),
     CreateCasePage(),
     PendingPage(),
     ProfilePage(),
@@ -58,17 +61,40 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
             backgroundColor: kWhiteColor,
             type: BottomNavigationBarType.fixed,
             items: [
-              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
               BottomNavigationBarItem(
-                icon: Icon(Icons.add_circle_outline),
+                icon: SvgPicture.asset(
+                  Assets.svgHomeIcon,
+                  colorFilter: colorFilter(
+                    color: selectedIndex == 0 ? kPrimaryColor : kDarkGreyColor,
+                  ),
+                ),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: SvgPicture.asset(
+                  Assets.svgCreateIcon,
+                  colorFilter: colorFilter(
+                    color: selectedIndex == 1 ? kPrimaryColor : kDarkGreyColor,
+                  ),
+                ),
                 label: 'Create',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.note_alt),
+                icon: SvgPicture.asset(
+                  Assets.svgPendingIcon,
+                  colorFilter: colorFilter(
+                    color: selectedIndex == 2 ? kPrimaryColor : kDarkGreyColor,
+                  ),
+                ),
                 label: 'Pending',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.person),
+                icon: SvgPicture.asset(
+                  Assets.svgProfileIcon,
+                  colorFilter: colorFilter(
+                    color: selectedIndex == 3 ? kPrimaryColor : kDarkGreyColor,
+                  ),
+                ),
                 label: 'Profile',
               ),
             ],

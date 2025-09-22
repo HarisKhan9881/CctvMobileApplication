@@ -1,3 +1,4 @@
+import 'package:cctv_app/core/components/admin_top_header.dart';
 import 'package:cctv_app/core/components/custom_horizontal_listview_widget.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
@@ -43,7 +44,8 @@ class HighlightItem {
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final bool isAdmin;
+  const HomePage({super.key, required this.isAdmin});
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -57,7 +59,7 @@ class _HomePageState extends State<HomePage> {
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
         children: [
-          SearchBarHeader(),
+          widget.isAdmin ? AdminTopHeader() : SearchBarHeader(),
           Space.vertical(20),
           CustomHorizontalListViewWidget(
             items: [

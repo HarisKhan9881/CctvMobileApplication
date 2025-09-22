@@ -1,7 +1,7 @@
+import 'package:cctv_app/core/components/admin_top_header.dart';
 import 'package:cctv_app/core/components/custom_dropdown.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
-import 'package:cctv_app/core/components/search_bar_header.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
@@ -20,7 +20,7 @@ class AnnouncementPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SearchBarHeader(),
+            AdminTopHeader(),
             Space.vertical(20),
             Align(
               alignment: Alignment.centerRight,

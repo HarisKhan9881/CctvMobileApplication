@@ -3,11 +3,15 @@ import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
+import 'package:cctv_app/feature/auth/pages/auth_page.dart';
 import 'package:cctv_app/feature/profile/pages/edit_profile_page.dart';
+import 'package:cctv_app/feature/profile/pages/help_and_support.dart';
 import 'package:cctv_app/feature/profile/pages/settings_page.dart';
+import 'package:cctv_app/feature/profile/pages/terms_and_policies.dart';
 import 'package:cctv_app/feature/profile/widget/profile_tile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -33,7 +37,7 @@ class ProfilePage extends StatelessWidget {
                     ),
                   );
                 },
-                child: Icon(Icons.settings),
+                child: SvgPicture.asset(Assets.svgSettingsIcon),
               ),
             ],
           ),
@@ -60,7 +64,7 @@ class ProfilePage extends StatelessWidget {
                   Space.vertical(20),
                   ProfileTile(
                     text: "Edit profile",
-                    icon: Icons.person_2_outlined,
+                    icon: Assets.svgEditProfileIcon,
                     onTap: () {
                       Navigator.push(
                         context,
@@ -73,19 +77,33 @@ class ProfilePage extends StatelessWidget {
                   Space.vertical(8),
                   ProfileTile(
                     text: "Help & Support",
-                    icon: Icons.help_center_outlined,
-                    onTap: () {},
+                    icon: Assets.svgHelpAndSupportIcon,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const HelpAndSupport(),
+                        ),
+                      );
+                    },
                   ),
                   Space.vertical(8),
                   ProfileTile(
                     text: "Terms and Policies",
-                    icon: Icons.policy_outlined,
-                    onTap: () {},
+                    icon: Assets.svgTermAndPoliciesIcon,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const TermsAndPolicies(),
+                        ),
+                      );
+                    },
                   ),
                   Space.vertical(8),
                   ProfileTile(
                     text: "Logout",
-                    icon: Icons.logout,
+                    icon: Assets.svgLogoutIcon,
                     onTap: () {
                       showLogoutDialog(context);
                     },
@@ -145,7 +163,10 @@ class ProfilePage extends StatelessWidget {
                 PrimaryButton(
                   text: "Logout",
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AuthPage()),
+                    );
                   },
                 ),
               ],

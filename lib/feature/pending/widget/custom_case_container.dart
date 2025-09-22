@@ -3,7 +3,9 @@ import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
+import 'package:cctv_app/core/utils/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class CustomCaseContainer extends StatelessWidget {
   const CustomCaseContainer({super.key});
@@ -52,13 +54,15 @@ class CustomCaseContainer extends StatelessWidget {
               ),
             ),
           ),
-          Space.vertical(6),
+        Space.vertical(6),
           Row(
             children: [
               Expanded(
                 child: PrimaryButton(
                   height: 45,
                   text: "Remind",
+                  prefixIcon: SvgPicture.asset(Assets.svgRemindIcon),
+                  padding: EdgeInsets.symmetric(horizontal: 6),
                   onPressed: () {},
                 ),
               ),
@@ -70,7 +74,10 @@ class CustomCaseContainer extends StatelessWidget {
                   border: Border.all(color: kGreyColor),
                 ),
                 padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Icon(Icons.delete_outline, color: kDarkGreyColor),
+                child: SvgPicture.asset(
+                  Assets.svgDeleteIcon,
+                  colorFilter: colorFilter(color: kDarkGreyColor),
+                ),
               ),
             ],
           ),

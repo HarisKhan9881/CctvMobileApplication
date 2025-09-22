@@ -1,11 +1,13 @@
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
+import 'package:cctv_app/core/utils/utils.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
 class ProfileTile extends StatelessWidget {
   final String text;
-  final IconData icon;
+  final String icon;
   final VoidCallback onTap;
   const ProfileTile({
     super.key,
@@ -24,7 +26,10 @@ class ProfileTile extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(icon, color: kPrimaryColor),
+                SvgPicture.asset(
+                  icon,
+                  colorFilter: colorFilter(color: kPrimaryColor),
+                ),
                 Space.horizontal(20),
                 Text(text, style: context.normal.copyWith(fontSize: 16)),
               ],

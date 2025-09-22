@@ -3,12 +3,25 @@ class Assets {
 
   ///SVG Icons
   static const String svgMenuIcon = 'assets/icons/menu.svg';
+  static const String svgDeleteIcon = 'assets/icons/delete.svg';
+  static const String svgRemindIcon = 'assets/icons/remind.svg';
   static const String svgNotificationIcon = 'assets/icons/notification.svg';
+  static const String svgEditProfileIcon = 'assets/icons/edit_profile.svg';
+  static const String svgHelpAndSupportIcon =
+      'assets/icons/help_and_support.svg';
+  static const String svgTermAndPoliciesIcon =
+      'assets/icons/term_and_policies.svg';
+  static const String svgLogoutIcon = 'assets/icons/logout.svg';
+  static const String svgSettingsIcon = 'assets/icons/settings.svg';
+  static const String svgNoteBookIcon = 'assets/icons/notebook.svg';
 
-  // static const String svgCreateSelectedIcon =
-  //     'assets/icons/svg/create_selected.svg';
-  // static const String svgCreateUnselectedIcon =
-  //     'assets/icons/svg/create_unselected.svg';
+  static const String svgHomeIcon = 'assets/icons/home.svg';
+  static const String svgCreateIcon = 'assets/icons/create.svg';
+  static const String svgPendingIcon = 'assets/icons/pending.svg';
+  static const String svgProfileIcon = 'assets/icons/profile.svg';
+  static const String svgAnnouncementIcon = 'assets/icons/announcement.svg';
+  static const String svgCommunityIcon = 'assets/icons/community.svg';
+  static const String svgNotifyIcon = 'assets/icons/notify.svg';
 
   ///Images
   static const String pngAppLogoImage = 'assets/images/app_logo.png';

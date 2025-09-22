@@ -1,11 +1,14 @@
 import 'package:cctv_app/core/components/custom_drawer.dart';
 import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
+import 'package:cctv_app/core/utils/utils.dart';
 import 'package:cctv_app/feature/adminHome/pages/admin_home_page.dart';
 import 'package:cctv_app/feature/announcement/pages/announcement_page.dart';
 import 'package:cctv_app/feature/home/pages/home_page.dart';
 import 'package:cctv_app/feature/profile/pages/notification_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
 class AdminBottomNavBar extends StatefulWidget {
   const AdminBottomNavBar({super.key});
@@ -19,7 +22,7 @@ class _AdminBottomNavBarState extends State<AdminBottomNavBar> {
 
   final List<Widget> pages = [
     AdminHomePage(),
-    HomePage(),
+    HomePage(isAdmin: true),
     AnnouncementPage(),
     NotificationPage(),
   ];
@@ -58,17 +61,40 @@ class _AdminBottomNavBarState extends State<AdminBottomNavBar> {
             backgroundColor: kWhiteColor,
             type: BottomNavigationBarType.fixed,
             items: [
-              BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
               BottomNavigationBarItem(
-                icon: Icon(Icons.commute),
+                icon: SvgPicture.asset(
+                  Assets.svgHomeIcon,
+                  colorFilter: colorFilter(
+                    color: selectedIndex == 0 ? kPrimaryColor : kDarkGreyColor,
+                  ),
+                ),
+                label: 'Home',
+              ),
+              BottomNavigationBarItem(
+                icon: SvgPicture.asset(
+                  Assets.svgCommunityIcon,
+                  colorFilter: colorFilter(
+                    color: selectedIndex == 1 ? kPrimaryColor : kDarkGreyColor,
+                  ),
+                ),
                 label: 'Community',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.announcement),
+                icon: SvgPicture.asset(
+                  Assets.svgAnnouncementIcon,
+                  colorFilter: colorFilter(
+                    color: selectedIndex == 2 ? kPrimaryColor : kDarkGreyColor,
+                  ),
+                ),
                 label: 'Announce',
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.notifications),
+                icon: SvgPicture.asset(
+                  Assets.svgNotifyIcon,
+                  colorFilter: colorFilter(
+                    color: selectedIndex == 3 ? kPrimaryColor : kDarkGreyColor,
+                  ),
+                ),
                 label: 'Notify',
               ),
             ],

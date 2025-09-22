@@ -52,6 +52,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 CustomTextField(
                   hintText: "Enter first name",
                   controller: firstNameController,
+                  suffix: Icon(Icons.person_outlined, color: kDarkGreyColor),
                   validator: (val) {
                     return Validators.userName(val);
                   },
@@ -62,6 +63,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 CustomTextField(
                   hintText: "Enter last name",
                   controller: lastNameController,
+                  suffix: Icon(Icons.person_outlined, color: kDarkGreyColor),
                   validator: (val) {
                     return Validators.userName(val);
                   },
@@ -72,6 +74,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 CustomTextField(
                   hintText: "Enter email",
                   controller: emailController,
+                  suffix: Icon(Icons.email_outlined, color: kDarkGreyColor),
                   keyboardType: TextInputType.emailAddress,
                   validator: (val) {
                     return Validators.email(val);
