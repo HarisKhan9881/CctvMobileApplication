@@ -1,3 +1,4 @@
+import 'package:cctv_app/core/components/custom_dropdown.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
@@ -29,6 +30,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isSmallScreen = screenWidth < 350;
     return Scaffold(
       backgroundColor: kWhiteColor,
       appBar: AppBar(
@@ -80,8 +83,67 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     return Validators.email(val);
                   },
                 ),
+                Space.vertical(16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "Gender",
+                            style: context.normal.copyWith(fontSize: 16),
+                          ),
+                          Space.vertical(8),
+                          CustomDropdown(
+                            value: "Select gender",
+                            items: [],
+                            hint: "Select gender",
+                            screenWidth: screenWidth,
+                            isSmallScreen: isSmallScreen,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Space.horizontal(10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "State",
+                            style: context.normal.copyWith(fontSize: 16),
+                          ),
+                          Space.vertical(8),
+                          CustomDropdown(
+                            value: "Select state",
+                            items: [],
+                            hint: "Select state",
+                            screenWidth: screenWidth,
+                            isSmallScreen: isSmallScreen,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
                 Space.vertical(30),
-                PrimaryButton(text: "Update", onPressed: () {}),
+                Row(
+                  children: [
+                    Expanded(
+                      child: PrimaryButton(
+                        text: "Cancel",
+                        borderColor: kPrimaryColor,
+                        showBorder: false,
+                        onPressed: () {},
+                      ),
+                    ),
+                    Space.horizontal(10),
+                    Expanded(
+                      child: PrimaryButton(text: "Update", onPressed: () {}),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),

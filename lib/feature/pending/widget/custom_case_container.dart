@@ -54,7 +54,7 @@ class CustomCaseContainer extends StatelessWidget {
               ),
             ),
           ),
-        Space.vertical(6),
+          Space.vertical(6),
           Row(
             children: [
               Expanded(
@@ -62,7 +62,7 @@ class CustomCaseContainer extends StatelessWidget {
                   height: 45,
                   text: "Remind",
                   prefixIcon: SvgPicture.asset(Assets.svgRemindIcon),
-                  padding: EdgeInsets.symmetric(horizontal: 6),
+                  padding: EdgeInsets.symmetric(horizontal: 2),
                   onPressed: () {},
                 ),
               ),
@@ -73,7 +73,7 @@ class CustomCaseContainer extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: kGreyColor),
                 ),
-                padding: EdgeInsets.symmetric(horizontal: 16),
+                padding: EdgeInsets.symmetric(horizontal: 10),
                 child: SvgPicture.asset(
                   Assets.svgDeleteIcon,
                   colorFilter: colorFilter(color: kDarkGreyColor),

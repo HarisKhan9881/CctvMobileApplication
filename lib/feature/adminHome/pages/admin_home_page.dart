@@ -37,7 +37,12 @@ class _AdminHomePageState extends State<AdminHomePage> {
                     icon: Assets.pngRegisterTopImage,
                     title: "Total Register",
                     value: "325,461",
-                    chart: Image.asset(Assets.pngRegisterBottomImage),
+                    chart: ClipRRect(
+                      borderRadius: BorderRadius.only(
+                        bottomRight: Radius.circular(40),
+                      ),
+                      child: Image.asset(Assets.pngRegisterBottomImage),
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -121,7 +126,25 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         ),
                       ),
                       rightTitles: AxisTitles(
-                        sideTitles: SideTitles(showTitles: false),
+                        sideTitles: SideTitles(
+                          showTitles: true, // <-- yahan enable kiya
+                          reservedSize: 40,
+                          getTitlesWidget: (value, meta) {
+                            if (value == 1330 ||
+                                value == 4370 ||
+                                value == 16330 ||
+                                value == 25660) {
+                              return Text(
+                                value.toInt().toString(),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: kBlackColor,
+                                ),
+                              );
+                            }
+                            return const SizedBox.shrink();
+                          },
+                        ),
                       ),
                       topTitles: AxisTitles(
                         sideTitles: SideTitles(showTitles: false),
@@ -153,7 +176,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         barRods: [
                           BarChartRodData(
                             toY: 23000,
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               colors: [Colors.blue, Colors.blueAccent],
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
@@ -168,7 +191,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         barRods: [
                           BarChartRodData(
                             toY: 15000,
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               colors: [Colors.blue, Colors.blueAccent],
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
@@ -183,7 +206,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         barRods: [
                           BarChartRodData(
                             toY: 25000,
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               colors: [Colors.blue, Colors.blueAccent],
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
@@ -198,7 +221,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         barRods: [
                           BarChartRodData(
                             toY: 12000,
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               colors: [Colors.blue, Colors.blueAccent],
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
@@ -213,7 +236,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
                         barRods: [
                           BarChartRodData(
                             toY: 17000,
-                            gradient: const LinearGradient(
+                            gradient: LinearGradient(
                               colors: [Colors.blue, Colors.blueAccent],
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
@@ -313,7 +336,11 @@ class InfoCard extends StatelessWidget {
           const SizedBox(height: 10),
           Align(
             alignment: Alignment.centerRight,
-            child: SizedBox(height: 60, width: double.infinity, child: chart),
+            child: SizedBox(
+              height: 60,
+              width: context.width * 0.5,
+              child: chart,
+            ),
           ),
         ],
       ),
