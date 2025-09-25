@@ -51,7 +51,7 @@ class _SignupViewState extends State<SignupView> {
             },
             suffix: const Icon(Icons.person_outline, color: kDarkGreyColor),
           ),
-          Space.vertical(16),
+          Space.vertical(14),
           CustomTextField(
             hintText: "Last Name",
             controller: lastNameController,
@@ -61,7 +61,7 @@ class _SignupViewState extends State<SignupView> {
             },
             suffix: const Icon(Icons.person_outline, color: kDarkGreyColor),
           ),
-          Space.vertical(16),
+          Space.vertical(14),
           CustomTextField(
             hintText: "Email",
             controller: emailController,
@@ -71,7 +71,7 @@ class _SignupViewState extends State<SignupView> {
             },
             suffix: const Icon(Icons.email_outlined, color: kDarkGreyColor),
           ),
-          Space.vertical(16),
+          Space.vertical(14),
           CustomTextField(
             hintText: "Password",
             controller: passwordController,
@@ -94,7 +94,7 @@ class _SignupViewState extends State<SignupView> {
               },
             ),
           ),
-          Space.vertical(16),
+          Space.vertical(14),
           CustomTextField(
             hintText: "Confirm Password",
             controller: confirmPasswordController,
@@ -123,7 +123,7 @@ class _SignupViewState extends State<SignupView> {
               },
             ),
           ),
-          Space.vertical(30),
+          Space.vertical(20),
           PrimaryButton(
             text: "Signup",
             isMainAxisSizeMin: true,

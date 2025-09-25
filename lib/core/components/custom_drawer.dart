@@ -6,8 +6,10 @@ import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/auth/pages/auth_page.dart';
 import 'package:cctv_app/feature/drawer/pages/post_history.dart';
 import 'package:cctv_app/feature/drawer/pages/user_profile_page.dart';
+import 'package:cctv_app/feature/profile/pages/help_and_support.dart';
 import 'package:cctv_app/feature/profile/pages/settings_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
@@ -22,12 +24,7 @@ class CustomDrawer extends StatelessWidget {
           children: [
             // ✅ Profile Header
             GestureDetector(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => UserProfilePage()),
-                );
-              },
+              onTap: () {},
               child: Container(
                 decoration: BoxDecoration(color: kTransparentColor),
                 padding: EdgeInsets.all(16.0),
@@ -58,9 +55,13 @@ class CustomDrawer extends StatelessWidget {
             const Divider(),
 
             // ✅ Drawer Items
-            _buildDrawerItem(icon: Icons.home, text: "Home", onTap: () {}),
             _buildDrawerItem(
-              icon: Icons.history,
+              icon: Assets.svgHomeIcon,
+              text: "Home",
+              onTap: () {},
+            ),
+            _buildDrawerItem(
+              icon: Assets.svgNoteBook2Icon,
               text: "Post History",
               onTap: () {
                 Navigator.push(
@@ -70,17 +71,22 @@ class CustomDrawer extends StatelessWidget {
               },
             ),
             _buildDrawerItem(
-              icon: Icons.group_add,
+              icon: Assets.svgInviteIcon,
               text: "Invite Friends",
               onTap: () {},
             ),
             _buildDrawerItem(
-              icon: Icons.help_outline,
+              icon: Assets.svgHelpAndSupport2Icon,
               text: "Help & Support",
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => HelpAndSupport()),
+                );
+              },
             ),
             _buildDrawerItem(
-              icon: Icons.settings,
+              icon: Assets.svgSettingsIcon,
               text: "Setting",
               onTap: () {
                 Navigator.push(
@@ -123,14 +129,14 @@ class CustomDrawer extends StatelessWidget {
   }
 
   Widget _buildDrawerItem({
-    required IconData icon,
+    required String icon,
     required String text,
     required VoidCallback onTap,
   }) {
     return Column(
       children: [
         ListTile(
-          leading: Icon(icon, color: Colors.black),
+          leading: SvgPicture.asset(icon, color: kBlackColor),
           title: Text(
             text,
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),

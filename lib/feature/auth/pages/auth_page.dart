@@ -115,10 +115,10 @@ class _AuthPageState extends State<AuthPage> {
                       ? SizedBox()
                       : isLogin
                       ? Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
                             Text(
-                              "Don't have an account?",
+                              "New User?",
                               style: context.medium.copyWith(
                                 color: kDarkGreyColor,
                                 fontSize: 14,
@@ -132,7 +132,7 @@ class _AuthPageState extends State<AuthPage> {
                               },
                               padding: EdgeInsets.zero,
                               child: Text(
-                                " Signup",
+                                " Sign Up",
                                 style: context.semiBold.copyWith(
                                   color: kBlackColor,
                                   fontSize: 14,

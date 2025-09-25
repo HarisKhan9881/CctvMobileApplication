@@ -1,9 +1,11 @@
+import 'package:cctv_app/core/components/app_bottom_sheet.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/auth/pages/auth_page.dart';
+import 'package:cctv_app/feature/drawer/pages/user_profile_page.dart';
 import 'package:cctv_app/feature/profile/pages/edit_profile_page.dart';
 import 'package:cctv_app/feature/profile/pages/help_and_support.dart';
 import 'package:cctv_app/feature/profile/pages/settings_page.dart';
@@ -25,7 +27,18 @@ class ProfilePage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("Edit", style: context.normal.copyWith(fontSize: 20)),
+              CupertinoButton(
+                child: Text(
+                  "Edit",
+                  style: context.normal.copyWith(fontSize: 20),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => EditProfilePage()),
+                  );
+                },
+              ),
               Text("Profile", style: context.bold.copyWith(fontSize: 20)),
               CupertinoButton(
                 padding: EdgeInsets.zero,
@@ -69,7 +82,7 @@ class ProfilePage extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const EditProfilePage(),
+                          builder: (context) => const UserProfilePage(),
                         ),
                       );
                     },
@@ -119,61 +132,107 @@ class ProfilePage extends StatelessWidget {
   }
 
   void showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: kWhiteColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 🔴 Title Text
-                const Text(
-                  "Are you sure you want\nto logout?",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // ❌ Cancel Button
-                PrimaryButton(
-                  text: "Cancel",
-                  borderColor: kGreyColor,
-                  textColor: kBlackColor,
-                  buttonColor: kWhiteColor,
-                  showBorder: true,
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                Space.vertical(12),
-
-                // ✅ Yes Button
-                PrimaryButton(
-                  text: "Logout",
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => AuthPage()),
-                    );
-                  },
-                ),
-              ],
+    AppBottomSheet.show(
+      context,
+      body: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 🔴 Title Text
+            const Text(
+              "Are you sure you want\nto logout?",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Colors.red,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-        );
-      },
+            const SizedBox(height: 20),
+
+            // ❌ Cancel Button
+            PrimaryButton(
+              text: "Cancel",
+              borderColor: kGreyColor,
+              textColor: kBlackColor,
+              buttonColor: kWhiteColor,
+              showBorder: true,
+              onPressed: () {
+                Navigator.pop(context);
+              },
+            ),
+            Space.vertical(12),
+
+            // ✅ Yes Button
+            PrimaryButton(
+              text: "Logout",
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => AuthPage()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
     );
+    // showDialog(
+    //   context: context,
+    //   barrierDismissible: false,
+
+    //   builder: (BuildContext context) {
+    //     return Dialog(
+    //       backgroundColor: kWhiteColor,
+    //       shape: RoundedRectangleBorder(
+    //         borderRadius: BorderRadius.circular(16),
+    //       ),
+    //       child: Padding(
+    //         padding: const EdgeInsets.all(20),
+    //         child: Column(
+    //           mainAxisSize: MainAxisSize.min,
+    //           children: [
+    //             // 🔴 Title Text
+    //             const Text(
+    //               "Are you sure you want\nto logout?",
+    //               textAlign: TextAlign.center,
+    //               style: TextStyle(
+    //                 color: Colors.red,
+    //                 fontSize: 18,
+    //                 fontWeight: FontWeight.bold,
+    //               ),
+    //             ),
+    //             const SizedBox(height: 20),
+
+    //             // ❌ Cancel Button
+    //             PrimaryButton(
+    //               text: "Cancel",
+    //               borderColor: kGreyColor,
+    //               textColor: kBlackColor,
+    //               buttonColor: kWhiteColor,
+    //               showBorder: true,
+    //               onPressed: () {
+    //                 Navigator.pop(context);
+    //               },
+    //             ),
+    //             Space.vertical(12),
+
+    //             // ✅ Yes Button
+    //             PrimaryButton(
+    //               text: "Logout",
+    //               onPressed: () {
+    //                 Navigator.push(
+    //                   context,
+    //                   MaterialPageRoute(builder: (context) => AuthPage()),
+    //                 );
+    //               },
+    //             ),
+    //           ],
+    //         ),
+    //       ),
+    //     );
+    //   },
+    // );
   }
 }

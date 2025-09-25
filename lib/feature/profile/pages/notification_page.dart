@@ -16,19 +16,129 @@ class NotificationPage extends StatelessWidget {
         backgroundColor: kWhiteColor,
         centerTitle: true,
         title: Text("Notifications"),
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Center(child: SvgPicture.asset(Assets.svgNotificationImage)),
-          Space.vertical(20),
-          Text(
-            "No new notifications",
-            style: context.normal.copyWith(fontSize: 20),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: SvgPicture.asset(Assets.svgDoubleTickIcon),
           ),
         ],
       ),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Column(
+          children: [
+            Space.vertical(10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(backgroundImage: AssetImage(Assets.pngUser1Image)),
+                Space.horizontal(12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Hannah Flores",
+                        style: context.bold.copyWith(fontSize: 16),
+                      ),
+                      Text("Someone tag please response"),
+                    ],
+                  ),
+                ),
+                Space.horizontal(12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    width: 100,
+                    height: 40,
+                    Assets.pngHighlight2Image,
+                  ),
+                ),
+              ],
+            ),
+            Space.vertical(6),
+            Divider(color: kGreyColor, thickness: 1),
+            Space.vertical(6),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(backgroundImage: AssetImage(Assets.pngUser1Image)),
+                Space.horizontal(12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Hannah Flores",
+                        style: context.bold.copyWith(fontSize: 16),
+                      ),
+                      Text("Someone tag please response"),
+                    ],
+                  ),
+                ),
+                Space.horizontal(12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    width: 100,
+                    height: 40,
+                    Assets.pngHighlight2Image,
+                  ),
+                ),
+              ],
+            ),
+            Space.vertical(6),
+            Divider(color: kGreyColor, thickness: 1),
+            Space.vertical(6),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(backgroundImage: AssetImage(Assets.pngUser1Image)),
+                Space.horizontal(12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Hannah Flores",
+                        style: context.bold.copyWith(fontSize: 16),
+                      ),
+                      Text("Someone tag please response"),
+                    ],
+                  ),
+                ),
+                Space.horizontal(12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.asset(
+                    width: 100,
+                    height: 40,
+                    Assets.pngHighlight2Image,
+                  ),
+                ),
+              ],
+            ),
+            Space.vertical(6),
+            Divider(color: kGreyColor, thickness: 1),
+            Space.vertical(6),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget emptyNotification(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Center(child: SvgPicture.asset(Assets.svgNotificationImage)),
+        Space.vertical(20),
+        Text(
+          "No new notifications",
+          style: context.normal.copyWith(fontSize: 20),
+        ),
+      ],
     );
   }
 }

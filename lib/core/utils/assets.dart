@@ -9,11 +9,18 @@ class Assets {
   static const String svgEditProfileIcon = 'assets/icons/edit_profile.svg';
   static const String svgHelpAndSupportIcon =
       'assets/icons/help_and_support.svg';
+  static const String svgHelpAndSupport2Icon =
+      'assets/icons/help_and_support_2.svg';
   static const String svgTermAndPoliciesIcon =
       'assets/icons/term_and_policies.svg';
   static const String svgLogoutIcon = 'assets/icons/logout.svg';
   static const String svgSettingsIcon = 'assets/icons/settings.svg';
   static const String svgNoteBookIcon = 'assets/icons/notebook.svg';
+  static const String svgInviteIcon = 'assets/icons/invite.svg';
+  static const String svgNoteBook2Icon = 'assets/icons/notebook_2.svg';
+  static const String svgMusicIcon = 'assets/icons/music.svg';
+  static const String svgDoubleTickIcon = 'assets/icons/double_tick.svg';
+  static const String svgCancelIcon = 'assets/icons/cancel.svg';
 
   static const String svgHomeIcon = 'assets/icons/home.svg';
   static const String svgCreateIcon = 'assets/icons/create.svg';

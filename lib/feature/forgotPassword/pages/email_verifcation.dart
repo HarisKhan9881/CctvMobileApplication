@@ -42,7 +42,7 @@ class _EmailVerifcationState extends State<EmailVerifcation> {
       controller: _controllers[index],
       focusNode: _focusNodes[index],
       onChanged: (value) {
-        if (value.isNotEmpty && index < 5) {
+        if (value.isNotEmpty && index < 3) {
           FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
         } else if (value.isEmpty && index > 0) {
           FocusScope.of(context).requestFocus(_focusNodes[index - 1]);
@@ -84,7 +84,7 @@ class _EmailVerifcationState extends State<EmailVerifcation> {
                 builder: (context, constraints) {
                   final screenWidth = constraints.maxWidth;
                   final spacing = 12.0;
-                  final boxCount = 6;
+                  final boxCount = 4;
                   double totalSpacing = spacing * (boxCount - 1);
                   double otpBoxSize = (screenWidth - totalSpacing) / boxCount;
                   otpBoxSize = otpBoxSize.clamp(40, 50);
@@ -92,7 +92,7 @@ class _EmailVerifcationState extends State<EmailVerifcation> {
                     alignment: WrapAlignment.center,
                     spacing: spacing,
                     runSpacing: 12,
-                    children: List.generate(6, (index) {
+                    children: List.generate(4, (index) {
                       return SizedBox(
                         width: otpBoxSize,
                         height: otpBoxSize,
@@ -103,9 +103,9 @@ class _EmailVerifcationState extends State<EmailVerifcation> {
                 },
               ),
               Space.vertical(16),
-              if (otpCode.length != 6 && isOtpEmpty)
+              if (otpCode.length != 4 && isOtpEmpty)
                 Text(
-                  "Please enter 6 digit code",
+                  "Please enter 4 digit code",
                   style: context.medium.copyWith(
                     color: kRedColor,
                     fontSize: 14,
@@ -140,7 +140,7 @@ class _EmailVerifcationState extends State<EmailVerifcation> {
                 text: "Verify and proceed",
                 isMainAxisSizeMin: true,
                 padding: EdgeInsets.symmetric(horizontal: 50),
-                onPressed: otpCode.length == 6
+                onPressed: otpCode.length == 4
                     ? () {
                         Navigator.push(
                           context,

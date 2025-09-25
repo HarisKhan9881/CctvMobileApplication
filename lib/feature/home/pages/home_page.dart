@@ -1,10 +1,13 @@
 import 'package:cctv_app/core/components/admin_top_header.dart';
 import 'package:cctv_app/core/components/custom_horizontal_listview_widget.dart';
+import 'package:cctv_app/core/components/custom_menu_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/components/search_bar_header.dart';
+import 'package:cctv_app/feature/home/pages/public_profile_page.dart';
+import 'package:cctv_app/feature/home/widgets/home_post_container.dart';
 import 'package:flutter/material.dart';
 
 final List<HighlightItem> highlights = [
@@ -152,115 +155,9 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   Space.vertical(20),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: kWhiteColor,
-                      borderRadius: BorderRadius.circular(20.0),
-                      border: Border.all(color: kGreyColor),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 30,
-                                    backgroundImage: AssetImage(
-                                      Assets.pngUser1Image,
-                                    ),
-                                  ),
-                                  Space.horizontal(10),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "Hannah Flores",
-                                        style: context.semiBold,
-                                      ),
-                                      Text(
-                                        "2 mints ago",
-                                        style: context.normal,
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: kGreyColor),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: EdgeInsets.all(8.0),
-                                child: Icon(Icons.more_horiz),
-                              ),
-                            ],
-                          ),
-                          Space.vertical(20),
-                          Image.asset(Assets.pngPost1Image),
-                        ],
-                      ),
-                    ),
-                  ),
+                  HomePostContainer(),
                   Space.vertical(20),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: kWhiteColor,
-                      borderRadius: BorderRadius.circular(20.0),
-                      border: Border.all(color: kGreyColor),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12.0),
-                      child: Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 30,
-                                    backgroundImage: AssetImage(
-                                      Assets.pngUser1Image,
-                                    ),
-                                  ),
-                                  Space.horizontal(10),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "Hannah Flores",
-                                        style: context.semiBold,
-                                      ),
-                                      Text(
-                                        "2 mints ago",
-                                        style: context.normal,
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                              Container(
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: kGreyColor),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: EdgeInsets.all(8.0),
-                                child: Icon(Icons.more_horiz),
-                              ),
-                            ],
-                          ),
-                          Space.vertical(20),
-                          Image.asset(Assets.pngPost1Image),
-                        ],
-                      ),
-                    ),
-                  ),
+                  HomePostContainer(),
                   Space.vertical(20),
                 ],
               ),

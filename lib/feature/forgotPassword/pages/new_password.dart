@@ -3,6 +3,7 @@ import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/validators.dart';
+import 'package:cctv_app/feature/auth/pages/auth_page.dart';
 import 'package:cctv_app/feature/forgotPassword/widget/forgot_password_header.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -104,7 +105,10 @@ class _NewPasswordState extends State<NewPassword> {
                   padding: EdgeInsets.symmetric(horizontal: 50),
                   onPressed: () {
                     if (formKey.currentState!.validate()) {
-                      Navigator.pop(context);
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => AuthPage()),
+                      );
                     }
                   },
                 ),
