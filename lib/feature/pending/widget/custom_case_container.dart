@@ -30,7 +30,7 @@ class CustomCaseContainer extends StatelessWidget {
               Assets.pngHighlight1Image,
               width: double.infinity,
               height: 100,
-              fit: BoxFit.cover,
+              fit: BoxFit.fill,
             ),
           ),
           Space.vertical(6),

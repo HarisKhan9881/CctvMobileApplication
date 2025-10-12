@@ -1,14 +1,25 @@
 import 'package:cctv_app/core/components/custom_menu_button.dart';
+import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/home/pages/public_profile_page.dart';
+import 'package:cctv_app/feature/home/widgets/comment_container.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
-class HomePostContainer extends StatelessWidget {
+class HomePostContainer extends StatefulWidget {
   const HomePostContainer({super.key});
+
+  @override
+  State<HomePostContainer> createState() => _HomePostContainerState();
+}
+
+class _HomePostContainerState extends State<HomePostContainer> {
+  bool areCommentsVisible = false;
 
   @override
   Widget build(BuildContext context) {
@@ -18,6 +29,7 @@ class HomePostContainer extends StatelessWidget {
         borderRadius: BorderRadius.circular(20.0),
         border: Border.all(color: kGreyColor),
       ),
+      margin: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Padding(
         padding: const EdgeInsets.all(12.0),
         child: Column(
@@ -140,7 +152,13 @@ class HomePostContainer extends StatelessWidget {
               ],
             ),
             Space.vertical(15),
-            PrimaryButton(height: 40, text: "Resolutions", onPressed: () {}),
+            PrimaryButton(
+              height: 40,
+              text: "Resolutions",
+              onPressed: () {
+                _showSimpleDialog(context);
+              },
+            ),
             Space.vertical(20),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -152,7 +170,11 @@ class HomePostContainer extends StatelessWidget {
                 ),
                 reactionContainer(
                   text: "42",
-                  onTap: () {},
+                  onTap: () {
+                    setState(() {
+                      areCommentsVisible = !areCommentsVisible;
+                    });
+                  },
                   icon: Icons.message,
                 ),
                 reactionContainer(
@@ -163,6 +185,18 @@ class HomePostContainer extends StatelessWidget {
                 reactionContainer(text: "13", onTap: () {}, icon: Icons.share),
               ],
             ),
+            SizedBox(height: 16),
+            if (areCommentsVisible) ...[
+              CommentContainer(),
+              Space.vertical(10),
+              CommentContainer(),
+              Space.vertical(10),
+
+              CustomTextField(
+                hintText: "Write comment here",
+                hintTextColor: kDarkGreyColor,
+              ),
+            ],
           ],
         ),
       ),
@@ -174,19 +208,67 @@ class HomePostContainer extends StatelessWidget {
     required VoidCallback onTap,
     required IconData icon,
   }) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(color: kGreyColor),
-        borderRadius: BorderRadius.circular(8),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border.all(color: kGreyColor),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        child: Row(
+          children: [
+            Icon(icon, color: kPrimaryColor),
+            Space.horizontal(8),
+            Text(text),
+          ],
+        ),
       ),
-      padding: EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      child: Row(
-        children: [
-          Icon(icon, color: kPrimaryColor),
-          Space.horizontal(8),
-          Text(text),
-        ],
-      ),
+    );
+  }
+
+  void _showSimpleDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: kWhiteColor,
+
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: CupertinoButton(
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                  child: SvgPicture.asset(Assets.svgCancelIcon),
+                ),
+              ),
+              Text('David Elson', style: context.bold),
+              SizedBox(height: 10),
+              Text(
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit.......',
+              ),
+              Text(
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit.......',
+              ),
+              Text(
+                'Lorem ipsum dolor sit amet, consectetur adipiscing elit.......',
+              ),
+              SizedBox(height: 20),
+              PrimaryButton(
+                text: "Close",
+                isMainAxisSizeMin: true,
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:cctv_app/core/components/custom_dropdown.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
@@ -5,15 +6,20 @@ import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/auth/pages/auth_page.dart';
 import 'package:cctv_app/feature/drawer/pages/post_history.dart';
-import 'package:cctv_app/feature/drawer/pages/user_profile_page.dart';
 import 'package:cctv_app/feature/profile/pages/help_and_support.dart';
 import 'package:cctv_app/feature/profile/pages/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
-class CustomDrawer extends StatelessWidget {
+class CustomDrawer extends StatefulWidget {
   const CustomDrawer({super.key});
 
+  @override
+  State<CustomDrawer> createState() => _CustomDrawerState();
+}
+
+class _CustomDrawerState extends State<CustomDrawer> {
+  String selectedLang = "English";
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -70,6 +76,7 @@ class CustomDrawer extends StatelessWidget {
                 );
               },
             ),
+            _buildLanguageDropdown(context),
             _buildDrawerItem(
               icon: Assets.svgInviteIcon,
               text: "Invite Friends",
@@ -123,6 +130,74 @@ class CustomDrawer extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageDropdown(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        decoration: const BoxDecoration(
+          color: kWhiteColor,
+          border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5)),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            value: selectedLang,
+            isExpanded: true,
+            dropdownColor: kWhiteColor,
+            icon: const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: Colors.black,
+            ),
+            items: const [
+              DropdownMenuItem(
+                value: "English",
+                child: Row(
+                  children: [
+                    Text("🇬🇧 "),
+                    SizedBox(width: 8),
+                    Text("English"),
+                  ],
+                ),
+              ),
+              DropdownMenuItem(
+                value: "German",
+                child: Row(
+                  children: [Text("🇩🇪 "), SizedBox(width: 8), Text("German")],
+                ),
+              ),
+              DropdownMenuItem(
+                value: "Chinese",
+                child: Row(
+                  children: [
+                    Text("🇨🇳 "),
+                    SizedBox(width: 8),
+                    Text("Chinese"),
+                  ],
+                ),
+              ),
+              DropdownMenuItem(
+                value: "Russian",
+                child: Row(
+                  children: [
+                    Text("🇷🇺 "),
+                    SizedBox(width: 8),
+                    Text("Russian"),
+                  ],
+                ),
+              ),
+            ],
+            onChanged: (value) {
+              if (value != null) {
+                setState(() {
+                  selectedLang = value; // 👈 update karte hain
+                });
+              }
+            },
+          ),
         ),
       ),
     );

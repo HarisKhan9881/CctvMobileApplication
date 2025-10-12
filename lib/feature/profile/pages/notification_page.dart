@@ -49,7 +49,7 @@ class NotificationPage extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.asset(
-                    width: 100,
+                    width: 40,
                     height: 40,
                     Assets.pngHighlight2Image,
                   ),
@@ -80,7 +80,7 @@ class NotificationPage extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.asset(
-                    width: 100,
+                    width: 40,
                     height: 40,
                     Assets.pngHighlight2Image,
                   ),
@@ -111,7 +111,7 @@ class NotificationPage extends StatelessWidget {
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Image.asset(
-                    width: 100,
+                    width: 40,
                     height: 40,
                     Assets.pngHighlight2Image,
                   ),

@@ -13,7 +13,7 @@ class PrimaryButton extends StatelessWidget {
     this.inactive = false,
     this.showBorder = false,
     this.borderColor = kTransparentColor,
-    this.borderRadius = 12,
+    this.borderRadius = 6,
     this.borderWidth = 1.5,
     this.processing = false,
     this.height = 60,
