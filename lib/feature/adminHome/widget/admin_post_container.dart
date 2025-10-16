@@ -14,7 +14,7 @@ class AdminPostContainer extends StatelessWidget {
         borderRadius: BorderRadius.circular(15.0),
         border: Border.all(color: kGreyColor),
       ),
-      padding: EdgeInsets.all(6),
+      padding: EdgeInsets.all(3),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -29,18 +29,19 @@ class AdminPostContainer extends StatelessWidget {
           Space.horizontal(10),
           Expanded(
             child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   "I need your support, not criticism.",
-                  overflow: TextOverflow.ellipsis,
-                  style: context.bold.copyWith(fontSize: 16),
+
+                  style: context.bold.copyWith(fontSize: 14),
                 ),
-                Space.vertical(10),
+                Space.vertical(8),
                 Text(
                   "5 May, 1 hr 30 min",
                   overflow: TextOverflow.ellipsis,
-                  style: context.normal.copyWith(fontSize: 16),
+                  style: context.normal.copyWith(fontSize: 14),
                 ),
               ],
             ),

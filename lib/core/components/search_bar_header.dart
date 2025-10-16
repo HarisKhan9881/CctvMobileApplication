@@ -2,6 +2,7 @@ import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
+import 'package:cctv_app/feature/home/pages/history_screen.dart';
 import 'package:cctv_app/feature/profile/pages/notification_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -44,6 +45,11 @@ class SearchBarHeader extends StatelessWidget {
           child: CustomTextField(
             topPadding: 10,
             bottomPadding: 10,
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const HistoryScreen()),
+            ),
+            readOnly: true,
             hintText: "Search",
             prefix: Icon(Icons.search, color: kDarkGreyColor),
             hintTextColor: kDarkGreyColor,

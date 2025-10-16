@@ -32,6 +32,8 @@ class _ForgotPaswordState extends State<ForgotPasword> {
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Space.vertical(50),
                 ForgotPasswordHeader(

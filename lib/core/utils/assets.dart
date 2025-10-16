@@ -29,6 +29,15 @@ class Assets {
   static const String svgAnnouncementIcon = 'assets/icons/announcement.svg';
   static const String svgCommunityIcon = 'assets/icons/community.svg';
   static const String svgNotifyIcon = 'assets/icons/notify.svg';
+  static const String svgBlockIcon = 'assets/icons/block.svg';
+  static const String svgMuteIcon = 'assets/icons/mute.svg';
+  static const String svgWarningIcon = 'assets/icons/warning.svg';
+  static const String svgHistoryIcon = 'assets/icons/history.svg';
+
+  static const String svgFacebookIcon = 'assets/icons/facebook.svg';
+  static const String svgTwitterIcon = 'assets/icons/twitter.svg';
+  static const String svgCopyIcon = 'assets/icons/copy.svg';
+  static const String svgWhatsappIcon = 'assets/icons/whatsapp.svg';
 
   ///Images
   static const String pngAppLogoImage = 'assets/images/app_logo.png';

@@ -1,4 +1,3 @@
-import 'package:cctv_app/core/components/custom_dropdown.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
@@ -76,6 +75,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 );
               },
             ),
+            Space.vertical(10),
             _buildLanguageDropdown(context),
             _buildDrawerItem(
               icon: Assets.svgInviteIcon,
@@ -136,70 +136,75 @@ class _CustomDrawerState extends State<CustomDrawer> {
   }
 
   Widget _buildLanguageDropdown(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Container(
-        decoration: const BoxDecoration(
-          color: kWhiteColor,
-          border: Border(bottom: BorderSide(color: Colors.grey, width: 0.5)),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            value: selectedLang,
-            isExpanded: true,
-            dropdownColor: kWhiteColor,
-            icon: const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              color: Colors.black,
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Container(
+            decoration: const BoxDecoration(color: kWhiteColor),
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: selectedLang,
+                isExpanded: true,
+                dropdownColor: kWhiteColor,
+                icon: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: Colors.black,
+                ),
+                items: const [
+                  DropdownMenuItem(
+                    value: "English",
+                    child: Row(
+                      children: [
+                        Text("🇬🇧 "),
+                        SizedBox(width: 8),
+                        Text("English"),
+                      ],
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: "German",
+                    child: Row(
+                      children: [
+                        Text("🇩🇪 "),
+                        SizedBox(width: 8),
+                        Text("German"),
+                      ],
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: "Chinese",
+                    child: Row(
+                      children: [
+                        Text("🇨🇳 "),
+                        SizedBox(width: 8),
+                        Text("Chinese"),
+                      ],
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: "Russian",
+                    child: Row(
+                      children: [
+                        Text("🇷🇺 "),
+                        SizedBox(width: 8),
+                        Text("Russian"),
+                      ],
+                    ),
+                  ),
+                ],
+                onChanged: (value) {
+                  if (value != null) {
+                    setState(() {
+                      selectedLang = value; // 👈 update karte hain
+                    });
+                  }
+                },
+              ),
             ),
-            items: const [
-              DropdownMenuItem(
-                value: "English",
-                child: Row(
-                  children: [
-                    Text("🇬🇧 "),
-                    SizedBox(width: 8),
-                    Text("English"),
-                  ],
-                ),
-              ),
-              DropdownMenuItem(
-                value: "German",
-                child: Row(
-                  children: [Text("🇩🇪 "), SizedBox(width: 8), Text("German")],
-                ),
-              ),
-              DropdownMenuItem(
-                value: "Chinese",
-                child: Row(
-                  children: [
-                    Text("🇨🇳 "),
-                    SizedBox(width: 8),
-                    Text("Chinese"),
-                  ],
-                ),
-              ),
-              DropdownMenuItem(
-                value: "Russian",
-                child: Row(
-                  children: [
-                    Text("🇷🇺 "),
-                    SizedBox(width: 8),
-                    Text("Russian"),
-                  ],
-                ),
-              ),
-            ],
-            onChanged: (value) {
-              if (value != null) {
-                setState(() {
-                  selectedLang = value; // 👈 update karte hain
-                });
-              }
-            },
           ),
         ),
-      ),
+      ],
     );
   }
 

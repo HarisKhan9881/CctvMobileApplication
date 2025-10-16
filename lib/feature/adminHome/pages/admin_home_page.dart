@@ -103,42 +103,26 @@ class _AdminHomePageState extends State<AdminHomePage> {
                 child: BarChart(
                   BarChartData(
                     alignment: BarChartAlignment.spaceAround,
-                    maxY: 26000,
+                    maxY: 27000,
+                    minY: 0,
                     gridData: FlGridData(show: false),
                     borderData: FlBorderData(show: false),
                     titlesData: FlTitlesData(
                       leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                          showTitles: true,
-                          reservedSize: 40,
-                          getTitlesWidget: (value, meta) {
-                            if (value == 1330 ||
-                                value == 4370 ||
-                                value == 16330 ||
-                                value == 25660) {
-                              return Text(
-                                value.toInt().toString(),
-                                style: const TextStyle(fontSize: 12),
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                        ),
+                        sideTitles: SideTitles(showTitles: false),
                       ),
                       rightTitles: AxisTitles(
                         sideTitles: SideTitles(
-                          showTitles: true, // <-- yahan enable kiya
+                          showTitles: true,
                           reservedSize: 40,
+                          interval: 5000,
                           getTitlesWidget: (value, meta) {
-                            if (value == 1330 ||
-                                value == 4370 ||
-                                value == 16330 ||
-                                value == 25660) {
+                            if (value.toInt() % 5000 == 0) {
                               return Text(
                                 value.toInt().toString(),
                                 style: const TextStyle(
-                                  fontSize: 12,
-                                  color: kBlackColor,
+                                  fontSize: 10,
+                                  color: Colors.black,
                                 ),
                               );
                             }
@@ -171,78 +155,257 @@ class _AdminHomePageState extends State<AdminHomePage> {
                       ),
                     ),
                     barGroups: [
+                      // 2021 - 3 bars
                       BarChartGroupData(
                         x: 0,
                         barRods: [
                           BarChartRodData(
-                            toY: 23000,
+                            toY: 25600, // Very tall bar
                             gradient: LinearGradient(
-                              colors: [Colors.blue, Colors.blueAccent],
+                              colors: [
+                                Colors.blue.shade600,
+                                Colors.blue.shade400,
+                              ],
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
                             ),
-                            borderRadius: BorderRadius.circular(6),
-                            width: 18,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            width: 12,
+                          ),
+                          BarChartRodData(
+                            toY: 12000, // Medium height bar
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.blue.shade600,
+                                Colors.blue.shade400,
+                              ],
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            width: 12,
+                          ),
+                          BarChartRodData(
+                            toY: 2500, // Short bar
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.blue.shade600,
+                                Colors.blue.shade400,
+                              ],
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            width: 12,
                           ),
                         ],
                       ),
+                      // 2022 - 3 bars
                       BarChartGroupData(
                         x: 1,
                         barRods: [
                           BarChartRodData(
-                            toY: 15000,
+                            toY: 10000, // Medium-tall bar
                             gradient: LinearGradient(
-                              colors: [Colors.blue, Colors.blueAccent],
+                              colors: [
+                                Colors.blue.shade600,
+                                Colors.blue.shade400,
+                              ],
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
                             ),
-                            borderRadius: BorderRadius.circular(6),
-                            width: 18,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            width: 12,
+                          ),
+                          BarChartRodData(
+                            toY: 3000, // Short bar
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.blue.shade600,
+                                Colors.blue.shade400,
+                              ],
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            width: 12,
+                          ),
+                          BarChartRodData(
+                            toY: 5000, // Medium-short bar
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.blue.shade600,
+                                Colors.blue.shade400,
+                              ],
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            width: 12,
                           ),
                         ],
                       ),
+                      // 2023 - 3 bars
                       BarChartGroupData(
                         x: 2,
                         barRods: [
                           BarChartRodData(
-                            toY: 25000,
+                            toY: 26000, // Tallest bar in chart
                             gradient: LinearGradient(
-                              colors: [Colors.blue, Colors.blueAccent],
+                              colors: [
+                                Colors.blue.shade600,
+                                Colors.blue.shade400,
+                              ],
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
                             ),
-                            borderRadius: BorderRadius.circular(6),
-                            width: 18,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            width: 12,
+                          ),
+                          BarChartRodData(
+                            toY: 20000, // Tall bar
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.blue.shade600,
+                                Colors.blue.shade400,
+                              ],
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            width: 12,
+                          ),
+                          BarChartRodData(
+                            toY: 9000, // Medium-tall bar
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.blue.shade600,
+                                Colors.blue.shade400,
+                              ],
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            width: 12,
                           ),
                         ],
                       ),
+                      // 2024 - 3 bars
                       BarChartGroupData(
                         x: 3,
                         barRods: [
                           BarChartRodData(
-                            toY: 12000,
+                            toY: 3000, // Medium-short bar
                             gradient: LinearGradient(
-                              colors: [Colors.blue, Colors.blueAccent],
+                              colors: [
+                                Colors.blue.shade600,
+                                Colors.blue.shade400,
+                              ],
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
                             ),
-                            borderRadius: BorderRadius.circular(6),
-                            width: 18,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            width: 12,
+                          ),
+                          BarChartRodData(
+                            toY: 10000, // Medium-tall bar
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.blue.shade600,
+                                Colors.blue.shade400,
+                              ],
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            width: 12,
+                          ),
+                          BarChartRodData(
+                            toY: 2000, // Short bar
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.blue.shade600,
+                                Colors.blue.shade400,
+                              ],
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            width: 12,
                           ),
                         ],
                       ),
+                      // 2025 - 2 bars
                       BarChartGroupData(
                         x: 4,
                         barRods: [
                           BarChartRodData(
-                            toY: 17000,
+                            toY: 3000, // Medium-short bar
                             gradient: LinearGradient(
-                              colors: [Colors.blue, Colors.blueAccent],
+                              colors: [
+                                Colors.blue.shade600,
+                                Colors.blue.shade400,
+                              ],
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
                             ),
-                            borderRadius: BorderRadius.circular(6),
-                            width: 18,
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            width: 12,
+                          ),
+                          BarChartRodData(
+                            toY: 10000, // Medium-tall bar
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.blue.shade600,
+                                Colors.blue.shade400,
+                              ],
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                            ),
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(8),
+                              topRight: Radius.circular(8),
+                            ),
+                            width: 12,
                           ),
                         ],
                       ),

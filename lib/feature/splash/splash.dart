@@ -1,5 +1,4 @@
 import 'package:cctv_app/core/components/primary_button.dart';
-import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/auth/pages/auth_page.dart';

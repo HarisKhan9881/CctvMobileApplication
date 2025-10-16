@@ -1,7 +1,6 @@
 import 'package:cctv_app/core/components/admin_top_header.dart';
 import 'package:cctv_app/core/components/app_bottom_sheet.dart';
 import 'package:cctv_app/core/components/custom_horizontal_listview_widget.dart';
-import 'package:cctv_app/core/components/custom_menu_button.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
@@ -9,6 +8,7 @@ import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/components/search_bar_header.dart';
+import 'package:cctv_app/feature/home/pages/private_profile_page.dart';
 import 'package:cctv_app/feature/home/pages/public_profile_page.dart';
 import 'package:cctv_app/feature/home/widgets/home_post_container.dart';
 import 'package:dotted_border/dotted_border.dart';
@@ -335,9 +335,29 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 Space.vertical(20),
-                HomePostContainer(),
+                HomePostContainer(
+                  isAdmin: widget.isAdmin,
+                  onClickProfile: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PublicProfilePage(),
+                      ),
+                    );
+                  },
+                ),
                 Space.vertical(20),
-                HomePostContainer(),
+                HomePostContainer(
+                  isAdmin: widget.isAdmin,
+                  onClickProfile: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PrivateProfilePage(),
+                      ),
+                    );
+                  },
+                ),
                 Space.vertical(20),
               ],
             ),
