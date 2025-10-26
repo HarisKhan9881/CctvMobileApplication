@@ -21,6 +21,8 @@ class Assets {
   static const String svgMusicIcon = 'assets/icons/music.svg';
   static const String svgDoubleTickIcon = 'assets/icons/double_tick.svg';
   static const String svgCancelIcon = 'assets/icons/cancel.svg';
+  static const String svgAdsIcon = 'assets/icons/ads.svg';
+  static const String svgAdminIcon = 'assets/icons/admin.svg';
 
   static const String svgHomeIcon = 'assets/icons/home.svg';
   static const String svgCreateIcon = 'assets/icons/create.svg';
@@ -38,6 +40,7 @@ class Assets {
   static const String svgTwitterIcon = 'assets/icons/twitter.svg';
   static const String svgCopyIcon = 'assets/icons/copy.svg';
   static const String svgWhatsappIcon = 'assets/icons/whatsapp.svg';
+  static const String svgFilterIcon = 'assets/icons/filter.svg';
 
   ///Images
   static const String pngAppLogoImage = 'assets/images/app_logo.png';
@@ -46,12 +49,14 @@ class Assets {
   static const String pngHighlight1Image = 'assets/images/highlight1.png';
   static const String pngHighlight2Image = 'assets/images/highlight2.png';
   static const String pngPost1Image = 'assets/images/post1.png';
+  static const String pngFlagImage = 'assets/images/flag.png';
 
   static const String pngRegisterTopImage = 'assets/images/register_top.png';
   static const String pngRegisterBottomImage =
       'assets/images/register_bottom.png';
   static const String pngActiveTopImage = 'assets/images/active_top.png';
   static const String pngActiveBottomImage = 'assets/images/active_bottom.png';
+  static const String pngViewImage = 'assets/images/view.png';
 
   ///SVG Images
   static const String svgNotificationImage = 'assets/images/notification.svg';

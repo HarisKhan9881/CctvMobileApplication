@@ -4,6 +4,7 @@ import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/validators.dart';
+import 'package:cctv_app/feature/bottomNavBar/ad_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/bottomNavBar/admin_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/bottomNavBar/user_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/forgotPassword/pages/forgot_pasword.dart';
@@ -103,6 +104,14 @@ class _SigninViewState extends State<SigninView> {
                     context,
                     MaterialPageRoute(
                       builder: (context) => const AdminBottomNavBar(),
+                    ),
+                  );
+                } else if (emailController.text.trim() == "abc@gmail.com" &&
+                    passwordController.text.trim() == "12345678") {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AdBottomNavBar(),
                     ),
                   );
                 } else {

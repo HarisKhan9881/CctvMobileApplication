@@ -134,7 +134,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       child: PrimaryButton(
                         text: "Cancel",
                         borderColor: kPrimaryColor,
-                        showBorder: false,
+                        buttonColor: kWhiteColor,
+                        textColor: kBlackColor,
+                        showBorder: true,
                         onPressed: () {},
                       ),
                     ),
