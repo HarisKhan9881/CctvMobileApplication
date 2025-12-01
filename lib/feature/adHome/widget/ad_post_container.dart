@@ -1,8 +1,10 @@
+import 'package:cctv_app/core/components/custom_menu_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 
 class AdPostContainer extends StatelessWidget {
   const AdPostContainer({super.key});
@@ -64,7 +66,55 @@ class AdPostContainer extends StatelessWidget {
             ),
           ),
           Space.horizontal(10),
-          Icon(Icons.more_vert, color: kDarkGreyColor),
+          Directionality(
+            textDirection: TextDirection.rtl,
+            child: MenuAnchor(
+              alignmentOffset: const Offset(0, 10),
+              style: MenuStyle(
+                backgroundColor: WidgetStateProperty.all(kWhiteColor),
+                shape: WidgetStateProperty.all(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: BorderSide(color: kLightGreyColor),
+                  ),
+                ),
+                elevation: WidgetStateProperty.all(4),
+                alignment: AlignmentDirectional.bottomStart,
+                visualDensity: VisualDensity.compact,
+              ),
+              builder:
+                  (
+                    BuildContext context,
+                    MenuController controller,
+                    Widget? child,
+                  ) {
+                    return GestureDetector(
+                      onTap: () {
+                        if (controller.isOpen) {
+                          controller.close();
+                        } else {
+                          controller.open();
+                        }
+                      },
+                      child: Icon(Icons.more_vert, color: kDarkGreyColor),
+                    );
+                  },
+              menuChildren: [
+                CustomMenuButton(
+                  onTap: () {},
+                  icon: SvgPicture.asset(Assets.svgRemoveIcon),
+                  iconSize: 15,
+                  title: 'Remove',
+                ),
+                CustomMenuButton(
+                  onTap: () {},
+                  icon: SvgPicture.asset(Assets.svgCopyIcon),
+                  iconSize: 15,
+                  title: 'Copy Link',
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

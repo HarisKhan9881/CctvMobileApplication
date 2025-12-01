@@ -94,7 +94,9 @@ class AdminProfilePage extends StatelessWidget {
                     height: 40,
                     buttonColor: kRedColor,
                     prefixIcon: Icon(Icons.delete, color: kWhiteColor),
-                    onPressed: () {},
+                    onPressed: () {
+                      showDeleteDialog(context);
+                    },
                   ),
                 ],
               ),
@@ -181,6 +183,78 @@ class AdminProfilePage extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+
+  void showDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: kWhiteColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Are you sure?",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Space.vertical(10),
+              const Text(
+                "Want to delete admin profile?",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
+              ),
+              Space.vertical(20),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: kWhiteColor,
+                        border: Border.all(color: kRedColor),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        "No",
+                        style: context.normal.copyWith(color: kBlackColor),
+                      ),
+                    ),
+                  ),
+                  Space.horizontal(10),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: kRedColor,
+                        border: Border.all(color: kRedColor),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        "Yes",
+                        style: context.normal.copyWith(color: kWhiteColor),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

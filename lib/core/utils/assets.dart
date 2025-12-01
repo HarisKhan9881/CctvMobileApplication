@@ -41,6 +41,7 @@ class Assets {
   static const String svgCopyIcon = 'assets/icons/copy.svg';
   static const String svgWhatsappIcon = 'assets/icons/whatsapp.svg';
   static const String svgFilterIcon = 'assets/icons/filter.svg';
+  static const String svgRemoveIcon = 'assets/icons/remove.svg';
 
   ///Images
   static const String pngAppLogoImage = 'assets/images/app_logo.png';

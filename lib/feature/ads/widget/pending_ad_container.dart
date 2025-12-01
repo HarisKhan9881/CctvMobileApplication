@@ -1,5 +1,6 @@
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
+import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/ads/pages/stats_page.dart';
@@ -101,7 +102,9 @@ class PendingAdContainer extends StatelessWidget {
                     borderColor: kGreyColor,
                     textColor: kBlackColor,
                     padding: EdgeInsets.symmetric(horizontal: 10),
-                    onPressed: () {},
+                    onPressed: () {
+                      showEndAdDialog(context);
+                    },
                   ),
                   Space.horizontal(10),
                   PrimaryButton(
@@ -126,6 +129,162 @@ class PendingAdContainer extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  void showEndAdDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: kWhiteColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Are you sure?",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Space.vertical(10),
+              const Text(
+                "Stopping this ad will immediately pause its visibility on the app. Users will no longer see it until you reactivate.",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
+              ),
+              Space.vertical(10),
+              const Text(
+                "Do you still want to proceed?",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
+              ),
+              Space.vertical(20),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: kWhiteColor,
+                        border: Border.all(color: kRedColor),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        "No",
+                        style: context.normal.copyWith(color: kBlackColor),
+                      ),
+                    ),
+                  ),
+                  Space.horizontal(10),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: kRedColor,
+                        border: Border.all(color: kRedColor),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        "Yes",
+                        style: context.normal.copyWith(color: kWhiteColor),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void showPauseAdDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: kWhiteColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Are you sure?",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              Space.vertical(10),
+              const Text(
+                "Pausing this ad will temporarily stop its visibility. You can resume it anytime from your dashboard.",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
+              ),
+              Space.vertical(10),
+              const Text(
+                "Do you still want to proceed?",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
+              ),
+              Space.vertical(20),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: kWhiteColor,
+                        border: Border.all(color: kPrimaryColor),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        "No",
+                        style: context.normal.copyWith(color: kBlackColor),
+                      ),
+                    ),
+                  ),
+                  Space.horizontal(10),
+                  Expanded(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: kPrimaryColor,
+                        border: Border.all(color: kPrimaryColor),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        "Yes",
+                        style: context.normal.copyWith(color: kWhiteColor),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

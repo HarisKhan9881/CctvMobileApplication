@@ -3,6 +3,7 @@ import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/home/pages/history_screen.dart';
+import 'package:cctv_app/feature/profile/pages/ad_profile_page.dart';
 import 'package:cctv_app/feature/profile/pages/notification_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
@@ -16,7 +17,10 @@ class AdTopHeader extends StatelessWidget {
       children: [
         GestureDetector(
           onTap: () {
-            Scaffold.of(context).openDrawer();
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => AdProfilePage()),
+            );
           },
           child: CircleAvatar(
             radius: 24,

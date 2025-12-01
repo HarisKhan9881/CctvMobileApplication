@@ -2,6 +2,7 @@ import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
+import 'package:cctv_app/feature/communityFeedback/pages/feedback_view.dart';
 import 'package:flutter/material.dart';
 
 class CommunityFeedbackWidget extends StatelessWidget {
@@ -69,20 +70,30 @@ class CommunityFeedbackWidget extends StatelessWidget {
                           ),
                         ),
                         Space.horizontal(16),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: kPrimaryColor,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          padding: EdgeInsets.symmetric(
-                            vertical: 8,
-                            horizontal: 12,
-                          ),
-                          child: Text(
-                            "View",
-                            style: context.normal.copyWith(
-                              fontSize: 14,
-                              color: kWhiteColor,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => FeedbackView(),
+                              ),
+                            );
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: kPrimaryColor,
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            padding: EdgeInsets.symmetric(
+                              vertical: 8,
+                              horizontal: 12,
+                            ),
+                            child: Text(
+                              "View",
+                              style: context.normal.copyWith(
+                                fontSize: 14,
+                                color: kWhiteColor,
+                              ),
                             ),
                           ),
                         ),
