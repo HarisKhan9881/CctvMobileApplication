@@ -106,7 +106,7 @@ class _HomePageState extends State<HomePage> {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withOpacity(0.5), // Shadow color
+                        color: Colors.grey.withValues(alpha:0.5), // Shadow color
                         spreadRadius: 2, // Kitna wide shadow ho
                         blurRadius: 7, // Shadow blur
                         offset: Offset(
@@ -157,7 +157,7 @@ class _HomePageState extends State<HomePage> {
                                             ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.grey.withOpacity(
+                                                color: Colors.grey.withValues(alpha:
                                                   0.5,
                                                 ), // Shadow color
                                                 spreadRadius:
@@ -283,7 +283,7 @@ class _HomePageState extends State<HomePage> {
                                       borderRadius: BorderRadius.circular(12),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: kBlackColor.withOpacity(0.08),
+                                          color: kBlackColor.withValues(alpha:0.08),
                                           blurRadius: 12,
                                           offset: Offset(0, 4),
                                         ),

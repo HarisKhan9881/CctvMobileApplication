@@ -1,8 +1,7 @@
 class Assets {
-  Assets._();
-
   ///SVG Icons
   static const String svgMenuIcon = 'assets/icons/menu.svg';
+
   static const String svgDeleteIcon = 'assets/icons/delete.svg';
   static const String svgRemindIcon = 'assets/icons/remind.svg';
   static const String svgNotificationIcon = 'assets/icons/notification.svg';
@@ -23,8 +22,8 @@ class Assets {
   static const String svgCancelIcon = 'assets/icons/cancel.svg';
   static const String svgAdsIcon = 'assets/icons/ads.svg';
   static const String svgAdminIcon = 'assets/icons/admin.svg';
-
   static const String svgHomeIcon = 'assets/icons/home.svg';
+
   static const String svgCreateIcon = 'assets/icons/create.svg';
   static const String svgPendingIcon = 'assets/icons/pending.svg';
   static const String svgProfileIcon = 'assets/icons/profile.svg';
@@ -35,8 +34,8 @@ class Assets {
   static const String svgMuteIcon = 'assets/icons/mute.svg';
   static const String svgWarningIcon = 'assets/icons/warning.svg';
   static const String svgHistoryIcon = 'assets/icons/history.svg';
-
   static const String svgFacebookIcon = 'assets/icons/facebook.svg';
+
   static const String svgTwitterIcon = 'assets/icons/twitter.svg';
   static const String svgCopyIcon = 'assets/icons/copy.svg';
   static const String svgWhatsappIcon = 'assets/icons/whatsapp.svg';
@@ -45,14 +44,15 @@ class Assets {
 
   ///Images
   static const String pngAppLogoImage = 'assets/images/app_logo.png';
+
   static const String pngUser1Image = 'assets/images/user1.png';
   static const String pngUser2Image = 'assets/images/user2.png';
   static const String pngHighlight1Image = 'assets/images/highlight1.png';
   static const String pngHighlight2Image = 'assets/images/highlight2.png';
   static const String pngPost1Image = 'assets/images/post1.png';
   static const String pngFlagImage = 'assets/images/flag.png';
-
   static const String pngRegisterTopImage = 'assets/images/register_top.png';
+
   static const String pngRegisterBottomImage =
       'assets/images/register_bottom.png';
   static const String pngActiveTopImage = 'assets/images/active_top.png';
@@ -61,4 +61,7 @@ class Assets {
 
   ///SVG Images
   static const String svgNotificationImage = 'assets/images/notification.svg';
+
+  static const String repostIcon = 'assets/icons/reposticon.png';
+  Assets._();
 }

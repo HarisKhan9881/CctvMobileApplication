@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sizer/sizer.dart';
 
 class VotingResultExample extends StatelessWidget {
   const VotingResultExample({super.key});
@@ -19,7 +20,7 @@ class VotingResultExample extends StatelessWidget {
             isWinner: votesA > votesB,
           ),
         ),
-        const SizedBox(width: 10),
+        SizedBox(width: 1.w),
         Expanded(
           child: _buildVoteOption(
             label: 'B.',

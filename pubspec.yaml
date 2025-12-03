@@ -37,7 +37,8 @@ dependencies:
   flutter_chat_ui: ^2.9.0
   flutter_svg: ^2.2.1
   syncfusion_flutter_charts: ^31.2.3
-
+  sizer: ^3.1.3
+  
 dev_dependencies:
   flutter_lints: ^5.0.0
   flutter_test:
@@ -65,17 +66,25 @@ flutter:
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
   # example:
-  # fonts:
-  #   - family: Schyler
-  #     fonts:
-  #       - asset: fonts/Schyler-Regular.ttf
-  #       - asset: fonts/Schyler-Italic.ttf
-  #         style: italic
-  #   - family: Trajan Pro
-  #     fonts:
-  #       - asset: fonts/TrajanPro.ttf
-  #       - asset: fonts/TrajanPro_Bold.ttf
-  #         weight: 700
-  #
+  fonts:
+    - family: poppinRegular
+      fonts:
+        - asset: assets/fonts/poppinRegular.ttf
+         
+    - family: poppinBold
+      fonts:
+        - asset: assets/fonts/poppinBold.ttf
+
+    - family: poppinExtraBold
+      fonts:
+        - asset: assets/fonts/poppinExtraBold.ttf
+
+    - family: poppinMedium
+      fonts:
+        - asset: assets/fonts/poppinMedium.ttf
+        
+    - family: poppinRegular
+      fonts:
+        - asset: assets/fonts/poppinRegular.ttf
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

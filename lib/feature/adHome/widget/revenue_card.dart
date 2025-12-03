@@ -41,7 +41,7 @@ class RevenueCard extends StatelessWidget {
         border: Border.all(color: kGreyColor),
         boxShadow: [
           BoxShadow(
-            color: kGreyColor.withOpacity(0.04),
+            color: kGreyColor.withValues(alpha:0.04),
             blurRadius: 6,
             offset: Offset(0, 4),
           ),
@@ -56,7 +56,7 @@ class RevenueCard extends StatelessWidget {
             children: [
               Container(
                 decoration: BoxDecoration(
-                  color: kPrimaryColor.withOpacity(0.08),
+                  color: kPrimaryColor.withValues(alpha:0.08),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 padding: const EdgeInsets.all(8),
@@ -128,8 +128,8 @@ class RevenueCard extends StatelessWidget {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          kPrimaryColor.withOpacity(0.95),
-                          kPrimaryColor.withOpacity(0.6),
+                          kPrimaryColor.withValues(alpha:0.95),
+                          kPrimaryColor.withValues(alpha:0.6),
                         ],
                       ),
                     ),

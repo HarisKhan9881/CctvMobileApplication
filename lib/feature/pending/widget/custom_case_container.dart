@@ -198,7 +198,7 @@ class CustomCaseContainer extends StatelessWidget {
                 color: kWhiteColor,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.5), // Color of the shadow
+                    color: Colors.grey.withValues(alpha:0.5), // Color of the shadow
                     spreadRadius: 2, // How much the shadow spreads
                     blurRadius: 3, // How blurry the shadow is
                     offset: Offset(0, 1), // Offset of the shadow (x, y)

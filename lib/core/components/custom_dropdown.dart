@@ -33,7 +33,7 @@ class CustomDropdown<T> extends StatelessWidget {
     final effectiveDropdownColor = dropdownColor ?? kWhiteColor;
 
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       items: items,
       validator: (value) {
         return Validators.required(value?.toString());

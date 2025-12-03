@@ -135,6 +135,88 @@ class _CustomDrawerState extends State<CustomDrawer> {
     );
   }
 
+  void showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+
+      builder: (BuildContext context) {
+        return Dialog(
+          backgroundColor: kWhiteColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // 🔴 Title Text
+                const Text(
+                  "Are you sure you want\nto logout?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 20),
+
+                // ❌ Cancel Button
+                PrimaryButton(
+                  text: "Cancel",
+                  borderColor: kGreyColor,
+                  textColor: kBlackColor,
+                  buttonColor: kWhiteColor,
+                  showBorder: true,
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                Space.vertical(12),
+
+                // ✅ Yes Button
+                PrimaryButton(
+                  text: "Logout",
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => AuthPage()),
+                    );
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildDrawerItem({
+    required String icon,
+    required String text,
+    required VoidCallback onTap,
+  }) {
+    return Column(
+      children: [
+        ListTile(
+          leading: SvgPicture.asset(
+            icon,
+            colorFilter: ColorFilter.mode(kBlackColor, BlendMode.color),
+          ),
+          title: Text(
+            text,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+          ),
+          onTap: onTap,
+        ),
+        const Divider(height: 1),
+      ],
+    );
+  }
+
   Widget _buildLanguageDropdown(BuildContext context) {
     return Column(
       children: [
@@ -205,85 +287,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildDrawerItem({
-    required String icon,
-    required String text,
-    required VoidCallback onTap,
-  }) {
-    return Column(
-      children: [
-        ListTile(
-          leading: SvgPicture.asset(icon, color: kBlackColor),
-          title: Text(
-            text,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-          ),
-          onTap: onTap,
-        ),
-        const Divider(height: 1),
-      ],
-    );
-  }
-
-  void showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-
-      builder: (BuildContext context) {
-        return Dialog(
-          backgroundColor: kWhiteColor,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 🔴 Title Text
-                const Text(
-                  "Are you sure you want\nto logout?",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.red,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 20),
-
-                // ❌ Cancel Button
-                PrimaryButton(
-                  text: "Cancel",
-                  borderColor: kGreyColor,
-                  textColor: kBlackColor,
-                  buttonColor: kWhiteColor,
-                  showBorder: true,
-                  onPressed: () {
-                    Navigator.pop(context);
-                  },
-                ),
-                Space.vertical(12),
-
-                // ✅ Yes Button
-                PrimaryButton(
-                  text: "Logout",
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => AuthPage()),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 }

@@ -7,6 +7,7 @@ import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/adminHome/pages/report_and_suspend.dart';
+import 'package:cctv_app/feature/home/pages/repost_screen.dart';
 import 'package:cctv_app/feature/home/widgets/comment_container.dart';
 import 'package:cctv_app/feature/home/widgets/vote_container.dart';
 import 'package:flutter/cupertino.dart';
@@ -379,7 +380,12 @@ class _HomePostContainerState extends State<HomePostContainer> {
                 ),
                 reactionContainer(
                   text: "09",
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => RepostScreen()),
+                    );
+                  },
                   icon: Icons.replay_circle_filled,
                 ),
                 Directionality(
@@ -480,7 +486,6 @@ class _HomePostContainerState extends State<HomePostContainer> {
               Space.vertical(10),
               CommentContainer(),
               Space.vertical(10),
-
               CustomTextField(
                 hintText: "Write comment here",
                 hintTextColor: kDarkGreyColor,
@@ -490,6 +495,12 @@ class _HomePostContainerState extends State<HomePostContainer> {
         ),
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    reactionOverlay?.remove();
+    super.dispose();
   }
 
   Widget reactionContainer({
@@ -514,6 +525,49 @@ class _HomePostContainerState extends State<HomePostContainer> {
         ),
       ),
     );
+  }
+
+  Widget _buildReactionButton(String emoji, String reaction) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedReaction = reaction;
+          isReactionPopupVisible = false;
+        });
+        _hideReactionPopup();
+      },
+      child: Container(
+        margin: EdgeInsets.symmetric(horizontal: 2),
+        child: Text(emoji, style: TextStyle(fontSize: 24)),
+      ),
+    );
+  }
+
+  IconData _getReactionIcon() {
+    switch (selectedReaction) {
+      case "Love":
+        return Icons.favorite;
+      case "Haha":
+        return Icons.emoji_emotions;
+      case "Wow":
+        return Icons.sentiment_neutral;
+      case "Sad":
+        return Icons.sentiment_very_dissatisfied;
+      case "Angry":
+        return Icons.sentiment_very_dissatisfied;
+      case "Like":
+        return Icons.thumb_up;
+      default:
+        return Icons.thumb_up_outlined;
+    }
+  }
+
+  void _hideReactionPopup() {
+    setState(() {
+      isReactionPopupVisible = false;
+    });
+    reactionOverlay?.remove();
+    reactionOverlay = null;
   }
 
   void _showReactionPopup(Offset position) {
@@ -549,7 +603,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
                   borderRadius: BorderRadius.circular(25),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
+                      color: Colors.black.withValues(alpha: 0.1),
                       blurRadius: 10,
                       offset: Offset(0, 2),
                     ),
@@ -574,55 +628,6 @@ class _HomePostContainerState extends State<HomePostContainer> {
     );
 
     Overlay.of(context).insert(reactionOverlay!);
-  }
-
-  Widget _buildReactionButton(String emoji, String reaction) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedReaction = reaction;
-          isReactionPopupVisible = false;
-        });
-        _hideReactionPopup();
-      },
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 2),
-        child: Text(emoji, style: TextStyle(fontSize: 24)),
-      ),
-    );
-  }
-
-  void _hideReactionPopup() {
-    setState(() {
-      isReactionPopupVisible = false;
-    });
-    reactionOverlay?.remove();
-    reactionOverlay = null;
-  }
-
-  IconData _getReactionIcon() {
-    switch (selectedReaction) {
-      case "Love":
-        return Icons.favorite;
-      case "Haha":
-        return Icons.emoji_emotions;
-      case "Wow":
-        return Icons.sentiment_neutral;
-      case "Sad":
-        return Icons.sentiment_very_dissatisfied;
-      case "Angry":
-        return Icons.sentiment_very_dissatisfied;
-      case "Like":
-        return Icons.thumb_up;
-      default:
-        return Icons.thumb_up_outlined;
-    }
-  }
-
-  @override
-  void dispose() {
-    reactionOverlay?.remove();
-    super.dispose();
   }
 
   void _showSimpleDialog(BuildContext context) {

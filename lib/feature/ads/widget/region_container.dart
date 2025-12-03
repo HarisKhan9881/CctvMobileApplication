@@ -33,7 +33,7 @@ class RegionContainer extends StatelessWidget {
             ),
           ],
         ),
-        Divider(color: kDarkGreyColor.withOpacity(0.2), thickness: 1),
+        Divider(color: kDarkGreyColor.withValues(alpha:0.2), thickness: 1),
       ],
     );
   }

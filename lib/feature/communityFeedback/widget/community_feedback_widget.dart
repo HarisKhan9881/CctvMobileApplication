@@ -29,7 +29,7 @@ class CommunityFeedbackWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: kBlackColor.withOpacity(0.08),
+                  color: kBlackColor.withValues(alpha:0.08),
                   blurRadius: 12,
                   offset: Offset(0, 4),
                 ),

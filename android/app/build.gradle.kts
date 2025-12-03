@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.example.cctv_app"
-    compileSdk = 35
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.cctv_app"
-        minSdk = flutter.minSdkVersion
+        minSdk = 24
         targetSdk = 35
         versionCode = flutter.versionCode
         versionName = flutter.versionName
