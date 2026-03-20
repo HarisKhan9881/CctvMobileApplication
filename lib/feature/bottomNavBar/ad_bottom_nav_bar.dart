@@ -1,5 +1,6 @@
 import 'package:cctv_app/core/components/custom_drawer.dart';
 import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/utils.dart';
@@ -11,14 +12,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 class AdBottomNavBar extends StatefulWidget {
-  const AdBottomNavBar({super.key});
+  final int initialIndex;
+  const AdBottomNavBar({super.key, this.initialIndex = 0});
 
   @override
   State<AdBottomNavBar> createState() => _AdBottomNavBarState();
 }
 
 class _AdBottomNavBarState extends State<AdBottomNavBar> {
-  int selectedIndex = 0;
+  late int selectedIndex;
 
   final List<Widget> pages = [
     AdHomePage(),
@@ -27,10 +29,17 @@ class _AdBottomNavBarState extends State<AdBottomNavBar> {
     AnnouncementPage(),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    selectedIndex = widget.initialIndex.clamp(0, pages.length - 1);
+  }
+
   void onItemTapped(int index) {
     setState(() {
       selectedIndex = index;
     });
+    const AuthStorage().saveLastTabIndex(DashboardType.ad, index);
   }
 
   @override

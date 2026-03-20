@@ -1,6 +1,7 @@
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/auth/pages/auth_page.dart';
@@ -19,6 +20,32 @@ class CustomDrawer extends StatefulWidget {
 
 class _CustomDrawerState extends State<CustomDrawer> {
   String selectedLang = "English";
+  String displayName = "User";
+  String displayEmail = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadName();
+  }
+
+  Future<void> _loadName() async {
+    final storage = const AuthStorage();
+    final first = await storage.readFirstName();
+    final last = await storage.readLastName();
+    final email = await storage.readEmail();
+    final name = [
+      if (first != null && first.trim().isNotEmpty) first.trim(),
+      if (last != null && last.trim().isNotEmpty) last.trim(),
+    ].join(' ');
+
+    if (!mounted) return;
+    setState(() {
+      displayName = name.isEmpty ? displayName : name;
+      displayEmail = (email ?? '').trim();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Drawer(
@@ -44,11 +71,11 @@ class _CustomDrawerState extends State<CustomDrawer> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Shaq Jason",
+                          displayName,
                           style: context.bold.copyWith(fontSize: 24),
                         ),
                         Text(
-                          "Online",
+                          displayEmail.isEmpty ? "Online" : displayEmail,
                           style: context.normal.copyWith(color: kDarkGreyColor),
                         ),
                       ],
@@ -179,10 +206,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 // ✅ Yes Button
                 PrimaryButton(
                   text: "Logout",
-                  onPressed: () {
-                    Navigator.push(
+                  onPressed: () async {
+                    await const AuthStorage().clear();
+                    Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (context) => AuthPage()),
+                      MaterialPageRoute(builder: (context) => const AuthPage()),
+                      (_) => false,
                     );
                   },
                 ),

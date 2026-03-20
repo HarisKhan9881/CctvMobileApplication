@@ -2,6 +2,7 @@ import 'package:cctv_app/core/components/app_bottom_sheet.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/auth/pages/auth_page.dart';
@@ -17,6 +18,20 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
+
+  Future<Map<String, String>> _loadProfileInfo() async {
+    final storage = const AuthStorage();
+    final first = (await storage.readFirstName() ?? '').trim();
+    final last = (await storage.readLastName() ?? '').trim();
+    final email = (await storage.readEmail() ?? '').trim();
+    final name = [if (first.isNotEmpty) first, if (last.isNotEmpty) last].join(
+      ' ',
+    );
+    return {
+      'name': name.isEmpty ? 'User' : name,
+      'email': email.isEmpty ? 'No username' : email,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -69,10 +84,24 @@ class ProfilePage extends StatelessWidget {
                     ),
                   ),
                   Space.vertical(15),
-                  Text("Shaq Josh", style: context.bold.copyWith(fontSize: 20)),
-                  Text(
-                    "abcdefgh586@gmail.com",
-                    style: context.normal.copyWith(fontSize: 18),
+                  FutureBuilder<Map<String, String>>(
+                    future: _loadProfileInfo(),
+                    builder: (context, snapshot) {
+                      final name = snapshot.data?['name'] ?? 'User';
+                      final email = snapshot.data?['email'] ?? 'No username';
+                      return Column(
+                        children: [
+                          Text(
+                            name,
+                            style: context.bold.copyWith(fontSize: 20),
+                          ),
+                          Text(
+                            email,
+                            style: context.normal.copyWith(fontSize: 18),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                   Space.vertical(20),
                   ProfileTile(
@@ -167,10 +196,13 @@ class ProfilePage extends StatelessWidget {
             // ✅ Yes Button
             PrimaryButton(
               text: "Logout",
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                await const AuthStorage().clear();
+                if (!context.mounted) return;
+                Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (context) => AuthPage()),
+                  MaterialPageRoute(builder: (context) => const AuthPage()),
+                  (_) => false,
                 );
               },
             ),

@@ -106,9 +106,9 @@ class _AuthPageState extends State<AuthPage> {
                   ),
                   Space.vertical(30),
                   isAdmin
-                      ? SigninView()
+                      ? SigninView(isAdminTab: true)
                       : isLogin
-                      ? SigninView()
+                      ? SigninView(isAdminTab: false)
                       : SignupView(),
                   Space.vertical(20),
                   isAdmin

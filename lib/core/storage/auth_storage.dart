@@ -1,0 +1,116 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+class AuthStorageKeys {
+  static const accessToken = 'access_token';
+  static const userId = 'user_id';
+  static const roleId = 'role_id';
+  static const firstName = 'first_name';
+  static const lastName = 'last_name';
+  static const email = 'user_email';
+  static const dashboardType = 'dashboard_type';
+  static const userTabIndex = 'user_tab_index';
+  static const adminTabIndex = 'admin_tab_index';
+  static const adTabIndex = 'ad_tab_index';
+  AuthStorageKeys._();
+}
+
+enum DashboardType { user, admin, ad }
+
+class AuthStorage {
+  final FlutterSecureStorage _storage;
+
+  const AuthStorage({FlutterSecureStorage? storage})
+      : _storage = storage ?? const FlutterSecureStorage();
+
+  Future<bool> hasSession() async {
+    final token = await readAccessToken();
+    final userId = await readUserId();
+    return token != null && token.trim().isNotEmpty && userId != null;
+  }
+
+  Future<void> saveAuth({
+    required String accessToken,
+    required int userId,
+    int? roleId,
+    String? firstName,
+    String? lastName,
+    String? email,
+    DashboardType dashboardType = DashboardType.user,
+  }) async {
+    await _storage.write(key: AuthStorageKeys.accessToken, value: accessToken);
+    await _storage.write(key: AuthStorageKeys.userId, value: '$userId');
+    await _storage.write(
+      key: AuthStorageKeys.roleId,
+      value: roleId == null ? null : '$roleId',
+    );
+    await _storage.write(key: AuthStorageKeys.firstName, value: firstName);
+    await _storage.write(key: AuthStorageKeys.lastName, value: lastName);
+    await _storage.write(key: AuthStorageKeys.email, value: email);
+    await _storage.write(
+      key: AuthStorageKeys.dashboardType,
+      value: dashboardType.name,
+    );
+  }
+
+  Future<String?> readAccessToken() =>
+      _storage.read(key: AuthStorageKeys.accessToken);
+
+  Future<int?> readUserId() async {
+    final value = await _storage.read(key: AuthStorageKeys.userId);
+    return value == null ? null : int.tryParse(value);
+  }
+
+  Future<int?> readRoleId() async {
+    final value = await _storage.read(key: AuthStorageKeys.roleId);
+    return value == null ? null : int.tryParse(value);
+  }
+
+  Future<String?> readFirstName() =>
+      _storage.read(key: AuthStorageKeys.firstName);
+
+  Future<String?> readLastName() => _storage.read(key: AuthStorageKeys.lastName);
+
+  Future<String?> readEmail() => _storage.read(key: AuthStorageKeys.email);
+
+  Future<DashboardType?> readDashboardType() async {
+    final value = await _storage.read(key: AuthStorageKeys.dashboardType);
+    return switch (value) {
+      'admin' => DashboardType.admin,
+      'ad' => DashboardType.ad,
+      'user' => DashboardType.user,
+      _ => null,
+    };
+  }
+
+  Future<void> saveLastTabIndex(DashboardType type, int index) async {
+    final key = switch (type) {
+      DashboardType.user => AuthStorageKeys.userTabIndex,
+      DashboardType.admin => AuthStorageKeys.adminTabIndex,
+      DashboardType.ad => AuthStorageKeys.adTabIndex,
+    };
+    await _storage.write(key: key, value: '$index');
+  }
+
+  Future<int?> readLastTabIndex(DashboardType type) async {
+    final key = switch (type) {
+      DashboardType.user => AuthStorageKeys.userTabIndex,
+      DashboardType.admin => AuthStorageKeys.adminTabIndex,
+      DashboardType.ad => AuthStorageKeys.adTabIndex,
+    };
+    final value = await _storage.read(key: key);
+    return value == null ? null : int.tryParse(value);
+  }
+
+  Future<void> clear() async {
+    await _storage.delete(key: AuthStorageKeys.accessToken);
+    await _storage.delete(key: AuthStorageKeys.userId);
+    await _storage.delete(key: AuthStorageKeys.roleId);
+    await _storage.delete(key: AuthStorageKeys.firstName);
+    await _storage.delete(key: AuthStorageKeys.lastName);
+    await _storage.delete(key: AuthStorageKeys.email);
+    await _storage.delete(key: AuthStorageKeys.dashboardType);
+    await _storage.delete(key: AuthStorageKeys.userTabIndex);
+    await _storage.delete(key: AuthStorageKeys.adminTabIndex);
+    await _storage.delete(key: AuthStorageKeys.adTabIndex);
+  }
+}

@@ -2,6 +2,7 @@ import 'package:cctv_app/core/components/app_bottom_sheet.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/auth/pages/auth_page.dart';
@@ -153,10 +154,13 @@ class AdProfilePage extends StatelessWidget {
             // ✅ Yes Button
             PrimaryButton(
               text: "Logout",
-              onPressed: () {
-                Navigator.push(
+              onPressed: () async {
+                await const AuthStorage().clear();
+                if (!context.mounted) return;
+                Navigator.pushAndRemoveUntil(
                   context,
-                  MaterialPageRoute(builder: (context) => AuthPage()),
+                  MaterialPageRoute(builder: (context) => const AuthPage()),
+                  (_) => false,
                 );
               },
             ),

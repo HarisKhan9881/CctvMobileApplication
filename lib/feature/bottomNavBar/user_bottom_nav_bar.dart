@@ -1,5 +1,6 @@
 import 'package:cctv_app/core/components/custom_drawer.dart';
 import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/utils.dart';
@@ -11,14 +12,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 class UserBottomNavBar extends StatefulWidget {
-  const UserBottomNavBar({super.key});
+  final int initialIndex;
+  const UserBottomNavBar({super.key, this.initialIndex = 0});
 
   @override
   State<UserBottomNavBar> createState() => _UserBottomNavBarState();
 }
 
 class _UserBottomNavBarState extends State<UserBottomNavBar> {
-  int selectedIndex = 0;
+  late int selectedIndex;
 
   final List<Widget> pages = [
     HomePage(isAdmin: false),
@@ -27,10 +29,17 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
     ProfilePage(),
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    selectedIndex = widget.initialIndex.clamp(0, pages.length - 1);
+  }
+
   void onItemTapped(int index) {
     setState(() {
       selectedIndex = index;
     });
+    const AuthStorage().saveLastTabIndex(DashboardType.user, index);
   }
 
   @override

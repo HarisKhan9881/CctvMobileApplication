@@ -1,8 +1,14 @@
 import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
+import 'package:cctv_app/core/network/api_client.dart';
+import 'package:cctv_app/core/network/api_config.dart';
+import 'package:cctv_app/core/network/api_exception.dart';
+import 'package:cctv_app/core/network/services/auth_service.dart';
+import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/validators.dart';
+import 'package:cctv_app/feature/bottomNavBar/admin_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/bottomNavBar/user_bottom_nav_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -25,6 +31,90 @@ class _SignupViewState extends State<SignupView> {
 
   bool obscurePassword = true;
   bool obscureConfirmPassword = true;
+  bool isSubmitting = false;
+
+  DashboardType _dashboardTypeFromRoleId(int? roleId) {
+    return switch (roleId) {
+      2 => DashboardType.admin,
+      1 => DashboardType.user,
+      _ => DashboardType.user,
+    };
+  }
+
+  Widget _dashboardFromType(DashboardType type) {
+    return switch (type) {
+      DashboardType.admin => const AdminBottomNavBar(),
+      DashboardType.user => const UserBottomNavBar(),
+      DashboardType.ad => const UserBottomNavBar(),
+    };
+  }
+
+  Future<void> _submit() async {
+    if (isSubmitting) return;
+    if (formKey.currentState?.validate() != true) return;
+
+    setState(() {
+      isSubmitting = true;
+    });
+
+    try {
+      final service = AuthService(
+        ApiClient(baseUrl: ApiConfig.baseUrl),
+      );
+
+      final firstName = firstNameController.text.trim();
+      final lastName = lastNameController.text.trim();
+      final email = emailController.text.trim();
+      final response = await service.signUp(
+        firstName: firstName,
+        lastName: lastName,
+        email: email,
+        password: passwordController.text,
+      );
+
+      final accessToken = response.accessToken ?? response.token;
+      final userId = response.content?.userId;
+      final roleId = response.content?.roleId ?? 1;
+      final dashboardType = _dashboardTypeFromRoleId(roleId);
+
+      if (accessToken == null || userId == null) {
+        throw const ApiException('Signup succeeded but auth data is missing');
+      }
+
+      await const AuthStorage().saveAuth(
+        accessToken: accessToken,
+        userId: userId,
+        roleId: roleId,
+        firstName: response.content?.firstName ?? firstName,
+        lastName: response.content?.lastName ?? lastName,
+        email: response.content?.userEmail ?? email,
+        dashboardType: dashboardType,
+      );
+
+      if (!mounted) return;
+      final dashboard = _dashboardFromType(dashboardType);
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => dashboard),
+        (_) => false,
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Signup failed: $e')),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        isSubmitting = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -128,15 +218,10 @@ class _SignupViewState extends State<SignupView> {
             text: "Signup",
             isMainAxisSizeMin: true,
             padding: EdgeInsets.symmetric(horizontal: 50),
+            processing: isSubmitting,
+            inactive: isSubmitting,
             onPressed: () {
-              if (formKey.currentState!.validate()) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const UserBottomNavBar(),
-                  ),
-                );
-              }
+              _submit();
             },
           ),
         ],

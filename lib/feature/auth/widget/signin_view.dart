@@ -2,9 +2,13 @@ import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/network/api_client.dart';
+import 'package:cctv_app/core/network/api_config.dart';
+import 'package:cctv_app/core/network/api_exception.dart';
+import 'package:cctv_app/core/network/services/auth_service.dart';
+import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/validators.dart';
-import 'package:cctv_app/feature/bottomNavBar/ad_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/bottomNavBar/admin_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/bottomNavBar/user_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/forgotPassword/pages/forgot_pasword.dart';
@@ -12,7 +16,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class SigninView extends StatefulWidget {
-  const SigninView({super.key});
+  final bool isAdminTab;
+  const SigninView({super.key, required this.isAdminTab});
 
   @override
   State<SigninView> createState() => _SigninViewState();
@@ -24,6 +29,81 @@ class _SigninViewState extends State<SigninView> {
   final TextEditingController passwordController = TextEditingController();
 
   bool obscurePassword = true;
+  bool isSubmitting = false;
+
+  DashboardType _dashboardTypeFromRole(int? roleId) {
+    return switch (roleId) {
+      2 => DashboardType.admin,
+      1 => DashboardType.user,
+      _ => DashboardType.user,
+    };
+  }
+
+  Widget _dashboardFromType(DashboardType type) {
+    return switch (type) {
+      DashboardType.admin => const AdminBottomNavBar(),
+      DashboardType.user => const UserBottomNavBar(),
+      DashboardType.ad => const UserBottomNavBar(),
+    };
+  }
+
+  Future<void> _submit() async {
+    if (isSubmitting) return;
+    if (formKey.currentState?.validate() != true) return;
+
+    setState(() {
+      isSubmitting = true;
+    });
+
+    try {
+      final service = AuthService(ApiClient(baseUrl: ApiConfig.baseUrl));
+      final username = emailController.text.trim();
+      final response = await service.login(
+        username: username,
+        password: passwordController.text,
+      );
+
+      final accessToken = response.accessToken ?? response.token;
+      final user = response.content;
+      if (accessToken == null || user == null) {
+        throw const ApiException('Login succeeded but auth data is missing');
+      }
+
+      final dashboardType = _dashboardTypeFromRole(user.roleId);
+      await AuthStorage().saveAuth(
+        accessToken: accessToken,
+        userId: user.userId,
+        roleId: user.roleId,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.userEmail ?? username,
+        dashboardType: dashboardType,
+      );
+
+      if (!mounted) return;
+      final dashboard = _dashboardFromType(dashboardType);
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (_) => dashboard),
+        (_) => false,
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Login failed: $e')),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        isSubmitting = false;
+      });
+    }
+  }
 
   @override
   void dispose() {
@@ -96,33 +176,10 @@ class _SigninViewState extends State<SigninView> {
             text: "Login",
             isMainAxisSizeMin: true,
             padding: EdgeInsets.symmetric(horizontal: 50),
+            processing: isSubmitting,
+            inactive: isSubmitting,
             onPressed: () {
-              if (formKey.currentState!.validate()) {
-                if (emailController.text.trim() == "admin@gmail.com" &&
-                    passwordController.text.trim() == "12345678") {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AdminBottomNavBar(),
-                    ),
-                  );
-                } else if (emailController.text.trim() == "abc@gmail.com" &&
-                    passwordController.text.trim() == "12345678") {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AdBottomNavBar(),
-                    ),
-                  );
-                } else {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const UserBottomNavBar(),
-                    ),
-                  );
-                }
-              }
+              _submit();
             },
           ),
         ],
