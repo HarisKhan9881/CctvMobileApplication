@@ -8,7 +8,6 @@ import 'package:cctv_app/core/network/services/auth_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/validators.dart';
-import 'package:cctv_app/feature/bottomNavBar/admin_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/bottomNavBar/user_bottom_nav_bar.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -32,22 +31,6 @@ class _SignupViewState extends State<SignupView> {
   bool obscurePassword = true;
   bool obscureConfirmPassword = true;
   bool isSubmitting = false;
-
-  DashboardType _dashboardTypeFromRoleId(int? roleId) {
-    return switch (roleId) {
-      2 => DashboardType.admin,
-      1 => DashboardType.user,
-      _ => DashboardType.user,
-    };
-  }
-
-  Widget _dashboardFromType(DashboardType type) {
-    return switch (type) {
-      DashboardType.admin => const AdminBottomNavBar(),
-      DashboardType.user => const UserBottomNavBar(),
-      DashboardType.ad => const UserBottomNavBar(),
-    };
-  }
 
   Future<void> _submit() async {
     if (isSubmitting) return;
@@ -74,8 +57,6 @@ class _SignupViewState extends State<SignupView> {
 
       final accessToken = response.accessToken ?? response.token;
       final userId = response.content?.userId;
-      final roleId = response.content?.roleId ?? 1;
-      final dashboardType = _dashboardTypeFromRoleId(roleId);
 
       if (accessToken == null || userId == null) {
         throw const ApiException('Signup succeeded but auth data is missing');
@@ -84,18 +65,18 @@ class _SignupViewState extends State<SignupView> {
       await const AuthStorage().saveAuth(
         accessToken: accessToken,
         userId: userId,
-        roleId: roleId,
+        roleId: response.content?.roleId ?? 1,
+        roleDescription: 'user',
         firstName: response.content?.firstName ?? firstName,
         lastName: response.content?.lastName ?? lastName,
         email: response.content?.userEmail ?? email,
-        dashboardType: dashboardType,
+        dashboardType: DashboardType.user,
       );
 
       if (!mounted) return;
-      final dashboard = _dashboardFromType(dashboardType);
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (_) => dashboard),
+        MaterialPageRoute(builder: (_) => const UserBottomNavBar()),
         (_) => false,
       );
     } on ApiException catch (e) {

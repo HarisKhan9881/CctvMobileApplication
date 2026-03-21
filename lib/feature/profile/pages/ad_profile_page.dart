@@ -10,7 +10,6 @@ import 'package:cctv_app/feature/drawer/pages/user_profile_page.dart';
 import 'package:cctv_app/feature/profile/pages/help_and_support.dart';
 import 'package:cctv_app/feature/profile/pages/terms_and_policies.dart';
 import 'package:cctv_app/feature/profile/widget/profile_tile.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class AdProfilePage extends StatelessWidget {

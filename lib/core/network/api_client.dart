@@ -10,6 +10,37 @@ class ApiClient {
   ApiClient({required this.baseUrl, http.Client? client})
       : _client = client ?? http.Client();
 
+  Future<Map<String, dynamic>> get(
+    String path, {
+    Map<String, String>? headers,
+  }) async {
+    final uri = Uri.parse('$baseUrl$path');
+    final response = await _client.get(
+      uri,
+      headers: {
+        'Accept': 'application/json',
+        ...?headers,
+      },
+    );
+
+    Map<String, dynamic> json;
+    try {
+      json = jsonDecode(response.body) as Map<String, dynamic>;
+    } catch (_) {
+      throw ApiException(
+        'Invalid server response',
+        statusCode: response.statusCode,
+      );
+    }
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      final serverMessage = (json['MESSAGE'] as String?) ?? 'Request failed';
+      throw ApiException(serverMessage, statusCode: response.statusCode);
+    }
+
+    return json;
+  }
+
   Future<Map<String, dynamic>> postJson(
     String path, {
     required Map<String, dynamic> body,

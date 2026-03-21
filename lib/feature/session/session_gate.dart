@@ -1,4 +1,5 @@
 import 'package:cctv_app/core/storage/auth_storage.dart';
+import 'package:cctv_app/feature/bottomNavBar/ad_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/bottomNavBar/admin_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/bottomNavBar/user_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/splash/splash.dart';
@@ -28,21 +29,33 @@ class SessionGate extends StatelessWidget {
     if (!hasSession) return const SplashPage();
 
     final dashboardType = await storage.readDashboardType();
+    final roleDescription = await storage.readRoleDescription();
     final roleId = await storage.readRoleId();
 
-    final resolvedType = dashboardType ?? _dashboardTypeFromRole(roleId);
+    final resolvedType =
+        dashboardType ??
+        _dashboardTypeFromRole(roleDescription: roleDescription, roleId: roleId);
     final initialIndex = await storage.readLastTabIndex(resolvedType);
 
     return switch (resolvedType) {
       DashboardType.admin => AdminBottomNavBar(initialIndex: initialIndex ?? 0),
-      DashboardType.ad => UserBottomNavBar(initialIndex: initialIndex ?? 0),
+      DashboardType.ad => AdBottomNavBar(initialIndex: initialIndex ?? 0),
       DashboardType.user => UserBottomNavBar(initialIndex: initialIndex ?? 0),
     };
   }
 
-  DashboardType _dashboardTypeFromRole(int? roleId) {
+  DashboardType _dashboardTypeFromRole({
+    String? roleDescription,
+    int? roleId,
+  }) {
+    final normalizedRole = roleDescription?.trim().toLowerCase();
+    if (normalizedRole == 'admin') return DashboardType.admin;
+    if (normalizedRole == 'ad') return DashboardType.ad;
+    if (normalizedRole == 'user') return DashboardType.user;
+
     return switch (roleId) {
       2 => DashboardType.admin,
+      3 => DashboardType.ad,
       1 => DashboardType.user,
       _ => DashboardType.user,
     };

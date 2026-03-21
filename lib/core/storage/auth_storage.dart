@@ -4,6 +4,7 @@ class AuthStorageKeys {
   static const accessToken = 'access_token';
   static const userId = 'user_id';
   static const roleId = 'role_id';
+  static const roleDescription = 'role_description';
   static const firstName = 'first_name';
   static const lastName = 'last_name';
   static const email = 'user_email';
@@ -32,6 +33,7 @@ class AuthStorage {
     required String accessToken,
     required int userId,
     int? roleId,
+    String? roleDescription,
     String? firstName,
     String? lastName,
     String? email,
@@ -42,6 +44,10 @@ class AuthStorage {
     await _storage.write(
       key: AuthStorageKeys.roleId,
       value: roleId == null ? null : '$roleId',
+    );
+    await _storage.write(
+      key: AuthStorageKeys.roleDescription,
+      value: roleDescription,
     );
     await _storage.write(key: AuthStorageKeys.firstName, value: firstName);
     await _storage.write(key: AuthStorageKeys.lastName, value: lastName);
@@ -64,6 +70,9 @@ class AuthStorage {
     final value = await _storage.read(key: AuthStorageKeys.roleId);
     return value == null ? null : int.tryParse(value);
   }
+
+  Future<String?> readRoleDescription() =>
+      _storage.read(key: AuthStorageKeys.roleDescription);
 
   Future<String?> readFirstName() =>
       _storage.read(key: AuthStorageKeys.firstName);
@@ -105,6 +114,7 @@ class AuthStorage {
     await _storage.delete(key: AuthStorageKeys.accessToken);
     await _storage.delete(key: AuthStorageKeys.userId);
     await _storage.delete(key: AuthStorageKeys.roleId);
+    await _storage.delete(key: AuthStorageKeys.roleDescription);
     await _storage.delete(key: AuthStorageKeys.firstName);
     await _storage.delete(key: AuthStorageKeys.lastName);
     await _storage.delete(key: AuthStorageKeys.email);

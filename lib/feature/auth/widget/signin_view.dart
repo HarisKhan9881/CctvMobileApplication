@@ -9,6 +9,7 @@ import 'package:cctv_app/core/network/services/auth_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/validators.dart';
+import 'package:cctv_app/feature/bottomNavBar/ad_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/bottomNavBar/admin_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/bottomNavBar/user_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/forgotPassword/pages/forgot_pasword.dart';
@@ -31,9 +32,18 @@ class _SigninViewState extends State<SigninView> {
   bool obscurePassword = true;
   bool isSubmitting = false;
 
-  DashboardType _dashboardTypeFromRole(int? roleId) {
+  DashboardType _dashboardTypeFromRole({
+    String? roleDescription,
+    int? roleId,
+  }) {
+    final normalizedRole = roleDescription?.trim().toLowerCase();
+    if (normalizedRole == 'admin') return DashboardType.admin;
+    if (normalizedRole == 'ad') return DashboardType.ad;
+    if (normalizedRole == 'user') return DashboardType.user;
+
     return switch (roleId) {
       2 => DashboardType.admin,
+      3 => DashboardType.ad,
       1 => DashboardType.user,
       _ => DashboardType.user,
     };
@@ -43,7 +53,7 @@ class _SigninViewState extends State<SigninView> {
     return switch (type) {
       DashboardType.admin => const AdminBottomNavBar(),
       DashboardType.user => const UserBottomNavBar(),
-      DashboardType.ad => const UserBottomNavBar(),
+      DashboardType.ad => const AdBottomNavBar(),
     };
   }
 
@@ -69,11 +79,15 @@ class _SigninViewState extends State<SigninView> {
         throw const ApiException('Login succeeded but auth data is missing');
       }
 
-      final dashboardType = _dashboardTypeFromRole(user.roleId);
+      final dashboardType = _dashboardTypeFromRole(
+        roleDescription: user.roleDescription,
+        roleId: user.roleId,
+      );
       await AuthStorage().saveAuth(
         accessToken: accessToken,
         userId: user.userId,
         roleId: user.roleId,
+        roleDescription: user.roleDescription,
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.userEmail ?? username,
