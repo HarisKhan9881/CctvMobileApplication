@@ -5,6 +5,12 @@ import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/network/models/active_post.dart';
+import 'package:cctv_app/core/network/models/general_parameter_option.dart';
+import 'package:cctv_app/core/network/api_exception.dart';
+import 'package:cctv_app/core/network/services/case_post_service.dart';
+import 'package:cctv_app/core/network/services/general_parameter_service.dart';
+import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/components/search_bar_header.dart';
@@ -62,6 +68,76 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int selectedIndex = 0;
+  bool _isLoadingPosts = true;
+  String? _postsError;
+  List<ActivePost> _posts = const [];
+  List<String> _categoryItems = const ['All'];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
+
+  Future<void> _loadInitialData() async {
+    setState(() {
+      _isLoadingPosts = true;
+      _postsError = null;
+    });
+
+    try {
+      final accessToken = await const AuthStorage().readAccessToken();
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+
+      final postService = CasePostService();
+      final parameterService = const GeneralParameterService();
+      final results = await Future.wait([
+        postService.getAllActivePosts(accessToken: accessToken),
+        parameterService.getByHeaderName(
+          headerName: 'CASE_CATEGORY',
+          accessToken: accessToken,
+        ),
+      ]);
+
+      final posts = results[0] as List<ActivePost>;
+      final categoryOptions = results[1] as List<GeneralParameterOption>;
+      final categories = categoryOptions
+          .map((option) => option.paramLabel)
+          .where((label) => label.trim().isNotEmpty)
+          .toList();
+
+      final uniqueCategories = <String>{'All', ...categories}.toList();
+
+      if (!mounted) return;
+      setState(() {
+        _posts = posts;
+        _categoryItems = uniqueCategories;
+        if (selectedIndex >= _categoryItems.length) {
+          selectedIndex = 0;
+        }
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _postsError = e.message;
+        _categoryItems = const ['All'];
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _postsError = 'Failed to load posts';
+        _categoryItems = const ['All'];
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingPosts = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -79,12 +155,7 @@ class _HomePageState extends State<HomePage> {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: CustomHorizontalListViewWidget(
-            items: [
-              'All',
-              'Family Affairs',
-              'Divorce',
-              'Neighborhood conflicts',
-            ],
+            items: _categoryItems,
             selectedItem: selectedIndex,
             onTap: (index) {
               setState(() {
@@ -335,29 +406,56 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
                 Space.vertical(20),
-                HomePostContainer(
-                  isAdmin: widget.isAdmin,
-                  onClickProfile: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PublicProfilePage(),
+                if (_isLoadingPosts)
+                  const Padding(
+                    padding: EdgeInsets.all(24),
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                else if (_postsError != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Column(
+                      children: [
+                        Text(
+                          _postsError!,
+                          style: context.normal.copyWith(color: kRedColor),
+                        ),
+                        Space.vertical(8),
+                        TextButton(
+                          onPressed: _loadInitialData,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    ),
+                  )
+                else if (_posts.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'No active posts yet',
+                      style: context.normal.copyWith(color: kDarkGreyColor),
+                    ),
+                  )
+                else
+                  ..._posts.map((post) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: HomePostContainer(
+                        isAdmin: widget.isAdmin,
+                        post: post,
+                        onClickProfile: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => post.postId.isEven
+                                  ? PrivateProfilePage()
+                                  : PublicProfilePage(),
+                            ),
+                          );
+                        },
                       ),
                     );
-                  },
-                ),
-                Space.vertical(20),
-                HomePostContainer(
-                  isAdmin: widget.isAdmin,
-                  onClickProfile: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PrivateProfilePage(),
-                      ),
-                    );
-                  },
-                ),
+                  }),
                 Space.vertical(20),
               ],
             ),

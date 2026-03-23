@@ -4,6 +4,7 @@ import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/network/models/active_post.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/adminHome/pages/report_and_suspend.dart';
@@ -13,14 +14,17 @@ import 'package:cctv_app/feature/home/widgets/vote_container.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:video_player/video_player.dart';
 
 class HomePostContainer extends StatefulWidget {
   final bool isAdmin;
   final VoidCallback onClickProfile;
+  final ActivePost post;
   const HomePostContainer({
     super.key,
     required this.isAdmin,
     required this.onClickProfile,
+    required this.post,
   });
 
   @override
@@ -34,9 +38,79 @@ class _HomePostContainerState extends State<HomePostContainer> {
   String? selectedReaction;
   bool isReactionPopupVisible = false;
   OverlayEntry? reactionOverlay;
+  VideoPlayerController? _videoController;
+  Future<void>? _videoInitialization;
+  VoidCallback? _videoListener;
+
+  String _timeLabel(String? value) {
+    if (value == null || value.trim().isEmpty) return '';
+    final parsed = DateTime.tryParse(value);
+    if (parsed == null) {
+      return value.replaceFirst('T', ' ');
+    }
+
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
+    final month = months[parsed.month - 1];
+    final hour = parsed.hour == 0
+        ? 12
+        : parsed.hour > 12
+        ? parsed.hour - 12
+        : parsed.hour;
+    final minute = parsed.minute.toString().padLeft(2, '0');
+    final suffix = parsed.hour >= 12 ? 'PM' : 'AM';
+    return '$month ${parsed.day}, ${parsed.year} • $hour:$minute $suffix';
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final media = widget.post.caseDetail?.meta;
+    if (media != null && media.hasMedia && !media.isImage) {
+      final controller = VideoPlayerController.networkUrl(
+        Uri.parse(media.metaUrl!),
+      );
+      _videoController = controller;
+      _videoListener = () {
+        if (!mounted) return;
+        setState(() {});
+      };
+      controller.addListener(_videoListener!);
+      _videoInitialization = controller.initialize().then((_) {
+        if (!mounted) return;
+        setState(() {});
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final post = widget.post;
+    final author = post.createdByUserInfo?.fullName.isNotEmpty == true
+        ? post.createdByUserInfo!.fullName
+        : 'Unknown User';
+    final timeText = _timeLabel(post.createdAt);
+    final media = post.caseDetail?.meta;
+    final firstDefendant = post.defendantDetails.isNotEmpty
+        ? post.defendantDetails.first.userInfo?.fullName ?? 'Defendant'
+        : 'Defendant';
+    final secondLabel = post.createdByUserInfo?.fullName.isNotEmpty == true
+        ? post.createdByUserInfo!.fullName
+        : 'Creator';
+
     return Container(
       decoration: BoxDecoration(
         color: kWhiteColor,
@@ -65,8 +139,11 @@ class _HomePostContainerState extends State<HomePostContainer> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text("Hannah Flores", style: context.semiBold),
-                            Text("2 mints ago", style: context.normal),
+                            Text(author, style: context.semiBold),
+                            Text(
+                              timeText.isEmpty ? "Just now" : timeText,
+                              style: context.normal,
+                            ),
                           ],
                         ),
                       ],
@@ -314,25 +391,42 @@ class _HomePostContainerState extends State<HomePostContainer> {
             ),
             Space.vertical(20),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text("Who's Right", style: context.bold.copyWith(fontSize: 20)),
-                Text(
-                  "6 hours left",
-                  style: context.normal.copyWith(color: kDarkGreyColor),
+                Expanded(
+                  child: Text(
+                    post.caseDetail?.caseTitle.isNotEmpty == true
+                        ? post.caseDetail!.caseTitle
+                        : "Who's Right",
+                    style: context.bold.copyWith(fontSize: 20),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ],
             ),
             Space.vertical(20),
-            Row(
-              children: [
-                Expanded(child: Image.asset(Assets.pngPost1Image)),
-                Space.horizontal(20),
-                Expanded(child: Image.asset(Assets.pngPost1Image)),
-              ],
+            _PostMediaPreview(
+              media: media,
+              videoController: _videoController,
+              videoInitialization: _videoInitialization,
             ),
+            if (post.postDescription.trim().isNotEmpty) ...[
+              Space.vertical(12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  post.postDescription,
+                  style: context.normal,
+                ),
+              ),
+            ],
             Space.vertical(15),
-            VotingResultExample(),
+            VotingResultExample(
+              leftLabel: 'A.',
+              leftText: firstDefendant,
+              rightLabel: 'B.',
+              rightText: secondLabel,
+            ),
             Space.vertical(15),
             PrimaryButton(
               height: 40,
@@ -370,7 +464,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
                   ),
                 ),
                 reactionContainer(
-                  text: "42",
+                  text: "${post.comments.length}",
                   onTap: () {
                     setState(() {
                       areCommentsVisible = !areCommentsVisible;
@@ -379,7 +473,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
                   icon: Icons.message,
                 ),
                 reactionContainer(
-                  text: "09",
+                  text: "${post.reactions.length}",
                   onTap: () {
                     Navigator.push(
                       context,
@@ -430,7 +524,9 @@ class _HomePostContainerState extends State<HomePostContainer> {
                               ),
                               child: Row(
                                 children: [
-                                  Text("12"),
+                                  Text(
+                                    "${post.reactionSummary?.totalReactions ?? post.reactions.length}",
+                                  ),
                                   Space.horizontal(8),
                                   Icon(Icons.share, color: kPrimaryColor),
                                 ],
@@ -482,10 +578,25 @@ class _HomePostContainerState extends State<HomePostContainer> {
             ),
             SizedBox(height: 16),
             if (areCommentsVisible) ...[
-              CommentContainer(),
-              Space.vertical(10),
-              CommentContainer(),
-              Space.vertical(10),
+              if (post.comments.isEmpty)
+                Text(
+                  "No comments yet",
+                  style: context.normal.copyWith(color: kDarkGreyColor),
+                )
+              else
+                ...post.comments.map((comment) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: CommentContainer.dynamic(
+                      authorName:
+                          comment.userInfo?.fullName.isNotEmpty == true
+                          ? comment.userInfo!.fullName
+                          : 'User',
+                      comment: comment.commentContent,
+                      timeText: _timeLabel(comment.createdAt),
+                    ),
+                  );
+                }),
               CustomTextField(
                 hintText: "Write comment here",
                 hintTextColor: kDarkGreyColor,
@@ -499,6 +610,10 @@ class _HomePostContainerState extends State<HomePostContainer> {
 
   @override
   void dispose() {
+    if (_videoController != null && _videoListener != null) {
+      _videoController!.removeListener(_videoListener!);
+    }
+    _videoController?.dispose();
     reactionOverlay?.remove();
     super.dispose();
   }
@@ -669,6 +784,145 @@ class _HomePostContainerState extends State<HomePostContainer> {
                 },
               ),
             ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _PostMediaPreview extends StatelessWidget {
+  final ActivePostMeta? media;
+  final VideoPlayerController? videoController;
+  final Future<void>? videoInitialization;
+
+  const _PostMediaPreview({
+    required this.media,
+    required this.videoController,
+    required this.videoInitialization,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    if (media == null || !media!.hasMedia) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.asset(
+          Assets.pngPost1Image,
+          width: double.infinity,
+          height: 220,
+          fit: BoxFit.cover,
+        ),
+      );
+    }
+
+    if (media!.isImage) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          height: 220,
+          width: double.infinity,
+          color: kBlackColor.withValues(alpha: 0.04),
+          child: Image.network(
+            media!.metaUrl!,
+            fit: BoxFit.contain,
+            errorBuilder: (_, _, _) => Image.asset(
+              Assets.pngPost1Image,
+              width: double.infinity,
+              height: 220,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+      );
+    }
+
+    if (videoController == null || videoInitialization == null) {
+      return Container(
+        height: 220,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: kBlackColor.withValues(alpha: 0.8),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        alignment: Alignment.center,
+        child: const Icon(Icons.videocam, color: kWhiteColor, size: 40),
+      );
+    }
+
+    return FutureBuilder<void>(
+      future: videoInitialization,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done ||
+            !videoController!.value.isInitialized) {
+          return Container(
+            height: 220,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: kBlackColor.withValues(alpha: 0.8),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            alignment: Alignment.center,
+            child: const CircularProgressIndicator(color: kWhiteColor),
+          );
+        }
+
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(12),
+          child: SizedBox(
+            height: 220,
+            width: double.infinity,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                Positioned.fill(
+                  child: FittedBox(
+                    fit: BoxFit.cover,
+                    child: SizedBox(
+                      width: videoController!.value.size.width == 0
+                          ? 16
+                          : videoController!.value.size.width,
+                      height: videoController!.value.size.height == 0
+                          ? 9
+                          : videoController!.value.size.height,
+                      child: VideoPlayer(videoController!),
+                    ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        if (videoController!.value.isPlaying) {
+                          videoController!.pause();
+                        } else {
+                          videoController!.play();
+                        }
+                      },
+                      child: videoController!.value.isPlaying
+                          ? const SizedBox.shrink()
+                          : Container(
+                              color: Colors.black.withValues(alpha: 0.25),
+                              alignment: Alignment.center,
+                              child: Container(
+                                decoration: const BoxDecoration(
+                                  color: kPrimaryColor,
+                                  shape: BoxShape.circle,
+                                ),
+                                padding: const EdgeInsets.all(10),
+                                child: const Icon(
+                                  Icons.play_arrow,
+                                  color: kWhiteColor,
+                                  size: 40,
+                                ),
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

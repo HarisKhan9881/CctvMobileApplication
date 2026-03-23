@@ -2,7 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
 
 class VotingResultExample extends StatelessWidget {
-  const VotingResultExample({super.key});
+  final String leftLabel;
+  final String leftText;
+  final String rightLabel;
+  final String rightText;
+
+  const VotingResultExample({
+    super.key,
+    this.leftLabel = 'A.',
+    this.leftText = 'Dennis Callis',
+    this.rightLabel = 'B.',
+    this.rightText = 'Katie Sims',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -15,16 +26,16 @@ class VotingResultExample extends StatelessWidget {
       children: [
         Expanded(
           child: _buildVoteOption(
-            label: 'A.',
-            text: 'Dennis Callis',
+            label: leftLabel,
+            text: leftText,
             isWinner: votesA > votesB,
           ),
         ),
         SizedBox(width: 1.w),
         Expanded(
           child: _buildVoteOption(
-            label: 'B.',
-            text: 'Katie Sims',
+            label: rightLabel,
+            text: rightText,
             isWinner: votesB > votesA,
           ),
         ),

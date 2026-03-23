@@ -5,10 +5,32 @@ import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:flutter/material.dart';
 
 class CommentContainer extends StatelessWidget {
-  const CommentContainer({super.key});
+  final String authorName;
+  final String comment;
+  final String timeText;
+
+  const CommentContainer({
+    super.key,
+    this.authorName = '',
+    this.comment = '',
+    this.timeText = '',
+  });
+
+  const CommentContainer.dynamic({
+    super.key,
+    required this.authorName,
+    required this.comment,
+    required this.timeText,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final resolvedAuthor = authorName.isEmpty ? "Maude Hell" : authorName;
+    final resolvedComment = comment.isEmpty
+        ? "The standard lorem ipsum passage has been a printer's friend for centuries. Like stock photos today, it served as a placeholder for actual content. "
+        : comment;
+    final resolvedTime = timeText.isEmpty ? "14 min" : timeText;
+
     return Column(
       children: [
         Row(
@@ -18,17 +40,17 @@ class CommentContainer extends StatelessWidget {
               backgroundImage: AssetImage(Assets.pngUser1Image),
             ),
             Space.horizontal(12),
-            Text("Maude Hell", style: context.bold),
+            Text(resolvedAuthor, style: context.bold),
             Space.horizontal(12),
             Text(
-              "14 min",
+              resolvedTime,
               style: context.normal.copyWith(color: kDarkGreyColor),
             ),
           ],
         ),
         Space.vertical(10),
         Text(
-          "The standard lorem ipsum passage has been a printer's friend for centuries. Like stock photos today, it served as a placeholder for actual content. ",
+          resolvedComment,
           style: context.normal,
         ),
         Space.vertical(10),
