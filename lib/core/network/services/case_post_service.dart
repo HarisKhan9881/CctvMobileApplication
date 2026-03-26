@@ -37,4 +37,88 @@ class CasePostService {
         .map(ActivePost.fromJson)
         .toList();
   }
+
+  Future<void> submitCasePollVote({
+    required String accessToken,
+    required int caseId,
+    required bool endPoll,
+    required String ownerVote,
+    required String defendantVote,
+  }) async {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    await _client.postJson(
+      '/api/v1/user_case/submit_case_poll_vote',
+      headers: {
+        'Authorization': 'Bearer $normalizedToken',
+      },
+      body: {
+        'case_id': caseId,
+        'end_poll': endPoll,
+        'owner_vote': ownerVote,
+        'defendant_vote': defendantVote,
+      },
+    );
+  }
+
+  Future<void> createPostReaction({
+    required String accessToken,
+    required int postId,
+    required int userId,
+    required String reactionType,
+  }) async {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    await _client.postJson(
+      '/api/v1/case_post/create_post_reaction',
+      headers: {
+        'Authorization': 'Bearer $normalizedToken',
+      },
+      body: {
+        'post_id': postId,
+        'user_id': userId,
+        'reaction_type': reactionType,
+      },
+    );
+  }
+
+  Future<void> createPostComment({
+    required String accessToken,
+    required int postId,
+    required int userId,
+    required String commentContent,
+  }) async {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    await _client.postJson(
+      '/api/v1/case_post/create_post_comment',
+      headers: {
+        'Authorization': 'Bearer $normalizedToken',
+      },
+      body: {
+        'post_id': postId,
+        'user_id': userId,
+        'comment_content': commentContent,
+      },
+    );
+  }
+
+  Future<void> createPostChildComment({
+    required String accessToken,
+    required int postId,
+    required int userId,
+    required int parentCommentId,
+    required String commentContent,
+  }) async {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    await _client.postJson(
+      '/api/v1/case_post/create_post_child_comment',
+      headers: {
+        'Authorization': 'Bearer $normalizedToken',
+      },
+      body: {
+        'post_id': postId,
+        'user_id': userId,
+        'parent_comment_id': parentCommentId,
+        'comment_content': commentContent,
+      },
+    );
+  }
 }

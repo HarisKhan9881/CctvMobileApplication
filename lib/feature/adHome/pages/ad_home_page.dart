@@ -1,5 +1,10 @@
 import 'package:cctv_app/core/components/ad_top_header.dart';
 import 'package:cctv_app/core/components/space.dart';
+import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/network/api_exception.dart';
+import 'package:cctv_app/core/network/models/active_post.dart';
+import 'package:cctv_app/core/network/services/case_post_service.dart';
+import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/adHome/widget/ad_post_container.dart';
 import 'package:cctv_app/feature/adHome/widget/horizontal_graph_list.dart';
@@ -15,6 +20,54 @@ class AdHomePage extends StatefulWidget {
 
 class _AdHomePageState extends State<AdHomePage> {
   int selectedYear = 2025;
+  bool _isLoadingPosts = true;
+  String? _postsError;
+  List<ActivePost> _posts = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPosts();
+  }
+
+  Future<void> _loadPosts() async {
+    setState(() {
+      _isLoadingPosts = true;
+      _postsError = null;
+    });
+
+    try {
+      final accessToken = await const AuthStorage().readAccessToken();
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+
+      final posts = await CasePostService().getAllActivePosts(
+        accessToken: accessToken,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _posts = posts;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _postsError = e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _postsError = 'Failed to load active posts';
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingPosts = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -43,7 +96,7 @@ class _AdHomePageState extends State<AdHomePage> {
             HorizontalGraphList(),
             Space.vertical(20),
             Text(
-              "Recent add admin",
+              "Active posts",
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -51,13 +104,43 @@ class _AdHomePageState extends State<AdHomePage> {
               ),
             ),
             Space.vertical(10),
-            AdPostContainer(),
-            Space.vertical(10),
-            AdPostContainer(),
-            Space.vertical(10),
-            AdPostContainer(),
-            Space.vertical(10),
-            AdPostContainer(),
+            if (_isLoadingPosts)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 24),
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_postsError != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Column(
+                  children: [
+                    Text(
+                      _postsError!,
+                      style: context.normal.copyWith(color: kRedColor),
+                    ),
+                    Space.vertical(8),
+                    TextButton(
+                      onPressed: _loadPosts,
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              )
+            else if (_posts.isEmpty)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Text(
+                  'No active posts yet',
+                  style: context.normal.copyWith(color: kDarkGreyColor),
+                ),
+              )
+            else
+              ..._posts.take(4).map((post) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: AdPostContainer(post: post),
+                );
+              }),
             Space.vertical(10),
           ],
         ),

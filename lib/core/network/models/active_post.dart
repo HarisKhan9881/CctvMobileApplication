@@ -8,6 +8,7 @@ class ActivePost {
   final List<ActivePostComment> comments;
   final List<ActivePostReaction> reactions;
   final ActivePostReactionSummary? reactionSummary;
+  final ActivePostPollCount? casePollCount;
 
   const ActivePost({
     required this.postId,
@@ -19,6 +20,7 @@ class ActivePost {
     required this.comments,
     required this.reactions,
     this.reactionSummary,
+    this.casePollCount,
   });
 
   factory ActivePost.fromJson(Map<String, dynamic> json) {
@@ -55,6 +57,11 @@ class ActivePost {
           json['reaction_summary'] is Map<String, dynamic>
           ? ActivePostReactionSummary.fromJson(
               json['reaction_summary'] as Map<String, dynamic>,
+            )
+          : null,
+      casePollCount: json['case_poll_count'] is Map<String, dynamic>
+          ? ActivePostPollCount.fromJson(
+              json['case_poll_count'] as Map<String, dynamic>,
             )
           : null,
     );
@@ -177,42 +184,77 @@ class ActivePostDefendantDetail {
 
 class ActivePostComment {
   final int? commentId;
+  final int? postId;
+  final int? userId;
+  final int? parentCommentId;
   final String commentContent;
+  final String? isActive;
   final String? createdAt;
+  final String? updatedAt;
   final ActivePostUserInfo? userInfo;
+  final List<ActivePostComment> childComments;
 
   const ActivePostComment({
     this.commentId,
+    this.postId,
+    this.userId,
+    this.parentCommentId,
     required this.commentContent,
+    this.isActive,
     this.createdAt,
+    this.updatedAt,
     this.userInfo,
+    this.childComments = const [],
   });
 
   factory ActivePostComment.fromJson(Map<String, dynamic> json) {
     return ActivePostComment(
       commentId: int.tryParse('${json['comment_id']}'),
+      postId: int.tryParse('${json['post_id']}'),
+      userId: int.tryParse('${json['user_id']}'),
+      parentCommentId: int.tryParse('${json['parent_comment_id']}'),
       commentContent: json['comment_content'] as String? ?? '',
+      isActive: json['is_active'] as String?,
       createdAt: json['created_at'] as String?,
+      updatedAt: json['updated_at'] as String?,
       userInfo: json['user_info'] is Map<String, dynamic>
           ? ActivePostUserInfo.fromJson(json['user_info'] as Map<String, dynamic>)
           : null,
+      childComments: (json['child_comments'] as List? ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .map(ActivePostComment.fromJson)
+          .toList(),
     );
   }
 }
 
 class ActivePostReaction {
   final int? reactionId;
+  final int? postId;
+  final int? userId;
   final String reactionType;
+  final String? createdAt;
+  final ActivePostUserInfo? userInfo;
 
   const ActivePostReaction({
     this.reactionId,
+    this.postId,
+    this.userId,
     required this.reactionType,
+    this.createdAt,
+    this.userInfo,
   });
 
   factory ActivePostReaction.fromJson(Map<String, dynamic> json) {
     return ActivePostReaction(
       reactionId: int.tryParse('${json['reaction_id']}'),
+      postId: int.tryParse('${json['post_id']}'),
+      userId: int.tryParse('${json['user_id']}'),
       reactionType: json['reaction_type'] as String? ?? '',
+      createdAt: json['created_at'] as String?,
+      userInfo: json['user_info'] is Map<String, dynamic>
+          ? ActivePostUserInfo.fromJson(json['user_info'] as Map<String, dynamic>)
+          : null,
     );
   }
 }
@@ -232,6 +274,35 @@ class ActivePostReactionSummary {
       byType: json['by_type'] is Map<String, dynamic>
           ? json['by_type'] as Map<String, dynamic>
           : const {},
+    );
+  }
+}
+
+class ActivePostPollCount {
+  final int ownerCount;
+  final int defendantCount;
+  final int totalCount;
+  final String? pollStartDate;
+  final String? pollEndDate;
+  final String? lastVoteAt;
+
+  const ActivePostPollCount({
+    required this.ownerCount,
+    required this.defendantCount,
+    required this.totalCount,
+    this.pollStartDate,
+    this.pollEndDate,
+    this.lastVoteAt,
+  });
+
+  factory ActivePostPollCount.fromJson(Map<String, dynamic> json) {
+    return ActivePostPollCount(
+      ownerCount: int.tryParse('${json['owner_count']}') ?? 0,
+      defendantCount: int.tryParse('${json['defendant_count']}') ?? 0,
+      totalCount: int.tryParse('${json['total_count']}') ?? 0,
+      pollStartDate: json['poll_start_date'] as String?,
+      pollEndDate: json['poll_end_date'] as String?,
+      lastVoteAt: json['last_vote_at'] as String?,
     );
   }
 }
