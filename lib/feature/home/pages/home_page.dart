@@ -524,16 +524,6 @@ class _ActiveReelCard extends StatelessWidget {
       ),
     );
   }
-
-  String _userLabel(ActiveReel reel) {
-    final parts = reel.displayName
-        .split(' ')
-        .where((part) => part.trim().isNotEmpty)
-        .take(2)
-        .toList();
-    if (parts.isEmpty) return 'U';
-    return parts.map((part) => part[0].toUpperCase()).join();
-  }
 }
 
 class _ReelUserAvatar extends StatelessWidget {

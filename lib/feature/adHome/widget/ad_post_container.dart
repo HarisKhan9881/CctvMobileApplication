@@ -335,46 +335,12 @@ class _AdPostContainerState extends State<AdPostContainer> {
     );
   }
 
-  Widget _reactionContainer({
-    required String text,
-    required VoidCallback? onTap,
-    required IconData icon,
-    bool isLoading = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: kGreyColor),
-          borderRadius: BorderRadius.circular(8),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        child: Row(
-          children: [
-            if (isLoading)
-              const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              Icon(icon, color: kPrimaryColor),
-            Space.horizontal(8),
-            Text(text),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _buildReactionSummaryRow(ActivePost activePost) {
     return Row(
       children: [
         Expanded(
           child: Text(
-            _reactionCount > 0
-                ? 'Reactions $_reactionCount'
-                : 'Reactions 0',
+            _reactionCount > 0 ? 'Reactions $_reactionCount' : 'Reactions 0',
             style: context.normal.copyWith(color: kDarkGreyColor),
             overflow: TextOverflow.ellipsis,
           ),
@@ -398,7 +364,9 @@ class _AdPostContainerState extends State<AdPostContainer> {
             },
             child: _buildActionButton(
               text: _reactionLabel(selectedReaction),
-              onTap: isReactionPopupVisible ? null : () => _submitReaction('Like'),
+              onTap: isReactionPopupVisible
+                  ? null
+                  : () => _submitReaction('Like'),
               icon: _getReactionIcon(),
               isLoading: _isSubmittingReaction,
               isSelected: selectedReaction != null,
@@ -533,7 +501,10 @@ class _AdPostContainerState extends State<AdPostContainer> {
             child: Material(
               color: Colors.transparent,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(25),
@@ -608,9 +579,9 @@ class _AdPostContainerState extends State<AdPostContainer> {
       setState(() {
         selectedReaction = previousReaction;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
       setState(() {
@@ -713,9 +684,9 @@ class _AdPostContainerState extends State<AdPostContainer> {
 
     final commentContent = _commentController.text.trim();
     if (commentContent.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please write a comment')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please write a comment')));
       return;
     }
 
@@ -774,9 +745,9 @@ class _AdPostContainerState extends State<AdPostContainer> {
       ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to add comment')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to add comment')));
     } finally {
       if (!mounted) return;
       setState(() {
@@ -792,9 +763,9 @@ class _AdPostContainerState extends State<AdPostContainer> {
 
     final commentContent = _replyController.text.trim();
     if (commentContent.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please write a reply')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please write a reply')));
       return;
     }
 
@@ -841,11 +812,13 @@ class _AdPostContainerState extends State<AdPostContainer> {
 
       setState(() {
         _comments = _comments
-            .map((comment) => _appendReplyToComment(
-                  comment,
-                  parentComment.commentId!,
-                  newReply,
-                ))
+            .map(
+              (comment) => _appendReplyToComment(
+                comment,
+                parentComment.commentId!,
+                newReply,
+              ),
+            )
             .toList();
         _replyController.clear();
         _replyFocusNode.unfocus();
@@ -863,9 +836,9 @@ class _AdPostContainerState extends State<AdPostContainer> {
       ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to add reply')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to add reply')));
     } finally {
       if (!mounted) return;
       setState(() {
@@ -1155,7 +1128,9 @@ class _AdPostContainerState extends State<AdPostContainer> {
     final commentId = comment.commentId;
     if (commentId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reply is not available for this comment')),
+        const SnackBar(
+          content: Text('Reply is not available for this comment'),
+        ),
       );
       return;
     }
@@ -1168,8 +1143,7 @@ class _AdPostContainerState extends State<AdPostContainer> {
         _replyFocusNode.unfocus();
       } else {
         _replyingToCommentId = commentId;
-        _replyingToAuthor =
-            comment.userInfo?.fullName.isNotEmpty == true
+        _replyingToAuthor = comment.userInfo?.fullName.isNotEmpty == true
             ? comment.userInfo!.fullName
             : 'User';
         _replyController.clear();
@@ -1357,7 +1331,9 @@ class _SideMediaState extends State<_SideMedia> {
       return;
     }
 
-    final controller = VideoPlayerController.networkUrl(Uri.parse(media.metaUrl!));
+    final controller = VideoPlayerController.networkUrl(
+      Uri.parse(media.metaUrl!),
+    );
     _videoController = controller;
     _videoListener = () {
       if (!mounted) return;
@@ -1456,10 +1432,7 @@ class _SideMediaState extends State<_SideMedia> {
               bottom: 12,
               child: Text(
                 '${widget.overlayTitle} VIDEO',
-                style: context.bold.copyWith(
-                  color: kWhiteColor,
-                  fontSize: 16,
-                ),
+                style: context.bold.copyWith(color: kWhiteColor, fontSize: 16),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -1557,30 +1530,27 @@ class _PostMenuButton extends StatelessWidget {
           alignment: AlignmentDirectional.bottomStart,
           visualDensity: VisualDensity.compact,
         ),
-        builder: (
-          BuildContext context,
-          MenuController controller,
-          Widget? child,
-        ) {
-          return GestureDetector(
-            onTap: () {
-              if (controller.isOpen) {
-                controller.close();
-              } else {
-                controller.open();
-              }
+        builder:
+            (BuildContext context, MenuController controller, Widget? child) {
+              return GestureDetector(
+                onTap: () {
+                  if (controller.isOpen) {
+                    controller.close();
+                  } else {
+                    controller.open();
+                  }
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: kWhiteColor,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: kGreyColor),
+                  ),
+                  child: Icon(Icons.more_horiz, color: kDarkGreyColor),
+                ),
+              );
             },
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                color: kWhiteColor,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: kGreyColor),
-              ),
-              child: Icon(Icons.more_horiz, color: kDarkGreyColor),
-            ),
-          );
-        },
         menuChildren: [
           CustomMenuButton(
             onTap: () {},
@@ -1623,7 +1593,9 @@ class _FullscreenMediaViewerState extends State<_FullscreenMediaViewer> {
   void initState() {
     super.initState();
     if (!widget.isImage) {
-      _controller = VideoPlayerController.networkUrl(Uri.parse(widget.mediaUrl));
+      _controller = VideoPlayerController.networkUrl(
+        Uri.parse(widget.mediaUrl),
+      );
       _initialization = _controller!.initialize().then((_) {
         _controller!.play();
         if (mounted) {

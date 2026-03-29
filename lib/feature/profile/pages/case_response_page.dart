@@ -15,7 +15,6 @@ import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/validators.dart';
 import 'package:cctv_app/feature/bottomNavBar/user_bottom_nav_bar.dart';
 import 'package:dotted_border/dotted_border.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
@@ -41,7 +40,6 @@ class _CaseResponsePageState extends State<CaseResponsePage> {
   bool _isMarkAsRead = false;
   bool _hasTriedSubmit = false;
   String? _selectedAttachmentName;
-  String? _selectedAttachmentUrl;
   String? _attachmentError;
   int? _attachmentMetaId;
 
@@ -182,27 +180,6 @@ class _CaseResponsePageState extends State<CaseResponsePage> {
     }
   }
 
-  Future<void> _pickDocumentFromFiles() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        allowMultiple: false,
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx', 'txt'],
-      );
-
-      if (result == null || result.files.isEmpty || !mounted) return;
-
-      setState(() {
-        _selectedAttachmentName = result.files.single.name;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to pick document: $e')));
-    }
-  }
-
   Future<void> _uploadSelectedFile({
     required String filePath,
     required String fileName,
@@ -238,7 +215,6 @@ class _CaseResponsePageState extends State<CaseResponsePage> {
       if (!mounted) return;
       setState(() {
         _selectedAttachmentName = fileName;
-        _selectedAttachmentUrl = uploadedMedia.metaUrl;
         _attachmentMetaId = uploadedMedia.metaId;
       });
 
@@ -270,7 +246,6 @@ class _CaseResponsePageState extends State<CaseResponsePage> {
       _isMarkAsRead = false;
       _hasTriedSubmit = false;
       _selectedAttachmentName = null;
-      _selectedAttachmentUrl = null;
       _attachmentError = null;
       _attachmentMetaId = null;
     });

@@ -21,7 +21,6 @@ import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/validators.dart';
 import 'package:dotted_border/dotted_border.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
@@ -55,7 +54,6 @@ class _CreateCasePageState extends State<CreateCasePage> {
   String? _viewCategoryLoadError;
   String? _availabilityTypeLoadError;
   String? _selectedAttachmentName;
-  String? _selectedAttachmentUrl;
   String? _attachmentError;
   int? _attachmentMetaId;
   List<GeneralParameterOption> _categories = const [];
@@ -276,7 +274,6 @@ class _CreateCasePageState extends State<CreateCasePage> {
       _selectedViewCategory = null;
       _selectedAvailabilityType = null;
       _selectedAttachmentName = null;
-      _selectedAttachmentUrl = null;
       _attachmentError = null;
       _attachmentMetaId = null;
       isMarkAsRead = false;
@@ -382,27 +379,6 @@ class _CreateCasePageState extends State<CreateCasePage> {
     }
   }
 
-  Future<void> _pickDocumentFromFiles() async {
-    try {
-      final result = await FilePicker.platform.pickFiles(
-        allowMultiple: false,
-        type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx', 'txt'],
-      );
-
-      if (result == null || result.files.isEmpty || !mounted) return;
-
-      setState(() {
-        _selectedAttachmentName = result.files.single.name;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick document: $e')),
-      );
-    }
-  }
-
   Future<void> _uploadSelectedFile({
     required String filePath,
     required String fileName,
@@ -438,15 +414,12 @@ class _CreateCasePageState extends State<CreateCasePage> {
       if (!mounted) return;
       setState(() {
         _selectedAttachmentName = fileName;
-        _selectedAttachmentUrl = uploadedMedia.metaUrl;
         _attachmentMetaId = uploadedMedia.metaId;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            '${isImage ? 'Image' : 'Video'} uploaded successfully',
-          ),
+          content: Text('${isImage ? 'Image' : 'Video'} uploaded successfully'),
         ),
       );
     } on ApiException catch (e) {
@@ -490,7 +463,10 @@ class _CreateCasePageState extends State<CreateCasePage> {
 
     final userId = await const AuthStorage().readUserId();
     final accessToken = await const AuthStorage().readAccessToken();
-    final caseCategoryId = _selectedParamDetailId(_categories, _selectedCategory);
+    final caseCategoryId = _selectedParamDetailId(
+      _categories,
+      _selectedCategory,
+    );
     final caseViewStatusId = _selectedParamDetailId(
       _viewCategories,
       _selectedViewCategory,
@@ -555,9 +531,9 @@ class _CreateCasePageState extends State<CreateCasePage> {
       ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to upload case: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to upload case: $e')));
     } finally {
       if (!mounted) return;
       setState(() {
@@ -810,58 +786,58 @@ class _CreateCasePageState extends State<CreateCasePage> {
                             children: [
                               SvgPicture.asset(Assets.svgMusicIcon),
                               Space.vertical(15),
-                            Text(
-                              "Attach video and audio Max 3 min length",
-                              style: context.normal.copyWith(
-                                color: kPrimaryColor,
-                              ),
-                            ),
-                            if (_selectedAttachmentName != null) ...[
-                              Space.vertical(12),
                               Text(
-                                _selectedAttachmentName!,
-                                textAlign: TextAlign.center,
-                                style: context.normal.copyWith(
-                                  color: AppColors.blackColor,
-                                ),
-                              ),
-                            ],
-                            if (_attachmentMetaId != null) ...[
-                              Space.vertical(8),
-                              Text(
-                                'Meta ID: $_attachmentMetaId',
-                                textAlign: TextAlign.center,
+                                "Attach video and audio Max 3 min length",
                                 style: context.normal.copyWith(
                                   color: kPrimaryColor,
                                 ),
                               ),
-                            ],
-                            if (_attachmentError != null) ...[
-                              Space.vertical(8),
-                              Text(
-                                _attachmentError!,
-                                textAlign: TextAlign.center,
-                                style: context.normal.copyWith(
-                                  color: kRedColor,
+                              if (_selectedAttachmentName != null) ...[
+                                Space.vertical(12),
+                                Text(
+                                  _selectedAttachmentName!,
+                                  textAlign: TextAlign.center,
+                                  style: context.normal.copyWith(
+                                    color: AppColors.blackColor,
+                                  ),
                                 ),
-                              ),
-                            ],
-                            Space.vertical(15),
-                            PrimaryButton(
-                              height: 40,
+                              ],
+                              if (_attachmentMetaId != null) ...[
+                                Space.vertical(8),
+                                Text(
+                                  'Meta ID: $_attachmentMetaId',
+                                  textAlign: TextAlign.center,
+                                  style: context.normal.copyWith(
+                                    color: kPrimaryColor,
+                                  ),
+                                ),
+                              ],
+                              if (_attachmentError != null) ...[
+                                Space.vertical(8),
+                                Text(
+                                  _attachmentError!,
+                                  textAlign: TextAlign.center,
+                                  style: context.normal.copyWith(
+                                    color: kRedColor,
+                                  ),
+                                ),
+                              ],
+                              Space.vertical(15),
+                              PrimaryButton(
+                                height: 40,
                                 isMainAxisSizeMin: true,
                                 text: _isUploadingAttachment
                                     ? "Uploading..."
                                     : "Browse files",
                                 buttonColor: kWhiteColor,
-                              textColor: kBlackColor,
-                              showBorder: true,
-                              prefixIcon: Icon(Icons.attach_file),
-                              borderColor: kPrimaryColor,
-                              processing: _isUploadingAttachment,
-                              inactive: _isUploadingAttachment,
-                              onPressed: _showAttachmentPicker,
-                            ),
+                                textColor: kBlackColor,
+                                showBorder: true,
+                                prefixIcon: Icon(Icons.attach_file),
+                                borderColor: kPrimaryColor,
+                                processing: _isUploadingAttachment,
+                                inactive: _isUploadingAttachment,
+                                onPressed: _showAttachmentPicker,
+                              ),
                             ],
                           ),
                         ),

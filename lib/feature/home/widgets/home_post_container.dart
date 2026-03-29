@@ -11,7 +11,6 @@ import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/adminHome/pages/report_and_suspend.dart';
-import 'package:cctv_app/feature/home/pages/repost_screen.dart';
 import 'package:cctv_app/feature/home/widgets/comment_container.dart';
 import 'package:cctv_app/feature/home/widgets/vote_container.dart';
 import 'package:flutter/cupertino.dart';
@@ -667,8 +666,9 @@ class _HomePostContainerState extends State<HomePostContainer> {
 
   void _showSimpleDialog(BuildContext context, ActivePost post) {
     final caseDetail = post.caseDetail;
-    final description = caseDetail?.caseDescription?.trim().isNotEmpty == true
-        ? caseDetail!.caseDescription.trim()
+    final caseDescription = caseDetail?.caseDescription?.trim();
+    final description = caseDescription != null && caseDescription.isNotEmpty
+        ? caseDescription
         : post.postDescription.trim();
     final resolution = caseDetail?.caseResolution?.trim().isNotEmpty == true
         ? caseDetail!.caseResolution!.trim()
