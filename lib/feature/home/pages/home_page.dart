@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cctv_app/core/components/admin_top_header.dart';
 import 'package:cctv_app/core/components/custom_horizontal_listview_widget.dart';
 import 'package:cctv_app/core/components/space.dart';
@@ -32,13 +34,18 @@ class _CategoryTabItem {
   final String label;
   final int? categoryId;
 
-  const _CategoryTabItem({
-    required this.label,
-    this.categoryId,
-  });
+  const _CategoryTabItem({required this.label, this.categoryId});
 }
 
 class _HomePageState extends State<HomePage> {
+  static const int _defaultPostRefreshSeconds = 300;
+  static const int _defaultReelRefreshSeconds = 500;
+  static List<ActivePost> _postsCache = const [];
+  static List<ActiveReel> _reelsCache = const [];
+  static List<_CategoryTabItem> _categoryTabsCache = const [
+    _CategoryTabItem(label: 'All'),
+  ];
+
   int selectedIndex = 0;
   bool _isLoadingPosts = true;
   bool _isLoadingReels = true;
@@ -46,9 +53,9 @@ class _HomePageState extends State<HomePage> {
   String? _reelsError;
   List<ActivePost> _posts = const [];
   List<ActiveReel> _reels = const [];
-  List<_CategoryTabItem> _categoryTabs = const [
-    _CategoryTabItem(label: 'All'),
-  ];
+  List<_CategoryTabItem> _categoryTabs = const [_CategoryTabItem(label: 'All')];
+  Timer? _postsRefreshTimer;
+  Timer? _reelsRefreshTimer;
 
   List<String> get _categoryItems =>
       _categoryTabs.map((tab) => tab.label).toList();
@@ -71,19 +78,54 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
+    _posts = _postsCache;
+    _reels = _reelsCache;
+    _categoryTabs = _categoryTabsCache;
+    _isLoadingPosts = _posts.isEmpty;
+    _isLoadingReels = _reels.isEmpty;
     _loadInitialData();
+    _startAutoRefreshTimers();
+  }
+
+  @override
+  void dispose() {
+    _postsRefreshTimer?.cancel();
+    _reelsRefreshTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadInitialData() async {
-    await Future.wait([
-      _loadPostsAndCategories(),
-      _loadReels(),
-    ]);
+    await Future.wait([_loadPostsAndCategories(), _loadReels()]);
+  }
+
+  Future<void> _startAutoRefreshTimers() async {
+    final storage = const AuthStorage();
+    final postSeconds =
+        await storage.readPostRefreshSeconds() ?? _defaultPostRefreshSeconds;
+    final reelSeconds =
+        await storage.readReelRefreshSeconds() ?? _defaultReelRefreshSeconds;
+
+    _postsRefreshTimer?.cancel();
+    _reelsRefreshTimer?.cancel();
+
+    if (postSeconds > 0) {
+      _postsRefreshTimer = Timer.periodic(Duration(seconds: postSeconds), (_) {
+        if (!mounted || _isLoadingPosts) return;
+        _loadPostsAndCategories();
+      });
+    }
+
+    if (reelSeconds > 0) {
+      _reelsRefreshTimer = Timer.periodic(Duration(seconds: reelSeconds), (_) {
+        if (!mounted || _isLoadingReels) return;
+        _loadReels();
+      });
+    }
   }
 
   Future<void> _loadPostsAndCategories() async {
     setState(() {
-      _isLoadingPosts = true;
+      _isLoadingPosts = _posts.isEmpty;
       _postsError = null;
     });
 
@@ -110,7 +152,8 @@ class _HomePageState extends State<HomePage> {
         const _CategoryTabItem(label: 'All'),
       ];
       for (final option in categoryOptions) {
-        if (option.paramLabel.trim().isEmpty || seenIds.contains(option.paramDetailId)) {
+        if (option.paramLabel.trim().isEmpty ||
+            seenIds.contains(option.paramDetailId)) {
           continue;
         }
         seenIds.add(option.paramDetailId);
@@ -129,6 +172,8 @@ class _HomePageState extends State<HomePage> {
         if (selectedIndex >= _categoryTabs.length) {
           selectedIndex = 0;
         }
+        _postsCache = posts;
+        _categoryTabsCache = categoryTabs;
       });
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -152,7 +197,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _loadReels() async {
     setState(() {
-      _isLoadingReels = true;
+      _isLoadingReels = _reels.isEmpty;
       _reelsError = null;
     });
 
@@ -169,6 +214,7 @@ class _HomePageState extends State<HomePage> {
       if (!mounted) return;
       setState(() {
         _reels = reels;
+        _reelsCache = reels;
       });
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -189,11 +235,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildReelsSection() {
-    if (_isLoadingReels) {
+    if (_isLoadingReels && _reels.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_reelsError != null) {
+    if (_reelsError != null && _reels.isEmpty) {
       return Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
@@ -204,10 +250,7 @@ class _HomePageState extends State<HomePage> {
               textAlign: TextAlign.center,
               style: const TextStyle(color: kRedColor),
             ),
-            TextButton(
-              onPressed: _loadReels,
-              child: const Text('Retry reels'),
-            ),
+            TextButton(onPressed: _loadReels, child: const Text('Retry reels')),
           ],
         ),
       );
@@ -224,9 +267,7 @@ class _HomePageState extends State<HomePage> {
             onTap: () async {
               final created = await Navigator.push<bool>(
                 context,
-                MaterialPageRoute(
-                  builder: (context) => const CreateReelPage(),
-                ),
+                MaterialPageRoute(builder: (context) => const CreateReelPage()),
               );
               if (created == true) {
                 _loadReels();
@@ -280,7 +321,9 @@ class _HomePageState extends State<HomePage> {
                     borderRadius: BorderRadius.circular(12),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.grey.withValues(alpha:0.5), // Shadow color
+                        color: Colors.grey.withValues(
+                          alpha: 0.5,
+                        ), // Shadow color
                         spreadRadius: 2, // Kitna wide shadow ho
                         blurRadius: 7, // Shadow blur
                         offset: Offset(
@@ -295,12 +338,12 @@ class _HomePageState extends State<HomePage> {
                   child: _buildReelsSection(),
                 ),
                 Space.vertical(20),
-                if (_isLoadingPosts)
+                if (_isLoadingPosts && _filteredPosts.isEmpty)
                   const Padding(
                     padding: EdgeInsets.all(24),
                     child: Center(child: CircularProgressIndicator()),
                   )
-                else if (_postsError != null)
+                else if (_postsError != null && _filteredPosts.isEmpty)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
@@ -398,11 +441,7 @@ class _AddReelCard extends StatelessWidget {
                   child: CircleAvatar(
                     radius: 24,
                     backgroundColor: kBlackColor,
-                    child: const Icon(
-                      Icons.add,
-                      color: kWhiteColor,
-                      size: 32,
-                    ),
+                    child: const Icon(Icons.add, color: kWhiteColor, size: 32),
                   ),
                 ),
               ],
@@ -426,9 +465,7 @@ class _ActiveReelCard extends StatelessWidget {
     return GestureDetector(
       onTap: () {
         Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => _FullscreenReelViewer(reel: reel),
-          ),
+          MaterialPageRoute(builder: (_) => _FullscreenReelViewer(reel: reel)),
         );
       },
       child: SizedBox(
@@ -496,10 +533,7 @@ class _ReelUserAvatar extends StatelessWidget {
   final ActiveReel reel;
   final double radius;
 
-  const _ReelUserAvatar({
-    required this.reel,
-    required this.radius,
-  });
+  const _ReelUserAvatar({required this.reel, required this.radius});
 
   @override
   Widget build(BuildContext context) {
@@ -582,9 +616,7 @@ class _FullscreenReelViewerState extends State<_FullscreenReelViewer> {
       body: SafeArea(
         child: Stack(
           children: [
-            Positioned.fill(
-              child: _isImage ? _buildImage() : _buildVideo(),
-            ),
+            Positioned.fill(child: _isImage ? _buildImage() : _buildVideo()),
             Positioned.fill(
               child: IgnorePointer(
                 child: DecoratedBox(
@@ -630,9 +662,7 @@ class _FullscreenReelViewerState extends State<_FullscreenReelViewer> {
                       Expanded(
                         child: Text(
                           widget.reel.displayName,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
+                          style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(
                                 color: kWhiteColor,
                                 fontWeight: FontWeight.w700,
@@ -758,10 +788,7 @@ class _ReelMediaPreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final mediaUrl = reel.mediaUrl;
     if (mediaUrl == null || mediaUrl.trim().isEmpty) {
-      return _buildFallback(
-        icon: Icons.hide_image_outlined,
-        label: 'No media',
-      );
+      return _buildFallback(icon: Icons.hide_image_outlined, label: 'No media');
     }
 
     if (reel.isImage) {
@@ -815,13 +842,12 @@ class _ReelMediaPreview extends StatelessWidget {
           right: 8,
           bottom: 8,
           child: Text(
-            reel.reelDescription.trim().isEmpty ? 'Video reel' : reel.reelDescription,
+            reel.reelDescription.trim().isEmpty
+                ? 'Video reel'
+                : reel.reelDescription,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: context.normal.copyWith(
-              color: kWhiteColor,
-              fontSize: 11,
-            ),
+            style: context.normal.copyWith(color: kWhiteColor, fontSize: 11),
           ),
         ),
       ],
@@ -845,10 +871,7 @@ class _ReelMediaPreview extends StatelessWidget {
           Text(
             label,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: kDarkGreyColor,
-              fontSize: 11,
-            ),
+            style: const TextStyle(color: kDarkGreyColor, fontSize: 11),
           ),
         ],
       ),

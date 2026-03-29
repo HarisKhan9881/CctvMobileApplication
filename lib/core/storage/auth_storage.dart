@@ -12,6 +12,9 @@ class AuthStorageKeys {
   static const userTabIndex = 'user_tab_index';
   static const adminTabIndex = 'admin_tab_index';
   static const adTabIndex = 'ad_tab_index';
+  static const postRefreshSeconds = 'post_refresh_seconds';
+  static const reelRefreshSeconds = 'reel_refresh_seconds';
+  static const notificationRefreshSeconds = 'notification_refresh_seconds';
   AuthStorageKeys._();
 }
 
@@ -21,7 +24,7 @@ class AuthStorage {
   final FlutterSecureStorage _storage;
 
   const AuthStorage({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage();
+    : _storage = storage ?? const FlutterSecureStorage();
 
   Future<bool> hasSession() async {
     final token = await readAccessToken();
@@ -77,7 +80,8 @@ class AuthStorage {
   Future<String?> readFirstName() =>
       _storage.read(key: AuthStorageKeys.firstName);
 
-  Future<String?> readLastName() => _storage.read(key: AuthStorageKeys.lastName);
+  Future<String?> readLastName() =>
+      _storage.read(key: AuthStorageKeys.lastName);
 
   Future<String?> readEmail() => _storage.read(key: AuthStorageKeys.email);
 
@@ -110,6 +114,48 @@ class AuthStorage {
     return value == null ? null : int.tryParse(value);
   }
 
+  Future<void> saveRefreshIntervals({
+    int? postSeconds,
+    int? reelSeconds,
+    int? notificationSeconds,
+  }) async {
+    if (postSeconds != null) {
+      await _storage.write(
+        key: AuthStorageKeys.postRefreshSeconds,
+        value: '$postSeconds',
+      );
+    }
+    if (reelSeconds != null) {
+      await _storage.write(
+        key: AuthStorageKeys.reelRefreshSeconds,
+        value: '$reelSeconds',
+      );
+    }
+    if (notificationSeconds != null) {
+      await _storage.write(
+        key: AuthStorageKeys.notificationRefreshSeconds,
+        value: '$notificationSeconds',
+      );
+    }
+  }
+
+  Future<int?> readPostRefreshSeconds() async {
+    final value = await _storage.read(key: AuthStorageKeys.postRefreshSeconds);
+    return value == null ? null : int.tryParse(value);
+  }
+
+  Future<int?> readReelRefreshSeconds() async {
+    final value = await _storage.read(key: AuthStorageKeys.reelRefreshSeconds);
+    return value == null ? null : int.tryParse(value);
+  }
+
+  Future<int?> readNotificationRefreshSeconds() async {
+    final value = await _storage.read(
+      key: AuthStorageKeys.notificationRefreshSeconds,
+    );
+    return value == null ? null : int.tryParse(value);
+  }
+
   Future<void> clear() async {
     await _storage.delete(key: AuthStorageKeys.accessToken);
     await _storage.delete(key: AuthStorageKeys.userId);
@@ -122,5 +168,8 @@ class AuthStorage {
     await _storage.delete(key: AuthStorageKeys.userTabIndex);
     await _storage.delete(key: AuthStorageKeys.adminTabIndex);
     await _storage.delete(key: AuthStorageKeys.adTabIndex);
+    await _storage.delete(key: AuthStorageKeys.postRefreshSeconds);
+    await _storage.delete(key: AuthStorageKeys.reelRefreshSeconds);
+    await _storage.delete(key: AuthStorageKeys.notificationRefreshSeconds);
   }
 }

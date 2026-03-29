@@ -6,6 +6,7 @@ import 'package:cctv_app/core/network/api_client.dart';
 import 'package:cctv_app/core/network/api_config.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/services/auth_service.dart';
+import 'package:cctv_app/core/network/services/common_parameter_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/validators.dart';
@@ -32,10 +33,7 @@ class _SigninViewState extends State<SigninView> {
   bool obscurePassword = true;
   bool isSubmitting = false;
 
-  DashboardType _dashboardTypeFromRole({
-    String? roleDescription,
-    int? roleId,
-  }) {
+  DashboardType _dashboardTypeFromRole({String? roleDescription, int? roleId}) {
     final normalizedRole = roleDescription?.trim().toLowerCase();
     if (normalizedRole == 'admin') return DashboardType.admin;
     if (normalizedRole == 'ad') return DashboardType.ad;
@@ -94,6 +92,8 @@ class _SigninViewState extends State<SigninView> {
         dashboardType: dashboardType,
       );
 
+      await _loadRefreshSettings(accessToken);
+
       if (!mounted) return;
       final dashboard = _dashboardFromType(dashboardType);
       Navigator.pushAndRemoveUntil(
@@ -103,19 +103,47 @@ class _SigninViewState extends State<SigninView> {
       );
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login failed: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Login failed: $e')));
     } finally {
       if (!mounted) return;
       setState(() {
         isSubmitting = false;
       });
+    }
+  }
+
+  Future<void> _loadRefreshSettings(String accessToken) async {
+    try {
+      final service = const CommonParameterService();
+      final results = await Future.wait([
+        service.getGlobalParameterValue(
+          paramKey: 'POST_REFRESH_IN_SECOND',
+          accessToken: accessToken,
+        ),
+        service.getGlobalParameterValue(
+          paramKey: 'REEL_REFRESH_IN_SECOND',
+          accessToken: accessToken,
+        ),
+        service.getGlobalParameterValue(
+          paramKey: 'NOTIFICATION_REFRESH_IN_SECOND',
+          accessToken: accessToken,
+        ),
+      ]);
+
+      await AuthStorage().saveRefreshIntervals(
+        postSeconds: results[0],
+        reelSeconds: results[1],
+        notificationSeconds: results[2],
+      );
+    } catch (_) {
+      // Ignore refresh-setting failures to avoid blocking login.
     }
   }
 

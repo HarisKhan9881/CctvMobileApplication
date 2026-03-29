@@ -93,11 +93,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     firstNameController.text = '';
     lastNameController.text = '';
     phoneNumberController.text = '';
-    await Future.wait([
-      _loadCountries(),
-      _loadGenders(),
-      _loadProfileTypes(),
-    ]);
+    await Future.wait([_loadCountries(), _loadGenders(), _loadProfileTypes()]);
     await _loadUserProfile();
   }
 
@@ -129,17 +125,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
       setState(() {
         _countryLoadError = e.message;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _countryLoadError = 'Failed to load countries';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load countries: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to load countries: $e')));
     } finally {
       if (!mounted) return;
       setState(() {
@@ -178,17 +174,17 @@ class _UserProfilePageState extends State<UserProfilePage> {
       setState(() {
         _genderLoadError = e.message;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _genderLoadError = 'Failed to load genders';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load genders: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to load genders: $e')));
     } finally {
       if (!mounted) return;
       setState(() {
@@ -235,9 +231,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
       setState(() {
         _profileLoadError = e.message;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -284,9 +280,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
       setState(() {
         _profileTypeLoadError = e.message;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -351,10 +347,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
     _selectedProfileType = null;
   }
 
-  bool _matchesGeneralParameterId(
-    GeneralParameterOption option,
-    int targetId,
-  ) {
+  bool _matchesGeneralParameterId(GeneralParameterOption option, int targetId) {
     if (option.paramDetailId == targetId) {
       return true;
     }
@@ -384,7 +377,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
   }
 
   String? _buildDob() {
-    if (_selectedMonth == null || _selectedDay == null || _selectedYear == null) {
+    if (_selectedMonth == null ||
+        _selectedDay == null ||
+        _selectedYear == null) {
       return null;
     }
 
@@ -424,7 +419,6 @@ class _UserProfilePageState extends State<UserProfilePage> {
         body: {
           'first_name': firstNameController.text.trim(),
           'last_name': lastNameController.text.trim(),
-          'user_password': _userProfile?.userPassword ?? '',
           'country_id': _selectedCountry?.countryId ?? 0,
           'state_id': _userProfile?.stateId ?? 0,
           'city_id': _userProfile?.cityId ?? 0,
@@ -455,14 +449,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
       await _loadUserProfile();
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update profile: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to update profile: $e')));
     } finally {
       if (!mounted) return;
       setState(() {
@@ -506,9 +500,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
       );
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -524,7 +518,8 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
   ImageProvider _profileImageProvider() {
     final profileImageUrl =
-        _uploadedProfileImage?.metaUrl ?? _userProfile?.applicationMeta?.metaUrl;
+        _uploadedProfileImage?.metaUrl ??
+        _userProfile?.applicationMeta?.metaUrl;
     if (profileImageUrl != null && profileImageUrl.trim().isNotEmpty) {
       return NetworkImage(profileImageUrl);
     }
@@ -558,7 +553,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
                   children: [
                     InkWell(
                       borderRadius: BorderRadius.circular(12),
-                      onTap: _isLoadingProfile ? null : _pickAndUploadProfileImage,
+                      onTap: _isLoadingProfile
+                          ? null
+                          : _pickAndUploadProfileImage,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4),
                         child: Row(
@@ -597,7 +594,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: _isLoadingProfile ? null : _loadUserProfile,
+                          onPressed: _isLoadingProfile
+                              ? null
+                              : _loadUserProfile,
                           child: const Text('Retry'),
                         ),
                       ),
@@ -694,7 +693,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       Align(
                         alignment: Alignment.centerRight,
                         child: TextButton(
-                          onPressed: _isLoadingCountries ? null : _loadCountries,
+                          onPressed: _isLoadingCountries
+                              ? null
+                              : _loadCountries,
                           child: const Text('Retry'),
                         ),
                       ),
@@ -839,10 +840,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
                       value: _selectedGender,
                       items: _genders
                           .map(
-                            (gender) => DropdownMenuItem<GeneralParameterOption>(
-                              value: gender,
-                              child: Text(gender.paramLabel),
-                            ),
+                            (gender) =>
+                                DropdownMenuItem<GeneralParameterOption>(
+                                  value: gender,
+                                  child: Text(gender.paramLabel),
+                                ),
                           )
                           .toList(),
                       hint: _isLoadingGenders ? "Loading..." : "Select Gender",

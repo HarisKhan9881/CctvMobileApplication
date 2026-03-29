@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
@@ -18,9 +20,13 @@ class NotificationPage extends StatefulWidget {
 }
 
 class _NotificationPageState extends State<NotificationPage> {
+  static const int _defaultNotificationRefreshSeconds = 500;
+  static List<AppNotificationItem> _notificationCache = const [];
+
   bool _isLoading = true;
   String? _errorMessage;
   List<AppNotificationItem> _notifications = const [];
+  Timer? _notificationRefreshTimer;
 
   String _notificationThumbnailUrl(AppNotificationItem notification) {
     return notification.parsedMeta?.mediaUrl?.trim() ?? '';
@@ -29,12 +35,39 @@ class _NotificationPageState extends State<NotificationPage> {
   @override
   void initState() {
     super.initState();
+    _notifications = _notificationCache;
+    _isLoading = _notifications.isEmpty;
     _loadNotifications();
+    _startAutoRefreshTimer();
+  }
+
+  @override
+  void dispose() {
+    _notificationRefreshTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _startAutoRefreshTimer() async {
+    final storage = const AuthStorage();
+    final notificationSeconds =
+        await storage.readNotificationRefreshSeconds() ??
+        _defaultNotificationRefreshSeconds;
+
+    _notificationRefreshTimer?.cancel();
+    if (notificationSeconds > 0) {
+      _notificationRefreshTimer = Timer.periodic(
+        Duration(seconds: notificationSeconds),
+        (_) {
+          if (!mounted || _isLoading) return;
+          _loadNotifications();
+        },
+      );
+    }
   }
 
   Future<void> _loadNotifications() async {
     setState(() {
-      _isLoading = true;
+      _isLoading = _notifications.isEmpty;
       _errorMessage = null;
     });
 
@@ -56,6 +89,7 @@ class _NotificationPageState extends State<NotificationPage> {
       if (!mounted) return;
       setState(() {
         _notifications = notifications;
+        _notificationCache = notifications;
       });
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -98,11 +132,11 @@ class _NotificationPageState extends State<NotificationPage> {
   }
 
   Widget _buildBody(BuildContext context) {
-    if (_isLoading) {
+    if (_isLoading && _notifications.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (_errorMessage != null) {
+    if (_errorMessage != null && _notifications.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -139,7 +173,8 @@ class _NotificationPageState extends State<NotificationPage> {
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => CaseResponsePage(notification: notification),
+                builder: (context) =>
+                    CaseResponsePage(notification: notification),
               ),
             );
           },
@@ -148,9 +183,7 @@ class _NotificationPageState extends State<NotificationPage> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(
-                  backgroundImage: AssetImage(Assets.pngUser1Image),
-                ),
+                CircleAvatar(backgroundImage: AssetImage(Assets.pngUser1Image)),
                 Space.horizontal(12),
                 Expanded(
                   child: Column(
