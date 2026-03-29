@@ -1,5 +1,8 @@
 import 'package:cctv_app/core/network/api_client.dart';
 import 'package:cctv_app/core/network/api_config.dart';
+import 'package:cctv_app/core/network/endpoints.dart';
+import 'package:cctv_app/core/network/models/active_reel.dart';
+import 'package:cctv_app/core/network/models/pending_case.dart';
 
 class UserCaseService {
   final ApiClient _client;
@@ -21,11 +24,74 @@ class UserCaseService {
   }) {
     final normalizedToken = _normalizeBearerToken(accessToken);
     return _client.postJson(
-      '/api/v1/user_case/createUserCase',
+      Endpoints.createUserCase,
       body: body,
       headers: {
         'Authorization': 'Bearer $normalizedToken',
       },
     );
+  }
+
+  Future<Map<String, dynamic>> createUserReel({
+    required String accessToken,
+    required int reelMetaId,
+    required String reelDescription,
+  }) {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    return _client.postJson(
+      Endpoints.createUserReel,
+      body: {
+        'reel_meta_id': reelMetaId,
+        'reel_description': reelDescription,
+      },
+      headers: {
+        'Authorization': 'Bearer $normalizedToken',
+      },
+    );
+  }
+
+  Future<List<ActiveReel>> getAllActiveReels({
+    required String accessToken,
+  }) async {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    final json = await _client.get(
+      Endpoints.getAllActiveReels,
+      headers: {
+        'Authorization': 'Bearer $normalizedToken',
+      },
+    );
+
+    final content = json['CONTENT'];
+    if (content is! List) {
+      return const [];
+    }
+
+    return content
+        .whereType<Map<String, dynamic>>()
+        .map(ActiveReel.fromJson)
+        .toList();
+  }
+
+  Future<List<PendingCase>> getPendingCases({
+    required String accessToken,
+    required int userId,
+  }) async {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    final json = await _client.get(
+      '${Endpoints.getPendingCases}?user_id=$userId',
+      headers: {
+        'Authorization': 'Bearer $normalizedToken',
+      },
+    );
+
+    final content = json['CONTENT'];
+    if (content is! List) {
+      return const [];
+    }
+
+    return content
+        .whereType<Map<String, dynamic>>()
+        .map(PendingCase.fromJson)
+        .toList();
   }
 }

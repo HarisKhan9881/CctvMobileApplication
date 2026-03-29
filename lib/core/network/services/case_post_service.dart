@@ -1,5 +1,6 @@
 import 'package:cctv_app/core/network/api_client.dart';
 import 'package:cctv_app/core/network/api_config.dart';
+import 'package:cctv_app/core/network/endpoints.dart';
 import 'package:cctv_app/core/network/models/active_post.dart';
 
 class CasePostService {
@@ -119,6 +120,21 @@ class CasePostService {
         'parent_comment_id': parentCommentId,
         'comment_content': commentContent,
       },
+    );
+  }
+
+  Future<void> remindCasePending({
+    required String accessToken,
+    required int caseId,
+  }) async {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    final query = Uri(queryParameters: {'case_id': '$caseId'}).query;
+    await _client.postJson(
+      '${Endpoints.remindCasePending}?$query',
+      headers: {
+        'Authorization': 'Bearer $normalizedToken',
+      },
+      body: const {},
     );
   }
 }

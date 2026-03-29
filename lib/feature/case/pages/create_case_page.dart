@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:cctv_app/core/components/custom_dropdown.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/plain_selection_widget.dart';
@@ -343,11 +345,13 @@ class _CreateCasePageState extends State<CreateCasePage> {
       final picker = ImagePicker();
       final file = await picker.pickImage(source: ImageSource.gallery);
       if (file == null || !mounted) return;
+      final fileBytes = await file.readAsBytes();
 
       await _uploadSelectedFile(
         filePath: file.path,
         fileName: file.name,
         isImage: true,
+        fileBytes: fileBytes,
       );
     } catch (e) {
       if (!mounted) return;
@@ -362,11 +366,13 @@ class _CreateCasePageState extends State<CreateCasePage> {
       final picker = ImagePicker();
       final file = await picker.pickVideo(source: ImageSource.gallery);
       if (file == null || !mounted) return;
+      final fileBytes = await file.readAsBytes();
 
       await _uploadSelectedFile(
         filePath: file.path,
         fileName: file.name,
         isImage: false,
+        fileBytes: fileBytes,
       );
     } catch (e) {
       if (!mounted) return;
@@ -401,6 +407,7 @@ class _CreateCasePageState extends State<CreateCasePage> {
     required String filePath,
     required String fileName,
     required bool isImage,
+    required Uint8List fileBytes,
   }) async {
     setState(() {
       _isUploadingAttachment = true;
@@ -418,10 +425,14 @@ class _CreateCasePageState extends State<CreateCasePage> {
           ? await service.uploadImage(
               accessToken: accessToken,
               filePath: filePath,
+              fileBytes: fileBytes,
+              fileName: fileName,
             )
           : await service.uploadVideo(
               accessToken: accessToken,
               filePath: filePath,
+              fileBytes: fileBytes,
+              fileName: fileName,
             );
 
       if (!mounted) return;

@@ -24,6 +24,7 @@ class AuthService {
         'user_password': password,
         'role_id': signUpRoleId,
       },
+      treatUnauthorizedAsSessionExpired: false,
     );
 
     return ApiResponse<UserContent>.fromJson(
@@ -43,6 +44,7 @@ class AuthService {
         'username': username,
         'password': password,
       },
+      treatUnauthorizedAsSessionExpired: false,
     );
 
     return ApiResponse<UserContent>.fromJson(

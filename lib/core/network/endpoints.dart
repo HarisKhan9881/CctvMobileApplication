@@ -4,5 +4,9 @@ class Endpoints {
   static const String uploadImage = '/api/v1/application_cloud/upload_image';
   static const String uploadVideo = '/api/v1/application_cloud/upload_video';
   static const String createUserCase = '/api/v1/user_case/createUserCase';
+  static const String createUserReel = '/api/v1/user_case/create_user_reel';
+  static const String getAllActiveReels = '/api/v1/user_case/get_all_active_reels';
+  static const String getPendingCases = '/api/v1/user_case/getPendingCases';
+  static const String remindCasePending = '/api/v1/case_post/remind_case_pending';
   Endpoints._();
 }

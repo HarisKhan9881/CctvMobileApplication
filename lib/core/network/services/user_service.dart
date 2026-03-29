@@ -2,46 +2,30 @@ import 'dart:convert';
 
 import 'package:cctv_app/core/network/api_config.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
+import 'package:cctv_app/core/network/network_response_handler.dart';
+import 'package:cctv_app/core/network/models/user_profile.dart';
 import 'package:cctv_app/core/network/models/user_option.dart';
+import 'package:cctv_app/core/session/app_session_manager.dart';
 import 'package:http/http.dart' as http;
 
 class UserService {
   const UserService();
 
-  String _normalizeBearerToken(String accessToken) {
-    final trimmedToken = accessToken.trim();
-    if (trimmedToken.toLowerCase().startsWith('bearer ')) {
-      return trimmedToken.substring(7).trim();
-    }
-    return trimmedToken;
-  }
-
   Future<List<UserOption>> getAllUsers({
     required String accessToken,
   }) async {
-    final normalizedToken = _normalizeBearerToken(accessToken);
+    final normalizedToken = await AppSessionManager.instance
+        .requireValidAccessToken(accessToken);
     final url = Uri.parse('${ApiConfig.baseUrl}/api/v1/user/getAllUsers');
     final response = await http.get(
       url,
       headers: {
         'accept': 'application/json',
+        'Authorization': 'Bearer $normalizedToken',
       },
     );
 
-    Map<String, dynamic> json;
-    try {
-      json = jsonDecode(response.body) as Map<String, dynamic>;
-    } catch (_) {
-      throw ApiException(
-        'Invalid server response',
-        statusCode: response.statusCode,
-      );
-    }
-
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      final serverMessage = (json['MESSAGE'] as String?) ?? 'Request failed';
-      throw ApiException(serverMessage, statusCode: response.statusCode);
-    }
+    final json = await NetworkResponseHandler.parseJsonResponse(response);
 
     final content = json['CONTENT'];
     if (content is! List) {
@@ -52,5 +36,53 @@ class UserService {
         .whereType<Map<String, dynamic>>()
         .map(UserOption.fromJson)
         .toList();
+  }
+
+  Future<UserProfile> getUserById({
+    required String accessToken,
+    required int userId,
+  }) async {
+    final normalizedToken = await AppSessionManager.instance
+        .requireValidAccessToken(accessToken);
+    final url = Uri.parse('${ApiConfig.baseUrl}/api/v1/user/getUserById/$userId');
+    final response = await http.get(
+      url,
+      headers: {
+        'accept': 'application/json',
+        'Authorization': 'Bearer $normalizedToken',
+      },
+    );
+
+    final json = await NetworkResponseHandler.parseJsonResponse(response);
+
+    final content = json['CONTENT'];
+    if (content is! Map<String, dynamic>) {
+      throw const ApiException(
+        'User response is missing content',
+      );
+    }
+
+    return UserProfile.fromJson(content);
+  }
+
+  Future<void> updateUser({
+    required String accessToken,
+    required int userId,
+    required Map<String, dynamic> body,
+  }) async {
+    final normalizedToken = await AppSessionManager.instance
+        .requireValidAccessToken(accessToken);
+    final url = Uri.parse('${ApiConfig.baseUrl}/api/v1/user/updateUser/$userId');
+    final response = await http.put(
+      url,
+      headers: {
+        'accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $normalizedToken',
+      },
+      body: jsonEncode(body),
+    );
+
+    await NetworkResponseHandler.parseJsonResponse(response);
   }
 }

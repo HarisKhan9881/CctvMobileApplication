@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'package:cctv_app/core/session/app_session_manager.dart';
 import 'package:cctv_app/feature/session/session_gate.dart';
 
 void main() {
@@ -15,6 +16,7 @@ class MyApp extends StatelessWidget {
     return Sizer(
       builder: (context, orientation, screenType) {
         return MaterialApp(
+          navigatorKey: AppSessionManager.instance.navigatorKey,
           debugShowCheckedModeBanner: false,
           title: 'CCTV Mobile App',
           theme: ThemeData(

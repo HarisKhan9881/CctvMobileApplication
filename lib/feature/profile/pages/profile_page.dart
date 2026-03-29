@@ -2,12 +2,13 @@ import 'package:cctv_app/core/components/app_bottom_sheet.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/network/models/user_profile.dart';
+import 'package:cctv_app/core/network/services/user_service.dart';
+import 'package:cctv_app/core/session/app_session_manager.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
-import 'package:cctv_app/feature/auth/pages/auth_page.dart';
 import 'package:cctv_app/feature/drawer/pages/user_profile_page.dart';
-import 'package:cctv_app/feature/profile/pages/edit_profile_page.dart';
 import 'package:cctv_app/feature/profile/pages/help_and_support.dart';
 import 'package:cctv_app/feature/profile/pages/settings_page.dart';
 import 'package:cctv_app/feature/profile/pages/terms_and_policies.dart';
@@ -19,14 +20,33 @@ import 'package:flutter_svg/flutter_svg.dart';
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
-  Future<Map<String, String>> _loadProfileInfo() async {
+  Future<UserProfile?> _loadUserProfile() async {
+    final storage = const AuthStorage();
+    final accessToken = await storage.readAccessToken();
+    final userId = await storage.readUserId();
+
+    if (accessToken == null ||
+        accessToken.trim().isEmpty ||
+        userId == null) {
+      return null;
+    }
+
+    try {
+      return const UserService().getUserById(
+        accessToken: accessToken,
+        userId: userId,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Map<String, String>> _loadFallbackProfileInfo() async {
     final storage = const AuthStorage();
     final first = (await storage.readFirstName() ?? '').trim();
     final last = (await storage.readLastName() ?? '').trim();
     final email = (await storage.readEmail() ?? '').trim();
-    final name = [if (first.isNotEmpty) first, if (last.isNotEmpty) last].join(
-      ' ',
-    );
+    final name = [if (first.isNotEmpty) first, if (last.isNotEmpty) last].join(' ');
     return {
       'name': name.isEmpty ? 'User' : name,
       'email': email.isEmpty ? 'No username' : email,
@@ -50,7 +70,9 @@ class ProfilePage extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => EditProfilePage()),
+                    MaterialPageRoute(
+                      builder: (context) => const UserProfilePage(),
+                    ),
                   );
                 },
               ),
@@ -74,32 +96,90 @@ class ProfilePage extends StatelessWidget {
               child: Column(
                 children: [
                   Space.vertical(20),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(50),
-                    child: Image.asset(
-                      Assets.pngHighlight1Image,
-                      width: 100,
-                      height: 100,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                  Space.vertical(15),
-                  FutureBuilder<Map<String, String>>(
-                    future: _loadProfileInfo(),
+                  FutureBuilder<UserProfile?>(
+                    future: _loadUserProfile(),
                     builder: (context, snapshot) {
-                      final name = snapshot.data?['name'] ?? 'User';
-                      final email = snapshot.data?['email'] ?? 'No username';
-                      return Column(
-                        children: [
-                          Text(
-                            name,
-                            style: context.bold.copyWith(fontSize: 20),
-                          ),
-                          Text(
-                            email,
-                            style: context.normal.copyWith(fontSize: 18),
-                          ),
-                        ],
+                      final profile = snapshot.data;
+                      final profileImageUrl = profile?.applicationMeta?.metaUrl;
+                      final name = [
+                        if ((profile?.firstName ?? '').trim().isNotEmpty)
+                          profile!.firstName.trim(),
+                        if ((profile?.lastName ?? '').trim().isNotEmpty)
+                          profile!.lastName.trim(),
+                      ].join(' ');
+
+                      if (profile != null) {
+                        return Column(
+                          children: [
+                            ClipRRect(
+                              borderRadius: BorderRadius.circular(50),
+                              child: profileImageUrl != null &&
+                                      profileImageUrl.trim().isNotEmpty
+                                  ? Image.network(
+                                      profileImageUrl,
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                      errorBuilder: (_, _, _) => Image.asset(
+                                        Assets.pngHighlight1Image,
+                                        width: 100,
+                                        height: 100,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    )
+                                  : Image.asset(
+                                      Assets.pngHighlight1Image,
+                                      width: 100,
+                                      height: 100,
+                                      fit: BoxFit.cover,
+                                    ),
+                            ),
+                            Space.vertical(15),
+                            Text(
+                              name.isEmpty ? 'User' : name,
+                              style: context.bold.copyWith(fontSize: 20),
+                            ),
+                            Text(
+                              profile.email.trim().isEmpty
+                                  ? 'No username'
+                                  : profile.email,
+                              style: context.normal.copyWith(fontSize: 18),
+                            ),
+                          ],
+                        );
+                      }
+
+                      return FutureBuilder<Map<String, String>>(
+                        future: _loadFallbackProfileInfo(),
+                        builder: (context, fallbackSnapshot) {
+                          final fallbackName =
+                              fallbackSnapshot.data?['name'] ?? 'User';
+                          final fallbackEmail =
+                              fallbackSnapshot.data?['email'] ?? 'No username';
+
+                          return Column(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(50),
+                                child: Image.asset(
+                                  Assets.pngHighlight1Image,
+                                  width: 100,
+                                  height: 100,
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                              Space.vertical(15),
+                              Text(
+                                fallbackName,
+                                style: context.bold.copyWith(fontSize: 20),
+                              ),
+                              Text(
+                                fallbackEmail,
+                                style: context.normal.copyWith(fontSize: 18),
+                              ),
+                            ],
+                          );
+                        },
                       );
                     },
                   ),
@@ -197,13 +277,7 @@ class ProfilePage extends StatelessWidget {
             PrimaryButton(
               text: "Logout",
               onPressed: () async {
-                await const AuthStorage().clear();
-                if (!context.mounted) return;
-                Navigator.pushAndRemoveUntil(
-                  context,
-                  MaterialPageRoute(builder: (context) => const AuthPage()),
-                  (_) => false,
-                );
+                await AppSessionManager.instance.logout();
               },
             ),
           ],

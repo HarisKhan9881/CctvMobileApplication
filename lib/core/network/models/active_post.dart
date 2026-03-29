@@ -126,6 +126,7 @@ class ActivePostCaseDetail {
   final int caseId;
   final String caseTitle;
   final String caseDescription;
+  final int? caseCategoryId;
   final String? caseResolution;
   final ActivePostMeta? meta;
 
@@ -133,6 +134,7 @@ class ActivePostCaseDetail {
     required this.caseId,
     required this.caseTitle,
     required this.caseDescription,
+    this.caseCategoryId,
     this.caseResolution,
     this.meta,
   });
@@ -144,6 +146,7 @@ class ActivePostCaseDetail {
       caseId: caseId is int ? caseId : int.parse('$caseId'),
       caseTitle: json['case_title'] as String? ?? '',
       caseDescription: json['case_description'] as String? ?? '',
+      caseCategoryId: int.tryParse('${json['case_category_id']}'),
       caseResolution: json['case_resolution'] as String?,
       meta: json['meta'] is Map<String, dynamic>
           ? ActivePostMeta.fromJson(json['meta'] as Map<String, dynamic>)

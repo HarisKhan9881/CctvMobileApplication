@@ -1,10 +1,10 @@
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/session/app_session_manager.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
-import 'package:cctv_app/feature/auth/pages/auth_page.dart';
 import 'package:cctv_app/feature/drawer/pages/post_history.dart';
 import 'package:cctv_app/feature/profile/pages/help_and_support.dart';
 import 'package:cctv_app/feature/profile/pages/settings_page.dart';
@@ -207,12 +207,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 PrimaryButton(
                   text: "Logout",
                   onPressed: () async {
-                    await const AuthStorage().clear();
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (context) => const AuthPage()),
-                      (_) => false,
-                    );
+                    await AppSessionManager.instance.logout();
                   },
                 ),
               ],
