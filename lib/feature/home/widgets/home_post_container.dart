@@ -22,11 +22,13 @@ import 'package:video_player/video_player.dart';
 class HomePostContainer extends StatefulWidget {
   final bool isAdmin;
   final VoidCallback onClickProfile;
+  final VoidCallback onPostUpdated;
   final ActivePost post;
   const HomePostContainer({
     super.key,
     required this.isAdmin,
     required this.onClickProfile,
+    required this.onPostUpdated,
     required this.post,
   });
 
@@ -50,7 +52,8 @@ class _HomePostContainerState extends State<HomePostContainer> {
   late List<ActivePostComment> _comments;
 
   int get _reactionCount =>
-      (widget.post.reactionSummary?.totalReactions ?? widget.post.reactions.length) +
+      (widget.post.reactionSummary?.totalReactions ??
+          widget.post.reactions.length) +
       _reactionCountDelta;
 
   @override
@@ -69,6 +72,21 @@ class _HomePostContainerState extends State<HomePostContainer> {
       _comments = List<ActivePostComment>.from(widget.post.comments);
       _commentController.clear();
       _loadCurrentUserReaction();
+      return;
+    }
+
+    if (oldWidget.post.comments.length != widget.post.comments.length) {
+      _comments = List<ActivePostComment>.from(widget.post.comments);
+    }
+
+    final oldTotal =
+        oldWidget.post.reactionSummary?.totalReactions ??
+        oldWidget.post.reactions.length;
+    final newTotal =
+        widget.post.reactionSummary?.totalReactions ??
+        widget.post.reactions.length;
+    if (oldTotal != newTotal) {
+      _reactionCountDelta = 0;
     }
   }
 
@@ -466,8 +484,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 10),
                     child: CommentContainer.dynamic(
-                      authorName:
-                          comment.userInfo?.fullName.isNotEmpty == true
+                      authorName: comment.userInfo?.fullName.isNotEmpty == true
                           ? comment.userInfo!.fullName
                           : 'User',
                       comment: comment.commentContent,
@@ -740,9 +757,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
           _reactionCountDelta += 1;
         }
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${_reactionLabel(reaction)} reaction added')),
-      );
+      widget.onPostUpdated();
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -836,7 +851,9 @@ class _HomePostContainerState extends State<HomePostContainer> {
               Space.horizontal(8),
               Flexible(
                 child: Text(
-                  _reactionCount > 0 ? '$_reactionCount' : 'Be the first to react',
+                  _reactionCount > 0
+                      ? '$_reactionCount'
+                      : 'Be the first to react',
                   style: context.normal.copyWith(color: kDarkGreyColor),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -863,7 +880,9 @@ class _HomePostContainerState extends State<HomePostContainer> {
             },
             child: _buildActionButton(
               text: _reactionLabel(selectedReaction),
-              onTap: isReactionPopupVisible ? null : () => _submitReaction('Like'),
+              onTap: isReactionPopupVisible
+                  ? null
+                  : () => _submitReaction('Like'),
               icon: _getReactionIcon(),
               isLoading: _isSubmittingReaction,
               isSelected: selectedReaction != null,
@@ -944,23 +963,20 @@ class _HomePostContainerState extends State<HomePostContainer> {
           alignment: AlignmentDirectional.bottomStart,
           visualDensity: VisualDensity.compact,
         ),
-        builder: (
-          BuildContext context,
-          MenuController controller,
-          Widget? child,
-        ) {
-          return _buildActionButton(
-            text: 'Share',
-            onTap: () {
-              if (controller.isOpen) {
-                controller.close();
-              } else {
-                controller.open();
-              }
+        builder:
+            (BuildContext context, MenuController controller, Widget? child) {
+              return _buildActionButton(
+                text: 'Share',
+                onTap: () {
+                  if (controller.isOpen) {
+                    controller.close();
+                  } else {
+                    controller.open();
+                  }
+                },
+                icon: Icons.share_outlined,
+              );
             },
-            icon: Icons.share_outlined,
-          );
-        },
         menuChildren: [
           Padding(
             padding: const EdgeInsets.only(top: 8.0, right: 26, bottom: 8),
@@ -1093,9 +1109,9 @@ class _HomePostContainerState extends State<HomePostContainer> {
 
     final commentContent = _commentController.text.trim();
     if (commentContent.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please write a comment')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please write a comment')));
       return;
     }
 
@@ -1140,10 +1156,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
         ];
         _commentController.clear();
       });
-
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Comment added')));
+      widget.onPostUpdated();
     } on ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -1151,9 +1164,9 @@ class _HomePostContainerState extends State<HomePostContainer> {
       ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to add comment')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to add comment')));
     } finally {
       if (!mounted) return;
       setState(() {
@@ -1223,9 +1236,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
       setState(() {
         _selectedVote = selectedVote;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Your vote is polled')),
-      );
+      widget.onPostUpdated();
     } on ApiException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -1233,9 +1244,9 @@ class _HomePostContainerState extends State<HomePostContainer> {
       ).showSnackBar(SnackBar(content: Text(e.message)));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to cast vote')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to cast vote')));
     } finally {
       if (!mounted) return;
       setState(() {
@@ -1323,7 +1334,9 @@ class _ComparisonMediaTileState extends State<_ComparisonMediaTile> {
       return;
     }
 
-    final controller = VideoPlayerController.networkUrl(Uri.parse(media.metaUrl!));
+    final controller = VideoPlayerController.networkUrl(
+      Uri.parse(media.metaUrl!),
+    );
     _videoController = controller;
     _videoListener = () {
       if (!mounted) return;
@@ -1380,18 +1393,12 @@ class _ComparisonMediaTileState extends State<_ComparisonMediaTile> {
   Widget _buildMedia() {
     final media = widget.media;
     if (media == null || !media.hasMedia) {
-      return Image.asset(
-        widget.fallbackAsset,
-        fit: BoxFit.cover,
-      );
+      return Image.asset(widget.fallbackAsset, fit: BoxFit.cover);
     }
 
     if (!media.isImage) {
       if (_videoController == null || _videoInitialization == null) {
-        return Image.asset(
-          widget.fallbackAsset,
-          fit: BoxFit.cover,
-        );
+        return Image.asset(widget.fallbackAsset, fit: BoxFit.cover);
       }
 
       return FutureBuilder<void>(
@@ -1429,10 +1436,8 @@ class _ComparisonMediaTileState extends State<_ComparisonMediaTile> {
         child: Image.network(
           media.metaUrl!,
           fit: BoxFit.cover,
-          errorBuilder: (_, _, _) => Image.asset(
-            widget.fallbackAsset,
-            fit: BoxFit.cover,
-          ),
+          errorBuilder: (_, _, _) =>
+              Image.asset(widget.fallbackAsset, fit: BoxFit.cover),
         ),
       ),
     );
@@ -1501,7 +1506,9 @@ class _FullscreenMediaViewerState extends State<_FullscreenMediaViewer> {
   void initState() {
     super.initState();
     if (!widget.isImage) {
-      _controller = VideoPlayerController.networkUrl(Uri.parse(widget.mediaUrl));
+      _controller = VideoPlayerController.networkUrl(
+        Uri.parse(widget.mediaUrl),
+      );
       _initialization = _controller!.initialize().then((_) {
         _controller!.play();
         if (mounted) {

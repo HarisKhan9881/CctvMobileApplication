@@ -8,7 +8,7 @@ class UserCaseService {
   final ApiClient _client;
 
   UserCaseService({ApiClient? client})
-      : _client = client ?? ApiClient(baseUrl: ApiConfig.baseUrl);
+    : _client = client ?? ApiClient(baseUrl: ApiConfig.baseUrl);
 
   String _normalizeBearerToken(String accessToken) {
     final trimmedToken = accessToken.trim();
@@ -26,9 +26,7 @@ class UserCaseService {
     return _client.postJson(
       Endpoints.createUserCase,
       body: body,
-      headers: {
-        'Authorization': 'Bearer $normalizedToken',
-      },
+      headers: {'Authorization': 'Bearer $normalizedToken'},
     );
   }
 
@@ -40,13 +38,8 @@ class UserCaseService {
     final normalizedToken = _normalizeBearerToken(accessToken);
     return _client.postJson(
       Endpoints.createUserReel,
-      body: {
-        'reel_meta_id': reelMetaId,
-        'reel_description': reelDescription,
-      },
-      headers: {
-        'Authorization': 'Bearer $normalizedToken',
-      },
+      body: {'reel_meta_id': reelMetaId, 'reel_description': reelDescription},
+      headers: {'Authorization': 'Bearer $normalizedToken'},
     );
   }
 
@@ -56,9 +49,7 @@ class UserCaseService {
     final normalizedToken = _normalizeBearerToken(accessToken);
     final json = await _client.get(
       Endpoints.getAllActiveReels,
-      headers: {
-        'Authorization': 'Bearer $normalizedToken',
-      },
+      headers: {'Authorization': 'Bearer $normalizedToken'},
     );
 
     final content = json['CONTENT'];
@@ -78,10 +69,8 @@ class UserCaseService {
   }) async {
     final normalizedToken = _normalizeBearerToken(accessToken);
     final json = await _client.get(
-      '${Endpoints.getPendingCases}?user_id=$userId',
-      headers: {
-        'Authorization': 'Bearer $normalizedToken',
-      },
+      '${Endpoints.getPendingCasesByUserId}?user_id=$userId',
+      headers: {'Authorization': 'Bearer $normalizedToken'},
     );
 
     final content = json['CONTENT'];

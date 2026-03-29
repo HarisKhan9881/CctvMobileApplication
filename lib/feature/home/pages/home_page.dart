@@ -3,18 +3,18 @@ import 'dart:async';
 import 'package:cctv_app/core/components/admin_top_header.dart';
 import 'package:cctv_app/core/components/custom_horizontal_listview_widget.dart';
 import 'package:cctv_app/core/components/space.dart';
+import 'package:cctv_app/core/components/search_bar_header.dart';
 import 'package:cctv_app/core/extensions/context.dart';
-import 'package:cctv_app/core/network/models/general_parameter_option.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/models/active_post.dart';
 import 'package:cctv_app/core/network/models/active_reel.dart';
+import 'package:cctv_app/core/network/models/general_parameter_option.dart';
 import 'package:cctv_app/core/network/services/case_post_service.dart';
 import 'package:cctv_app/core/network/services/general_parameter_service.dart';
 import 'package:cctv_app/core/network/services/user_case_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
-import 'package:cctv_app/core/components/search_bar_header.dart';
 import 'package:cctv_app/feature/home/pages/create_reel_page.dart';
 import 'package:cctv_app/feature/home/pages/private_profile_page.dart';
 import 'package:cctv_app/feature/home/pages/public_profile_page.dart';
@@ -38,8 +38,8 @@ class _CategoryTabItem {
 }
 
 class _HomePageState extends State<HomePage> {
-  static const int _defaultPostRefreshSeconds = 300;
-  static const int _defaultReelRefreshSeconds = 500;
+  static const int _defaultPostRefreshSeconds = 0;
+  static const int _defaultReelRefreshSeconds = 0;
   static List<ActivePost> _postsCache = const [];
   static List<ActiveReel> _reelsCache = const [];
   static List<_CategoryTabItem> _categoryTabsCache = const [
@@ -310,88 +310,95 @@ class _HomePageState extends State<HomePage> {
         ),
         Space.vertical(20),
         Expanded(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                SizedBox(height: 4),
-                Container(
-                  height: 190,
-                  decoration: BoxDecoration(
-                    color: kWhiteColor,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withValues(
-                          alpha: 0.5,
-                        ), // Shadow color
-                        spreadRadius: 2, // Kitna wide shadow ho
-                        blurRadius: 7, // Shadow blur
-                        offset: Offset(
-                          0,
-                          3,
-                        ), // X aur Y direction mein shadow ka move
-                      ),
-                    ],
-                  ),
-                  margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                  padding: const EdgeInsets.only(top: 8, bottom: 8),
-                  child: _buildReelsSection(),
-                ),
-                Space.vertical(20),
-                if (_isLoadingPosts && _filteredPosts.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                else if (_postsError != null && _filteredPosts.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      children: [
-                        Text(
-                          _postsError!,
-                          style: context.normal.copyWith(color: kRedColor),
-                        ),
-                        Space.vertical(8),
-                        TextButton(
-                          onPressed: _loadInitialData,
-                          child: const Text('Retry'),
+          child: RefreshIndicator(
+            onRefresh: () async {
+              await _loadPostsAndCategories();
+            },
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Column(
+                children: [
+                  SizedBox(height: 4),
+                  Container(
+                    height: 190,
+                    decoration: BoxDecoration(
+                      color: kWhiteColor,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withValues(
+                            alpha: 0.5,
+                          ), // Shadow color
+                          spreadRadius: 2, // Kitna wide shadow ho
+                          blurRadius: 7, // Shadow blur
+                          offset: Offset(
+                            0,
+                            3,
+                          ), // X aur Y direction mein shadow ka move
                         ),
                       ],
                     ),
-                  )
-                else if (_filteredPosts.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      selectedIndex == 0
-                          ? 'No active posts yet'
-                          : 'No posts found for this category',
-                      style: context.normal.copyWith(color: kDarkGreyColor),
-                    ),
-                  )
-                else
-                  ..._filteredPosts.map((post) {
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      child: HomePostContainer(
-                        isAdmin: widget.isAdmin,
-                        post: post,
-                        onClickProfile: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => post.postId.isEven
-                                  ? PrivateProfilePage()
-                                  : PublicProfilePage(),
-                            ),
-                          );
-                        },
+                    margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                    padding: const EdgeInsets.only(top: 8, bottom: 8),
+                    child: _buildReelsSection(),
+                  ),
+                  Space.vertical(20),
+                  if (_isLoadingPosts && _filteredPosts.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.all(24),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else if (_postsError != null && _filteredPosts.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Column(
+                        children: [
+                          Text(
+                            _postsError!,
+                            style: context.normal.copyWith(color: kRedColor),
+                          ),
+                          Space.vertical(8),
+                          TextButton(
+                            onPressed: _loadInitialData,
+                            child: const Text('Retry'),
+                          ),
+                        ],
                       ),
-                    );
-                  }),
-                Space.vertical(20),
-              ],
+                    )
+                  else if (_filteredPosts.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(
+                        selectedIndex == 0
+                            ? 'No active posts yet'
+                            : 'No posts found for this category',
+                        style: context.normal.copyWith(color: kDarkGreyColor),
+                      ),
+                    )
+                  else
+                    ..._filteredPosts.map((post) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: HomePostContainer(
+                          isAdmin: widget.isAdmin,
+                          post: post,
+                          onClickProfile: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => post.postId.isEven
+                                    ? PrivateProfilePage()
+                                    : PublicProfilePage(),
+                              ),
+                            );
+                          },
+                          onPostUpdated: _loadPostsAndCategories,
+                        ),
+                      );
+                    }),
+                  Space.vertical(20),
+                ],
+              ),
             ),
           ),
         ),
