@@ -63,69 +63,47 @@ class _RepostScreenState extends State<RepostScreen> {
                   ),
                   Directionality(
                     textDirection: TextDirection.rtl,
-                    child: MenuAnchor(
-                      alignmentOffset: const Offset(0, 10),
-                      style: MenuStyle(
-                        backgroundColor: WidgetStateProperty.all(kWhiteColor),
-                        shape: WidgetStateProperty.all(
-                          RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: BorderSide(color: kLightGreyColor),
+                    child: PopupMenuButton<String>(
+                      onSelected: (_) {},
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'save',
+                          child: CustomMenuButton(
+                            onTap: () {},
+                            icon: Icon(Icons.bookmark_add_outlined),
+                            iconSize: 15,
+                            title: 'Save',
                           ),
                         ),
-                        elevation: WidgetStateProperty.all(4),
-                        alignment: AlignmentDirectional.bottomStart,
-                        visualDensity: VisualDensity.compact,
-                      ),
-                      builder:
-                          (
-                            BuildContext context,
-                            MenuController controller,
-                            Widget? child,
-                          ) {
-                            return GestureDetector(
-                              onTap: () {
-                                if (controller.isOpen) {
-                                  controller.close();
-                                } else {
-                                  controller.open();
-                                }
-                              },
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: kWhiteColor,
-                                  border: Border.all(color: kGreyColor),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                padding: EdgeInsets.all(6.0),
-                                child: Icon(
-                                  Icons.more_horiz,
-                                  color: kBlackColor,
-                                ),
-                              ),
-                            );
-                          },
-                      menuChildren: [
-                        CustomMenuButton(
-                          onTap: () {},
-                          icon: Icon(Icons.bookmark_add_outlined),
-                          iconSize: 15,
-                          title: 'Save',
+                        PopupMenuItem(
+                          value: 'copy',
+                          child: CustomMenuButton(
+                            onTap: () {},
+                            icon: Icon(Icons.copy_all),
+                            iconSize: 15,
+                            title: 'Copy Link',
+                          ),
                         ),
-                        CustomMenuButton(
-                          onTap: () {},
-                          icon: Icon(Icons.copy_all),
-                          iconSize: 15,
-                          title: 'Copy Link',
-                        ),
-                        CustomMenuButton(
-                          onTap: () {},
-                          icon: Icon(Icons.report, color: kRedColor),
-                          iconSize: 15,
-                          textColor: kRedColor,
-                          title: 'Report',
+                        PopupMenuItem(
+                          value: 'report',
+                          child: CustomMenuButton(
+                            onTap: () {},
+                            icon: Icon(Icons.report, color: kRedColor),
+                            iconSize: 15,
+                            textColor: kRedColor,
+                            title: 'Report',
+                          ),
                         ),
                       ],
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: kWhiteColor,
+                          border: Border.all(color: kGreyColor),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: EdgeInsets.all(6.0),
+                        child: Icon(Icons.more_horiz, color: kBlackColor),
+                      ),
                     ),
                   ),
                 ],

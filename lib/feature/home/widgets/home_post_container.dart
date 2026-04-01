@@ -6,7 +6,9 @@ import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/models/active_post.dart';
+import 'package:cctv_app/core/network/models/general_parameter_option.dart';
 import 'package:cctv_app/core/network/services/case_post_service.dart';
+import 'package:cctv_app/core/network/services/general_parameter_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
@@ -346,71 +348,87 @@ class _HomePostContainerState extends State<HomePostContainer> {
                       )
                     : Directionality(
                         textDirection: TextDirection.rtl,
-                        child: MenuAnchor(
-                          alignmentOffset: const Offset(0, 10),
-                          style: MenuStyle(
-                            backgroundColor: WidgetStateProperty.all(
-                              kWhiteColor,
-                            ),
-                            shape: WidgetStateProperty.all(
-                              RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                side: BorderSide(color: kLightGreyColor),
+                        child: PopupMenuButton<String>(
+                          onSelected: (value) {
+                            if (value == 'report') {
+                              WidgetsBinding.instance.addPostFrameCallback((_) {
+                                if (!mounted) return;
+                                _showReportBottomSheet(context, post);
+                              });
+                            }
+                          },
+                          itemBuilder: (context) => [
+                            PopupMenuItem(
+                              value: 'save',
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Save',
+                                    style: context.textTheme.titleMedium!
+                                        .copyWith(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: kBlackColor,
+                                        ),
+                                  ),
+                                  Space.horizontal(20),
+                                  Icon(Icons.bookmark_add_outlined, size: 18),
+                                ],
                               ),
                             ),
-                            elevation: WidgetStateProperty.all(4),
-                            alignment: AlignmentDirectional.bottomStart,
-                            visualDensity: VisualDensity.compact,
-                          ),
-                          builder:
-                              (
-                                BuildContext context,
-                                MenuController controller,
-                                Widget? child,
-                              ) {
-                                return GestureDetector(
-                                  onTap: () {
-                                    if (controller.isOpen) {
-                                      controller.close();
-                                    } else {
-                                      controller.open();
-                                    }
-                                  },
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: kWhiteColor,
-                                      border: Border.all(color: kGreyColor),
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    padding: EdgeInsets.all(6.0),
-                                    child: Icon(
-                                      Icons.more_horiz,
-                                      color: kBlackColor,
-                                    ),
+                            PopupMenuItem(
+                              value: 'copy',
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Copy Link',
+                                    style: context.textTheme.titleMedium!
+                                        .copyWith(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: kBlackColor,
+                                        ),
                                   ),
-                                );
-                              },
-                          menuChildren: [
-                            CustomMenuButton(
-                              onTap: () {},
-                              icon: Icon(Icons.bookmark_add_outlined),
-                              iconSize: 15,
-                              title: 'Save',
+                                  Space.horizontal(20),
+                                  Icon(Icons.copy_all, size: 18),
+                                ],
+                              ),
                             ),
-                            CustomMenuButton(
-                              onTap: () {},
-                              icon: Icon(Icons.copy_all),
-                              iconSize: 15,
-                              title: 'Copy Link',
-                            ),
-                            CustomMenuButton(
-                              onTap: () {},
-                              icon: Icon(Icons.report, color: kRedColor),
-                              iconSize: 15,
-                              textColor: kRedColor,
-                              title: 'Report',
+                            PopupMenuItem(
+                              value: 'report',
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    'Report',
+                                    style: context.textTheme.titleMedium!
+                                        .copyWith(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          color: kRedColor,
+                                        ),
+                                  ),
+                                  Space.horizontal(20),
+                                  Icon(
+                                    Icons.report,
+                                    size: 18,
+                                    color: kRedColor,
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: kWhiteColor,
+                              border: Border.all(color: kGreyColor),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: EdgeInsets.all(6.0),
+                            child: Icon(Icons.more_horiz, color: kBlackColor),
+                          ),
                         ),
                       ),
               ],
@@ -949,67 +967,51 @@ class _HomePostContainerState extends State<HomePostContainer> {
   Widget _buildShareActionButton() {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: MenuAnchor(
-        alignmentOffset: const Offset(0, 10),
-        style: MenuStyle(
-          backgroundColor: WidgetStateProperty.all(kWhiteColor),
-          shape: WidgetStateProperty.all(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: kLightGreyColor),
+      child: PopupMenuButton<String>(
+        onSelected: (_) {},
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            value: 'whatsapp',
+            child: CustomMenuButton(
+              onTap: () {},
+              icon: SvgPicture.asset(Assets.svgCopyIcon),
+              iconSize: 15,
+              title: 'Whatsapp',
             ),
           ),
-          elevation: WidgetStateProperty.all(4),
-          alignment: AlignmentDirectional.bottomStart,
-          visualDensity: VisualDensity.compact,
-        ),
-        builder:
-            (BuildContext context, MenuController controller, Widget? child) {
-              return _buildActionButton(
-                text: 'Share',
-                onTap: () {
-                  if (controller.isOpen) {
-                    controller.close();
-                  } else {
-                    controller.open();
-                  }
-                },
-                icon: Icons.share_outlined,
-              );
-            },
-        menuChildren: [
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0, right: 26, bottom: 8),
-            child: Text(
-              "Quick Actions",
-              style: context.normal.copyWith(color: kDarkGreyColor),
+          PopupMenuItem(
+            value: 'twitter',
+            child: CustomMenuButton(
+              onTap: () {},
+              icon: SvgPicture.asset(Assets.svgTwitterIcon),
+              iconSize: 15,
+              title: 'Twitter/X',
             ),
           ),
-          CustomMenuButton(
-            onTap: () {},
-            icon: SvgPicture.asset(Assets.svgCopyIcon),
-            iconSize: 15,
-            title: 'Whatsapp',
+          PopupMenuItem(
+            value: 'facebook',
+            child: CustomMenuButton(
+              onTap: () {},
+              icon: SvgPicture.asset(Assets.svgFacebookIcon),
+              iconSize: 15,
+              title: 'Facebook',
+            ),
           ),
-          CustomMenuButton(
-            onTap: () {},
-            icon: SvgPicture.asset(Assets.svgTwitterIcon),
-            iconSize: 15,
-            title: 'Twitter/X',
-          ),
-          CustomMenuButton(
-            onTap: () {},
-            icon: SvgPicture.asset(Assets.svgFacebookIcon),
-            iconSize: 15,
-            title: 'Facebook',
-          ),
-          CustomMenuButton(
-            onTap: () {},
-            icon: SvgPicture.asset(Assets.svgCopyIcon),
-            iconSize: 15,
-            title: 'CopyLink',
+          PopupMenuItem(
+            value: 'copy',
+            child: CustomMenuButton(
+              onTap: () {},
+              icon: SvgPicture.asset(Assets.svgCopyIcon),
+              iconSize: 15,
+              title: 'CopyLink',
+            ),
           ),
         ],
+        child: _buildActionButton(
+          text: 'Share',
+          onTap: null,
+          icon: Icons.share_outlined,
+        ),
       ),
     );
   }
@@ -1239,9 +1241,13 @@ class _HomePostContainerState extends State<HomePostContainer> {
       widget.onPostUpdated();
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      if (_isPollEndedMessage(e.message)) {
+        _showPollEndedDialog(context, e.message);
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(e.message)));
+      }
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -1253,6 +1259,469 @@ class _HomePostContainerState extends State<HomePostContainer> {
         _isSubmittingVote = false;
       });
     }
+  }
+
+  bool _isPollEndedMessage(String message) {
+    final normalized = message.toLowerCase();
+    return normalized.contains('poll for case') &&
+        normalized.contains('already ended');
+  }
+
+  void _showPollEndedDialog(BuildContext context, String message) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: kWhiteColor,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+          title: Row(
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: kLightGreyColor,
+                child: const Icon(Icons.info_outline, color: kPrimaryColor),
+              ),
+              Space.horizontal(10),
+              Expanded(
+                child: Text(
+                  'Poll Closed',
+                  style: context.bold.copyWith(fontSize: 18),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            message,
+            style: context.normal.copyWith(color: kDarkGreyColor),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showReportBottomSheet(BuildContext context, ActivePost post) {
+    AppBottomSheet.show(
+      context,
+      showSheetHandler: true,
+      enableScrollView: true,
+      borderRadius: 24,
+      body: _ReportBottomSheetContent(post: post),
+    );
+  }
+
+  Widget _buildReportReasonTile({
+    required String title,
+    required String subtitle,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isSelected ? kTextfieldBlueColor : kWhiteColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isSelected ? kPrimaryColor : kGreyColor),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 18,
+              height: 18,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: isSelected ? kPrimaryColor : kSecondaryGreyColor,
+                  width: 1.5,
+                ),
+                color: isSelected ? kPrimaryColor : kWhiteColor,
+              ),
+              child: isSelected
+                  ? const Icon(Icons.check, size: 14, color: kWhiteColor)
+                  : null,
+            ),
+            Space.horizontal(10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: context.semiBold),
+                  if (subtitle.isNotEmpty) ...[
+                    Space.vertical(4),
+                    Text(
+                      subtitle,
+                      style: context.normal.copyWith(
+                        fontSize: 12,
+                        color: kDarkGreyColor,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ReportBottomSheetContent extends StatefulWidget {
+  final ActivePost post;
+
+  const _ReportBottomSheetContent({required this.post});
+
+  @override
+  State<_ReportBottomSheetContent> createState() =>
+      _ReportBottomSheetContentState();
+}
+
+class _ReportBottomSheetContentState extends State<_ReportBottomSheetContent> {
+  final TextEditingController _detailsController = TextEditingController();
+  bool _isLoading = true;
+  bool _isSubmittingReport = false;
+  String? _loadError;
+  List<GeneralParameterOption> _reasons = const [];
+  int? _selectedReasonId;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadReasons();
+  }
+
+  Future<void> _loadReasons() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
+
+    try {
+      final accessToken = await const AuthStorage().readAccessToken();
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+
+      final reasons = await const GeneralParameterService().getByHeaderName(
+        headerName: 'REPORT_REASON_TYPE',
+        accessToken: accessToken,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _reasons = reasons;
+        if (reasons.isEmpty) {
+          _loadError = 'No report reasons available';
+        }
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loadError = 'Failed to load report reasons';
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _submitReport() async {
+    if (_isSubmittingReport) return;
+
+    final reasonId = _selectedReasonId;
+    if (reasonId == null) return;
+
+    setState(() {
+      _isSubmittingReport = true;
+    });
+
+    try {
+      final authStorage = const AuthStorage();
+      final accessToken = await authStorage.readAccessToken();
+      final userId = await authStorage.readUserId();
+
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+      if (userId == null) {
+        throw const ApiException('User id not found');
+      }
+
+      await CasePostService().createPostReport(
+        accessToken: accessToken,
+        postId: widget.post.postId,
+        reportReasonTypeId: reasonId,
+        reportAdditionalInformation: _detailsController.text.trim(),
+        createdBy: userId,
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Report submitted successfully')),
+      );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.message)));
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Failed to submit report')));
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isSubmittingReport = false;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _detailsController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final detailsLength = _detailsController.text.trim().length;
+    final caseTitle =
+        widget.post.caseDetail?.caseTitle.trim().isNotEmpty == true
+        ? widget.post.caseDetail!.caseTitle
+        : 'Post #${widget.post.postId}';
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 10, 20, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Report', style: context.bold.copyWith(fontSize: 20)),
+          Space.vertical(12),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: kLightOrangeColor.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: kLightOrangeColor),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  color: kLightOrangeColor,
+                ),
+                Space.horizontal(10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Report issue',
+                        style: context.bold.copyWith(fontSize: 14),
+                      ),
+                      Space.vertical(4),
+                      Text(
+                        'Your report helps us maintain quality and '
+                        'safety. False reports may result in account '
+                        'restrictions.',
+                        style: context.normal.copyWith(
+                          color: kDarkGreyColor,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Space.vertical(14),
+          Text('You are reporting:', style: context.normal),
+          Space.vertical(8),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: kLightGreyColor,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: kGreyColor),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(caseTitle, style: context.semiBold),
+                Space.vertical(4),
+                Text(
+                  'Post ID ${widget.post.postId}',
+                  style: context.normal.copyWith(
+                    color: kDarkGreyColor,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Space.vertical(16),
+          Text('Select Reason *', style: context.semiBold),
+          Space.vertical(8),
+          if (_isLoading)
+            const Center(child: CircularProgressIndicator())
+          else if (_loadError != null)
+            Column(
+              children: [
+                Text(
+                  _loadError!,
+                  style: context.normal.copyWith(color: kRedColor),
+                ),
+                Space.vertical(8),
+                TextButton(onPressed: _loadReasons, child: const Text('Retry')),
+              ],
+            )
+          else
+            ...List.generate(_reasons.length, (index) {
+              final reason = _reasons[index];
+              final isSelected = _selectedReasonId == reason.paramDetailId;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _buildReportReasonTile(
+                  title: reason.paramLabel,
+                  subtitle: reason.paramValue,
+                  isSelected: isSelected,
+                  onTap: () {
+                    setState(() {
+                      _selectedReasonId = reason.paramDetailId;
+                    });
+                  },
+                ),
+              );
+            }),
+          Space.vertical(6),
+          Text('Additional Details (Optional)', style: context.semiBold),
+          Space.vertical(8),
+          CustomTextField(
+            controller: _detailsController,
+            hintText:
+                'Please provide any additional information that will '
+                'help us investigate this issue...',
+            hintTextStyle: context.normal.copyWith(
+              fontSize: 12,
+              color: kDarkGreyColor,
+              fontWeight: FontWeight.w400,
+            ),
+            maxLine: 4,
+            maxLength: 500,
+            onChanged: (_) => setState(() {}),
+          ),
+          Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              '${detailsLength.clamp(0, 500)}/500 characters',
+              style: context.normal.copyWith(
+                fontSize: 12,
+                color: kDarkGreyColor,
+              ),
+            ),
+          ),
+          Space.vertical(12),
+          PrimaryButton(
+            text: 'Submit Report',
+            buttonColor: kRedColor,
+            textColor: kWhiteColor,
+            inactive: _selectedReasonId == null || _isSubmittingReport,
+            processing: _isSubmittingReport,
+            onPressed: _submitReport,
+          ),
+          Space.vertical(8),
+          Text(
+            'Our support team will review your report and take '
+            'appropriate action.',
+            textAlign: TextAlign.center,
+            style: context.normal.copyWith(fontSize: 12, color: kDarkGreyColor),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReportReasonTile({
+    required String title,
+    required String subtitle,
+    required bool isSelected,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isSelected ? kTextfieldBlueColor : kWhiteColor,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isSelected ? kPrimaryColor : kGreyColor),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 18,
+              height: 18,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(
+                  color: isSelected ? kPrimaryColor : kSecondaryGreyColor,
+                  width: 1.5,
+                ),
+                color: isSelected ? kPrimaryColor : kWhiteColor,
+              ),
+              child: isSelected
+                  ? const Icon(Icons.check, size: 14, color: kWhiteColor)
+                  : null,
+            ),
+            Space.horizontal(10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: context.semiBold),
+                  if (subtitle.isNotEmpty) ...[
+                    Space.vertical(4),
+                    Text(
+                      subtitle,
+                      style: context.normal.copyWith(
+                        fontSize: 12,
+                        color: kDarkGreyColor,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

@@ -2,11 +2,21 @@ import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
-import 'package:cctv_app/feature/communityFeedback/pages/feedback_view.dart';
 import 'package:flutter/material.dart';
 
 class CommunityFeedbackWidget extends StatelessWidget {
-  const CommunityFeedbackWidget({super.key});
+  final String title;
+  final String? categoryLabel;
+  final String createdAt;
+  final VoidCallback? onView;
+
+  const CommunityFeedbackWidget({
+    super.key,
+    required this.title,
+    required this.createdAt,
+    this.categoryLabel,
+    this.onView,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +39,7 @@ class CommunityFeedbackWidget extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               boxShadow: [
                 BoxShadow(
-                  color: kBlackColor.withValues(alpha:0.08),
+                  color: kBlackColor.withValues(alpha: 0.08),
                   blurRadius: 12,
                   offset: Offset(0, 4),
                 ),
@@ -46,15 +56,12 @@ class CommunityFeedbackWidget extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               child: Column(
                 children: [
+                  Text(title, style: context.semiBold.copyWith(fontSize: 18)),
                   Text(
-                    "Culpa aliquam consequnntur veritatis at",
-                    style: context.semiBold.copyWith(fontSize: 18),
-                  ),
-                  Text(
-                    "Culpa aliquam consequnntur veritatis at",
+                    categoryLabel ?? '',
                     style: context.semiBold.copyWith(
                       fontSize: 12,
-                      color: kTransparentColor,
+                      color: kDarkGreyColor,
                     ),
                   ),
                   Padding(
@@ -63,7 +70,7 @@ class CommunityFeedbackWidget extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         Text(
-                          "Apr 30, 10:27 am",
+                          createdAt,
                           style: context.normal.copyWith(
                             fontSize: 14,
                             color: kDarkGreyColor,
@@ -71,14 +78,7 @@ class CommunityFeedbackWidget extends StatelessWidget {
                         ),
                         Space.horizontal(16),
                         GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => FeedbackView(),
-                              ),
-                            );
-                          },
+                          onTap: onView,
                           child: Container(
                             decoration: BoxDecoration(
                               color: kPrimaryColor,

@@ -51,6 +51,11 @@ class Assets {
   static const String pngHighlight2Image = 'assets/images/highlight2.png';
   static const String pngPost1Image = 'assets/images/post1.png';
   static const String pngFlagImage = 'assets/images/flag.png';
+  static const String pngHomeImage = 'assets/images/home.png';
+  static const String pngFileImage = 'assets/images/file.png';
+  static const String pngRedirectImage = 'assets/images/redirect.png';
+  static const String pngInfoImage = 'assets/images/info.png';
+  static const String pngSettingImage = 'assets/images/setting.png';
   static const String pngRegisterTopImage = 'assets/images/register_top.png';
 
   static const String pngRegisterBottomImage =

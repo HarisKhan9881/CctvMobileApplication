@@ -22,8 +22,27 @@ class NetworkResponseHandler {
       );
     }
 
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      final serverMessage = (json['MESSAGE'] as String?) ?? fallbackMessage;
+    String buildServerMessage() {
+      final exceptionMessage = json['EXCEPTION'];
+      final exceptionText = exceptionMessage is String
+          ? exceptionMessage.trim()
+          : exceptionMessage?.toString().trim();
+      final messageText = (json['MESSAGE'] as String?)?.trim();
+      return (exceptionText != null && exceptionText.isNotEmpty)
+          ? exceptionText
+          : (messageText?.isNotEmpty == true ? messageText! : fallbackMessage);
+    }
+
+    final bodyStatusCode = json['STATUS_CODE'];
+    final bodySuccess = json['SUCCESS'];
+    final isBodyError =
+        bodySuccess == false ||
+        (bodyStatusCode is int && bodyStatusCode >= 400);
+
+    if (response.statusCode < 200 ||
+        response.statusCode >= 300 ||
+        isBodyError) {
+      final serverMessage = buildServerMessage();
       final normalizedMessage = serverMessage.trim().toLowerCase();
       final isUnauthorized =
           response.statusCode == 401 ||

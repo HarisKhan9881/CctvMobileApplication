@@ -9,7 +9,6 @@ import 'package:cctv_app/feature/drawer/pages/post_history.dart';
 import 'package:cctv_app/feature/profile/pages/help_and_support.dart';
 import 'package:cctv_app/feature/profile/pages/settings_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
 class CustomDrawer extends StatefulWidget {
   const CustomDrawer({super.key});
@@ -88,12 +87,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
             // ✅ Drawer Items
             _buildDrawerItem(
-              icon: Assets.svgHomeIcon,
+              leading: Image.asset(Assets.pngHomeImage, width: 22, height: 22),
               text: "Home",
               onTap: () {},
             ),
             _buildDrawerItem(
-              icon: Assets.svgNoteBook2Icon,
+              leading: Image.asset(Assets.pngFileImage, width: 22, height: 22),
               text: "Post History",
               onTap: () {
                 Navigator.push(
@@ -105,12 +104,16 @@ class _CustomDrawerState extends State<CustomDrawer> {
             Space.vertical(10),
             _buildLanguageDropdown(context),
             _buildDrawerItem(
-              icon: Assets.svgInviteIcon,
+              leading: Image.asset(
+                Assets.pngRedirectImage,
+                width: 22,
+                height: 22,
+              ),
               text: "Invite Friends",
               onTap: () {},
             ),
             _buildDrawerItem(
-              icon: Assets.svgHelpAndSupport2Icon,
+              leading: Image.asset(Assets.pngInfoImage, width: 22, height: 22),
               text: "Help & Support",
               onTap: () {
                 Navigator.push(
@@ -120,7 +123,11 @@ class _CustomDrawerState extends State<CustomDrawer> {
               },
             ),
             _buildDrawerItem(
-              icon: Assets.svgSettingsIcon,
+              leading: Image.asset(
+                Assets.pngSettingImage,
+                width: 22,
+                height: 22,
+              ),
               text: "Setting",
               onTap: () {
                 Navigator.push(
@@ -219,17 +226,14 @@ class _CustomDrawerState extends State<CustomDrawer> {
   }
 
   Widget _buildDrawerItem({
-    required String icon,
+    required Widget leading,
     required String text,
     required VoidCallback onTap,
   }) {
     return Column(
       children: [
         ListTile(
-          leading: SvgPicture.asset(
-            icon,
-            colorFilter: ColorFilter.mode(kBlackColor, BlendMode.color),
-          ),
+          leading: leading,
           title: Text(
             text,
             style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
@@ -257,14 +261,14 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   Icons.keyboard_arrow_down_rounded,
                   color: Colors.black,
                 ),
-                items: const [
+                items: [
                   DropdownMenuItem(
                     value: "English",
                     child: Row(
                       children: [
-                        Text("🇬🇧 "),
-                        SizedBox(width: 8),
-                        Text("English"),
+                        Image.asset(Assets.pngFlagImage, width: 18, height: 18),
+                        const SizedBox(width: 8),
+                        const Text("English"),
                       ],
                     ),
                   ),
@@ -272,9 +276,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     value: "German",
                     child: Row(
                       children: [
-                        Text("🇩🇪 "),
-                        SizedBox(width: 8),
-                        Text("German"),
+                        Image.asset(Assets.pngFlagImage, width: 18, height: 18),
+                        const SizedBox(width: 8),
+                        const Text("German"),
                       ],
                     ),
                   ),
@@ -282,9 +286,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     value: "Chinese",
                     child: Row(
                       children: [
-                        Text("🇨🇳 "),
-                        SizedBox(width: 8),
-                        Text("Chinese"),
+                        Image.asset(Assets.pngFlagImage, width: 18, height: 18),
+                        const SizedBox(width: 8),
+                        const Text("Chinese"),
                       ],
                     ),
                   ),
@@ -292,9 +296,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     value: "Russian",
                     child: Row(
                       children: [
-                        Text("🇷🇺 "),
-                        SizedBox(width: 8),
-                        Text("Russian"),
+                        Image.asset(Assets.pngFlagImage, width: 18, height: 18),
+                        const SizedBox(width: 8),
+                        const Text("Russian"),
                       ],
                     ),
                   ),

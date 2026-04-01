@@ -1516,55 +1516,37 @@ class _PostMenuButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: MenuAnchor(
-        alignmentOffset: const Offset(0, 10),
-        style: MenuStyle(
-          backgroundColor: WidgetStateProperty.all(kWhiteColor),
-          shape: WidgetStateProperty.all(
-            RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-              side: BorderSide(color: kLightGreyColor),
+      child: PopupMenuButton<String>(
+        onSelected: (_) {},
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            value: 'remove',
+            child: CustomMenuButton(
+              onTap: () {},
+              icon: SvgPicture.asset(Assets.svgRemoveIcon),
+              iconSize: 15,
+              title: 'Remove',
             ),
           ),
-          elevation: WidgetStateProperty.all(4),
-          alignment: AlignmentDirectional.bottomStart,
-          visualDensity: VisualDensity.compact,
-        ),
-        builder:
-            (BuildContext context, MenuController controller, Widget? child) {
-              return GestureDetector(
-                onTap: () {
-                  if (controller.isOpen) {
-                    controller.close();
-                  } else {
-                    controller.open();
-                  }
-                },
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: kWhiteColor,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: kGreyColor),
-                  ),
-                  child: Icon(Icons.more_horiz, color: kDarkGreyColor),
-                ),
-              );
-            },
-        menuChildren: [
-          CustomMenuButton(
-            onTap: () {},
-            icon: SvgPicture.asset(Assets.svgRemoveIcon),
-            iconSize: 15,
-            title: 'Remove',
-          ),
-          CustomMenuButton(
-            onTap: () {},
-            icon: SvgPicture.asset(Assets.svgCopyIcon),
-            iconSize: 15,
-            title: 'Copy Link',
+          PopupMenuItem(
+            value: 'copy',
+            child: CustomMenuButton(
+              onTap: () {},
+              icon: SvgPicture.asset(Assets.svgCopyIcon),
+              iconSize: 15,
+              title: 'Copy Link',
+            ),
           ),
         ],
+        child: Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            color: kWhiteColor,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: kGreyColor),
+          ),
+          child: Icon(Icons.more_horiz, color: kDarkGreyColor),
+        ),
       ),
     );
   }

@@ -9,6 +9,8 @@ class Endpoints {
       '/api/v1/user_case/get_all_active_reels';
   static const String getPendingCasesByUserId =
       '/api/v1/user_case/getPendingCasesByUserId';
+  static const String getPostsByUserId = '/api/v1/case_post/getPostsByUserId';
+  static const String createPostReport = '/api/v1/case_post/createPostReport';
   static const String remindCasePending =
       '/api/v1/case_post/remind_case_pending';
   Endpoints._();
