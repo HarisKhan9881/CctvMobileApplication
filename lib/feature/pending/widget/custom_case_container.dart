@@ -1,3 +1,4 @@
+import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
@@ -227,19 +228,13 @@ class _CustomCaseContainerState extends State<CustomCaseContainer> {
       );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reminder has been sent')),
-      );
+      AppAlert.showSuccess(context, 'Reminder has been sent');
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.message)),
-      );
+      AppAlert.showError(context, e.message);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to send reminder: $e')),
-      );
+      AppAlert.showError(context, 'Failed to send reminder: $e');
     } finally {
       if (!mounted) return;
       setState(() {

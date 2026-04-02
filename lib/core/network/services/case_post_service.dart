@@ -80,6 +80,28 @@ class CasePostService {
         .toList();
   }
 
+  Future<List<ActivePost>> getSavedPostByUserId({
+    required String accessToken,
+    required int userId,
+  }) async {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    final query = Uri(queryParameters: {'user_id': '$userId'}).query;
+    final json = await _client.get(
+      '${Endpoints.getSavedPostByUserId}?$query',
+      headers: {'Authorization': 'Bearer $normalizedToken'},
+    );
+
+    final content = json['CONTENT'];
+    if (content is! List) {
+      return const [];
+    }
+
+    return content
+        .whereType<Map<String, dynamic>>()
+        .map(ActivePost.fromJson)
+        .toList();
+  }
+
   Future<void> submitCasePollVote({
     required String accessToken,
     required int caseId,
@@ -132,6 +154,24 @@ class CasePostService {
         'post_id': postId,
         'user_id': userId,
         'comment_content': commentContent,
+      },
+    );
+  }
+
+  Future<void> createSavedPost({
+    required String accessToken,
+    required int postId,
+    required int userId,
+    required int createdBy,
+  }) async {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    await _client.postJson(
+      Endpoints.createSavedPost,
+      headers: {'Authorization': 'Bearer $normalizedToken'},
+      body: {
+        'post_id': postId,
+        'user_id': userId,
+        'created_by': createdBy,
       },
     );
   }

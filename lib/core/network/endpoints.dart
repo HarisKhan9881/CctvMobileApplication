@@ -10,6 +10,9 @@ class Endpoints {
   static const String getPendingCasesByUserId =
       '/api/v1/user_case/getPendingCasesByUserId';
   static const String getPostsByUserId = '/api/v1/case_post/getPostsByUserId';
+  static const String getSavedPostByUserId =
+      '/api/v1/case_post/getSavedPostByUserId';
+  static const String createSavedPost = '/api/v1/case_post/createSavedPost';
   static const String createPostReport = '/api/v1/case_post/createPostReport';
   static const String remindCasePending =
       '/api/v1/case_post/remind_case_pending';

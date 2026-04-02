@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:cctv_app/core/components/custom_textfield.dart';
+import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
@@ -101,9 +102,7 @@ class _CreateReelPageState extends State<CreateReelPage> {
       await _uploadMedia(file, isVideo: false);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick image: $e')),
-      );
+      AppAlert.showError(context, 'Failed to pick image: $e');
     }
   }
 
@@ -118,9 +117,7 @@ class _CreateReelPageState extends State<CreateReelPage> {
       await _uploadMedia(file, isVideo: true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick video: $e')),
-      );
+      AppAlert.showError(context, 'Failed to pick video: $e');
     }
   }
 
@@ -162,14 +159,9 @@ class _CreateReelPageState extends State<CreateReelPage> {
         _uploadedMetaId = uploadedMedia.metaId;
         _selectedImageBytes = isVideo ? null : fileBytes;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            isVideo
-                ? 'Video uploaded successfully'
-                : 'Image uploaded successfully',
-          ),
-        ),
+      AppAlert.showSuccess(
+        context,
+        isVideo ? 'Video uploaded successfully' : 'Image uploaded successfully',
       );
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -179,9 +171,7 @@ class _CreateReelPageState extends State<CreateReelPage> {
         _isVideoMedia = null;
         _selectedImageBytes = null;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -190,16 +180,9 @@ class _CreateReelPageState extends State<CreateReelPage> {
         _isVideoMedia = null;
         _selectedImageBytes = null;
       });
-      ScaffoldMessenger.of(
+      AppAlert.showError(
         context,
-      ).showSnackBar(
-        SnackBar(
-          content: Text(
-            isVideo
-                ? 'Failed to upload video: $e'
-                : 'Failed to upload image: $e',
-          ),
-        ),
+        isVideo ? 'Failed to upload video: $e' : 'Failed to upload image: $e',
       );
     } finally {
       if (!mounted) return;
@@ -213,9 +196,7 @@ class _CreateReelPageState extends State<CreateReelPage> {
     if (_isSubmitting || _isUploading) return;
     if (_formKey.currentState?.validate() != true) return;
     if (_uploadedMetaId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please upload an image or video first')),
-      );
+      AppAlert.showWarning(context, 'Please upload an image or video first');
       return;
     }
 
@@ -236,20 +217,14 @@ class _CreateReelPageState extends State<CreateReelPage> {
       );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reel created successfully')),
-      );
+      AppAlert.showSuccess(context, 'Reel created successfully');
       Navigator.of(context).pop(true);
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to create reel: $e')));
+      AppAlert.showError(context, 'Failed to create reel: $e');
     } finally {
       if (!mounted) return;
       setState(() {

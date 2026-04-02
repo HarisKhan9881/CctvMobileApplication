@@ -1,3 +1,5 @@
+import 'package:cctv_app/core/deeplink/post_link_manager.dart';
+import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/components/app_bottom_sheet.dart';
 import 'package:cctv_app/core/components/custom_menu_button.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
@@ -17,6 +19,7 @@ import 'package:cctv_app/feature/home/widgets/comment_container.dart';
 import 'package:cctv_app/feature/home/widgets/vote_container.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:video_player/video_player.dart';
 
@@ -47,9 +50,14 @@ class _HomePostContainerState extends State<HomePostContainer> {
   bool _isSubmittingVote = false;
   bool _isSubmittingReaction = false;
   bool _isSubmittingComment = false;
+  bool _isSubmittingReply = false;
+  bool _isSavingPost = false;
   int _reactionCountDelta = 0;
   String? _selectedVote;
-  late final TextEditingController _commentController;
+  int? _replyingCommentId;
+  final Set<int> _expandedReplyCommentIds = <int>{};
+  final TextEditingController _commentController = TextEditingController();
+  final TextEditingController _replyController = TextEditingController();
   late List<ActivePostComment> _comments;
 
   int get _reactionCount =>
@@ -60,7 +68,6 @@ class _HomePostContainerState extends State<HomePostContainer> {
   @override
   void initState() {
     super.initState();
-    _commentController = TextEditingController();
     _comments = List<ActivePostComment>.from(widget.post.comments);
     _loadCurrentUserReaction();
   }
@@ -72,6 +79,9 @@ class _HomePostContainerState extends State<HomePostContainer> {
       _reactionCountDelta = 0;
       _comments = List<ActivePostComment>.from(widget.post.comments);
       _commentController.clear();
+      _replyController.clear();
+      _replyingCommentId = null;
+      _expandedReplyCommentIds.clear();
       _loadCurrentUserReaction();
       return;
     }
@@ -122,6 +132,56 @@ class _HomePostContainerState extends State<HomePostContainer> {
     final minute = parsed.minute.toString().padLeft(2, '0');
     final suffix = parsed.hour >= 12 ? 'PM' : 'AM';
     return '$month ${parsed.day}, ${parsed.year} • $hour:$minute $suffix';
+  }
+
+  Future<void> _copyPostLink() async {
+    final postLink = PostLinkManager.buildPostLink(widget.post.postId);
+    await Clipboard.setData(ClipboardData(text: postLink));
+    if (!mounted) return;
+    AppAlert.showInfo(context, 'Post link copied to clipboard');
+  }
+
+  Future<void> _savePost() async {
+    if (_isSavingPost) return;
+
+    setState(() {
+      _isSavingPost = true;
+    });
+
+    try {
+      final authStorage = const AuthStorage();
+      final accessToken = await authStorage.readAccessToken();
+      final userId = await authStorage.readUserId();
+
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+      if (userId == null) {
+        throw const ApiException('User id not found');
+      }
+
+      await CasePostService().createSavedPost(
+        accessToken: accessToken,
+        postId: widget.post.postId,
+        userId: userId,
+        createdBy: userId,
+      );
+
+      if (!mounted) return;
+      AppAlert.showSuccess(context, 'Post saved successfully');
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      AppAlert.showError(context, e.message);
+    } catch (_) {
+      if (!mounted) return;
+      AppAlert.showError(context, 'Failed to save post');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSavingPost = false;
+        });
+      }
+    }
   }
 
   @override
@@ -350,6 +410,14 @@ class _HomePostContainerState extends State<HomePostContainer> {
                         textDirection: TextDirection.rtl,
                         child: PopupMenuButton<String>(
                           onSelected: (value) {
+                            if (value == 'save') {
+                              _savePost();
+                              return;
+                            }
+                            if (value == 'copy') {
+                              _copyPostLink();
+                              return;
+                            }
                             if (value == 'report') {
                               WidgetsBinding.instance.addPostFrameCallback((_) {
                                 if (!mounted) return;
@@ -500,13 +568,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
                 ..._comments.map((comment) {
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 10),
-                    child: CommentContainer.dynamic(
-                      authorName: comment.userInfo?.fullName.isNotEmpty == true
-                          ? comment.userInfo!.fullName
-                          : 'User',
-                      comment: comment.commentContent,
-                      timeText: _timeLabel(comment.createdAt),
-                    ),
+                    child: _buildCommentThread(comment),
                   );
                 }),
               Row(
@@ -547,6 +609,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
   void dispose() {
     reactionOverlay?.remove();
     _commentController.dispose();
+    _replyController.dispose();
     super.dispose();
   }
 
@@ -781,17 +844,13 @@ class _HomePostContainerState extends State<HomePostContainer> {
       setState(() {
         selectedReaction = previousReaction;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (_) {
       if (!mounted) return;
       setState(() {
         selectedReaction = previousReaction;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to submit reaction')),
-      );
+      AppAlert.showError(context, 'Failed to submit reaction');
     } finally {
       if (!mounted) return;
       setState(() {
@@ -968,7 +1027,11 @@ class _HomePostContainerState extends State<HomePostContainer> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: PopupMenuButton<String>(
-        onSelected: (_) {},
+        onSelected: (value) {
+          if (value == 'copy') {
+            _copyPostLink();
+          }
+        },
         itemBuilder: (context) => [
           PopupMenuItem(
             value: 'whatsapp',
@@ -1111,9 +1174,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
 
     final commentContent = _commentController.text.trim();
     if (commentContent.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please write a comment')));
+      AppAlert.showWarning(context, 'Please write a comment');
       return;
     }
 
@@ -1161,20 +1222,253 @@ class _HomePostContainerState extends State<HomePostContainer> {
       widget.onPostUpdated();
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Failed to add comment')));
+      AppAlert.showError(context, 'Failed to add comment');
     } finally {
       if (!mounted) return;
       setState(() {
         _isSubmittingComment = false;
       });
     }
+  }
+
+  Future<void> _submitReply(ActivePostComment comment) async {
+    if (_isSubmittingReply) return;
+
+    final replyContent = _replyController.text.trim();
+    if (replyContent.isEmpty) {
+      AppAlert.showWarning(context, 'Please write a reply');
+      return;
+    }
+
+    final parentCommentId = comment.commentId;
+    if (parentCommentId == null) {
+      AppAlert.showWarning(context, 'Comment id not found');
+      return;
+    }
+
+    setState(() {
+      _isSubmittingReply = true;
+    });
+
+    try {
+      final authStorage = const AuthStorage();
+      final accessToken = await authStorage.readAccessToken();
+      final userId = await authStorage.readUserId();
+      final firstName = await authStorage.readFirstName();
+      final lastName = await authStorage.readLastName();
+
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+      if (userId == null) {
+        throw const ApiException('User id not found');
+      }
+
+      await CasePostService().createPostChildComment(
+        accessToken: accessToken,
+        postId: widget.post.postId,
+        userId: userId,
+        parentCommentId: parentCommentId,
+        commentContent: replyContent,
+      );
+
+      final reply = ActivePostComment(
+        postId: widget.post.postId,
+        userId: userId,
+        parentCommentId: parentCommentId,
+        commentContent: replyContent,
+        createdAt: DateTime.now().toIso8601String(),
+        userInfo: ActivePostUserInfo(
+          firstName: firstName ?? '',
+          lastName: lastName ?? '',
+        ),
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _comments = _appendReplyToComments(_comments, parentCommentId, reply);
+        _replyController.clear();
+        _replyingCommentId = null;
+        _expandedReplyCommentIds.add(parentCommentId);
+      });
+      widget.onPostUpdated();
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      AppAlert.showError(context, e.message);
+    } catch (_) {
+      if (!mounted) return;
+      AppAlert.showError(context, 'Failed to add reply');
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isSubmittingReply = false;
+      });
+    }
+  }
+
+  List<ActivePostComment> _appendReplyToComments(
+    List<ActivePostComment> comments,
+    int parentCommentId,
+    ActivePostComment reply,
+  ) {
+    return comments.map((comment) {
+      if (comment.commentId == parentCommentId) {
+        return ActivePostComment(
+          commentId: comment.commentId,
+          postId: comment.postId,
+          userId: comment.userId,
+          parentCommentId: comment.parentCommentId,
+          commentContent: comment.commentContent,
+          isActive: comment.isActive,
+          createdAt: comment.createdAt,
+          updatedAt: comment.updatedAt,
+          userInfo: comment.userInfo,
+          childComments: [...comment.childComments, reply],
+        );
+      }
+
+      if (comment.childComments.isEmpty) {
+        return comment;
+      }
+
+      return ActivePostComment(
+        commentId: comment.commentId,
+        postId: comment.postId,
+        userId: comment.userId,
+        parentCommentId: comment.parentCommentId,
+        commentContent: comment.commentContent,
+        isActive: comment.isActive,
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt,
+        userInfo: comment.userInfo,
+        childComments: _appendReplyToComments(
+          comment.childComments,
+          parentCommentId,
+          reply,
+        ),
+      );
+    }).toList();
+  }
+
+  Widget _buildCommentThread(
+    ActivePostComment comment, {
+    double leftPadding = 0,
+  }) {
+    final isReplying = _replyingCommentId == comment.commentId;
+    final hasReplies = comment.childComments.isNotEmpty;
+    final commentId = comment.commentId;
+    final isRepliesExpanded =
+        commentId != null && _expandedReplyCommentIds.contains(commentId);
+
+    void toggleReply() {
+      setState(() {
+        if (_replyingCommentId == comment.commentId) {
+          _replyingCommentId = null;
+          _replyController.clear();
+        } else {
+          _replyingCommentId = comment.commentId;
+          _replyController.clear();
+        }
+      });
+    }
+
+    void toggleRepliesAccordion() {
+      if (commentId == null || !hasReplies) return;
+      setState(() {
+        if (_expandedReplyCommentIds.contains(commentId)) {
+          _expandedReplyCommentIds.remove(commentId);
+        } else {
+          _expandedReplyCommentIds.add(commentId);
+        }
+      });
+    }
+
+    return Padding(
+      padding: EdgeInsets.only(left: leftPadding),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          CommentContainer.dynamic(
+            authorName: comment.userInfo?.fullName.isNotEmpty == true
+                ? comment.userInfo!.fullName
+                : 'User',
+            comment: comment.commentContent,
+            timeText: _timeLabel(comment.createdAt),
+            onReplyTap: toggleReply,
+            replyLabel: isReplying ? 'Cancel' : 'Reply',
+          ),
+          if (isReplying) ...[
+            const SizedBox(height: 6),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: CustomTextField(
+                    controller: _replyController,
+                    hintText: 'Write reply here',
+                    hintTextColor: kDarkGreyColor,
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _submitReply(comment),
+                  ),
+                ),
+                Space.horizontal(8),
+                SizedBox(
+                  height: 58,
+                  child: PrimaryButton(
+                    text: _isSubmittingReply ? '...' : 'Reply',
+                    isMainAxisSizeMin: true,
+                    inactive: _isSubmittingReply,
+                    processing: _isSubmittingReply,
+                    onPressed: () => _submitReply(comment),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (hasReplies)
+            InkWell(
+              onTap: toggleRepliesAccordion,
+              borderRadius: BorderRadius.circular(8),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isRepliesExpanded
+                          ? Icons.keyboard_arrow_down
+                          : Icons.keyboard_arrow_right,
+                      size: 18,
+                      color: kPrimaryColor,
+                    ),
+                    Text(
+                      '${comment.childComments.length} ${comment.childComments.length == 1 ? 'Reply' : 'Replies'}',
+                      style: context.semiBold.copyWith(
+                        color: kPrimaryColor,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          if (hasReplies && isRepliesExpanded)
+            ...comment.childComments.map(
+              (child) => Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: _buildCommentThread(
+                  child,
+                  leftPadding: leftPadding + 20,
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
   }
 
   Future<void> _confirmVote(
@@ -1210,9 +1504,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
 
     final caseId = post.caseDetail?.caseId;
     if (caseId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Case id not found for this post')),
-      );
+      AppAlert.showWarning(context, 'Case id not found for this post');
       return;
     }
 
@@ -1244,15 +1536,11 @@ class _HomePostContainerState extends State<HomePostContainer> {
       if (_isPollEndedMessage(e.message)) {
         _showPollEndedDialog(context, e.message);
       } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(e.message)));
+        AppAlert.showError(context, e.message);
       }
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Failed to cast vote')));
+      AppAlert.showError(context, 'Failed to cast vote');
     } finally {
       if (!mounted) return;
       setState(() {
@@ -1477,19 +1765,13 @@ class _ReportBottomSheetContentState extends State<_ReportBottomSheetContent> {
 
       if (!mounted) return;
       Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Report submitted successfully')),
-      );
+      AppAlert.showSuccess(context, 'Report submitted successfully');
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Failed to submit report')));
+      AppAlert.showError(context, 'Failed to submit report');
     } finally {
       if (!mounted) return;
       setState(() {

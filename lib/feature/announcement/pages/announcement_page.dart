@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/components/admin_top_header.dart';
 import 'package:cctv_app/core/components/custom_dropdown.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
@@ -84,17 +85,13 @@ class _AnnouncementPageState extends State<AnnouncementPage> {
       setState(() {
         _categoryLoadError = e.message;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _categoryLoadError = 'Failed to load categories';
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to load categories: $e')));
+      AppAlert.showError(context, 'Failed to load categories: $e');
     } finally {
       if (!mounted) return;
       setState(() {
@@ -117,9 +114,7 @@ class _AnnouncementPageState extends State<AnnouncementPage> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick image from gallery: $e')),
-      );
+      AppAlert.showError(context, 'Failed to pick image from gallery: $e');
     }
   }
 
@@ -152,25 +147,19 @@ class _AnnouncementPageState extends State<AnnouncementPage> {
         _attachmentController.text = fileName;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Image uploaded successfully')),
-      );
+      AppAlert.showSuccess(context, 'Image uploaded successfully');
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
         _attachmentError = e.message;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _attachmentError = 'Failed to upload image';
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to upload image: $e')));
+      AppAlert.showError(context, 'Failed to upload image: $e');
     } finally {
       if (!mounted) return;
       setState(() {
@@ -200,15 +189,11 @@ class _AnnouncementPageState extends State<AnnouncementPage> {
     final alertNote = _alertNoteController.text.trim();
 
     if (categoryInitial == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a category.')),
-      );
+      AppAlert.showWarning(context, 'Please select a category.');
       return;
     }
     if (alertNote.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please enter alert note.')));
+      AppAlert.showWarning(context, 'Please enter alert note.');
       return;
     }
 
@@ -237,19 +222,13 @@ class _AnnouncementPageState extends State<AnnouncementPage> {
 
       if (!mounted) return;
       _clearForm();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Alert submitted successfully')),
-      );
+      AppAlert.showSuccess(context, 'Alert submitted successfully');
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to submit alert: $e')));
+      AppAlert.showError(context, 'Failed to submit alert: $e');
     } finally {
       if (!mounted) return;
       setState(() {

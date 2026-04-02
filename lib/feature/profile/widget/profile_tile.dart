@@ -7,14 +7,16 @@ import 'package:flutter_svg/svg.dart';
 
 class ProfileTile extends StatelessWidget {
   final String text;
-  final String icon;
+  final String? icon;
+  final IconData? iconData;
   final VoidCallback onTap;
   const ProfileTile({
     super.key,
     required this.text,
-    required this.icon,
+    this.icon,
+    this.iconData,
     required this.onTap,
-  });
+  }) : assert(icon != null || iconData != null);
 
   @override
   Widget build(BuildContext context) {
@@ -26,10 +28,13 @@ class ProfileTile extends StatelessWidget {
           children: [
             Row(
               children: [
-                SvgPicture.asset(
-                  icon,
-                  colorFilter: colorFilter(color: kPrimaryColor),
-                ),
+                if (icon != null)
+                  SvgPicture.asset(
+                    icon!,
+                    colorFilter: colorFilter(color: kPrimaryColor),
+                  )
+                else
+                  Icon(iconData, color: kPrimaryColor, size: 20),
                 Space.horizontal(20),
                 Text(text, style: context.normal.copyWith(fontSize: 16)),
               ],

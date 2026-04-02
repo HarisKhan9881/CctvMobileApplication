@@ -10,6 +10,7 @@ import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/drawer/pages/user_profile_page.dart';
 import 'package:cctv_app/feature/profile/pages/help_and_support.dart';
+import 'package:cctv_app/feature/profile/pages/saved_posts_page.dart';
 import 'package:cctv_app/feature/profile/pages/settings_page.dart';
 import 'package:cctv_app/feature/profile/pages/terms_and_policies.dart';
 import 'package:cctv_app/feature/profile/widget/profile_tile.dart';
@@ -76,7 +77,7 @@ class ProfilePage extends StatelessWidget {
                   );
                 },
               ),
-              Text("Profile", style: context.bold.copyWith(fontSize: 20)),
+              Text("My Profile", style: context.bold.copyWith(fontSize: 20)),
               CupertinoButton(
                 padding: EdgeInsets.zero,
                 onPressed: () {
@@ -117,33 +118,36 @@ class ProfilePage extends StatelessWidget {
                                       profileImageUrl.trim().isNotEmpty
                                   ? Image.network(
                                       profileImageUrl,
-                                      width: 100,
-                                      height: 100,
+                                      width: 78,
+                                      height: 78,
                                       fit: BoxFit.cover,
                                       errorBuilder: (_, _, _) => Image.asset(
                                         Assets.pngHighlight1Image,
-                                        width: 100,
-                                        height: 100,
+                                        width: 78,
+                                        height: 78,
                                         fit: BoxFit.cover,
                                       ),
                                     )
                                   : Image.asset(
                                       Assets.pngHighlight1Image,
-                                      width: 100,
-                                      height: 100,
+                                      width: 78,
+                                      height: 78,
                                       fit: BoxFit.cover,
                                     ),
                             ),
-                            Space.vertical(15),
+                            Space.vertical(12),
                             Text(
                               name.isEmpty ? 'User' : name,
-                              style: context.bold.copyWith(fontSize: 20),
+                              style: context.bold.copyWith(fontSize: 24),
                             ),
                             Text(
                               profile.email.trim().isEmpty
                                   ? 'No username'
                                   : profile.email,
-                              style: context.normal.copyWith(fontSize: 18),
+                              style: context.normal.copyWith(
+                                fontSize: 12,
+                                color: kDarkGreyColor,
+                              ),
                             ),
                           ],
                         );
@@ -163,19 +167,22 @@ class ProfilePage extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(50),
                                 child: Image.asset(
                                   Assets.pngHighlight1Image,
-                                  width: 100,
-                                  height: 100,
+                                  width: 78,
+                                  height: 78,
                                   fit: BoxFit.cover,
                                 ),
                               ),
-                              Space.vertical(15),
+                              Space.vertical(12),
                               Text(
                                 fallbackName,
-                                style: context.bold.copyWith(fontSize: 20),
+                                style: context.bold.copyWith(fontSize: 24),
                               ),
                               Text(
                                 fallbackEmail,
-                                style: context.normal.copyWith(fontSize: 18),
+                                style: context.normal.copyWith(
+                                  fontSize: 12,
+                                  color: kDarkGreyColor,
+                                ),
                               ),
                             ],
                           );
@@ -205,6 +212,19 @@ class ProfilePage extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                           builder: (context) => const HelpAndSupport(),
+                        ),
+                      );
+                    },
+                  ),
+                  Space.vertical(8),
+                  ProfileTile(
+                    text: "Saved Posts",
+                    iconData: Icons.bookmark_border_rounded,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SavedPostsPage(),
                         ),
                       );
                     },

@@ -1,3 +1,4 @@
+import 'package:cctv_app/core/deeplink/post_link_manager.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/feature/bottomNavBar/ad_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/bottomNavBar/admin_bottom_nav_bar.dart';
@@ -18,6 +19,9 @@ class SessionGate extends StatelessWidget {
             body: Center(child: CircularProgressIndicator()),
           );
         }
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          PostLinkManager.instance.tryOpenPendingPost();
+        });
         return snapshot.data ?? const SplashPage();
       },
     );

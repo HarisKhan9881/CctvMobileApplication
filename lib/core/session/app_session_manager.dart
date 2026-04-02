@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/feature/auth/pages/auth_page.dart';
@@ -84,10 +85,9 @@ class AppSessionManager {
         );
 
         if (isSessionExpired) {
-          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
-            const SnackBar(
-              content: Text('Your session expired. Please log in again.'),
-            ),
+          AppAlert.showWarning(
+            context,
+            'Your session expired. Please log in again.',
           );
         }
       }

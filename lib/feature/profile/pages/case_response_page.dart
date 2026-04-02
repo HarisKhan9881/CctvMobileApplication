@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
@@ -153,9 +154,7 @@ class _CaseResponsePageState extends State<CaseResponsePage> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick image from gallery: $e')),
-      );
+      AppAlert.showError(context, 'Failed to pick image from gallery: $e');
     }
   }
 
@@ -174,9 +173,7 @@ class _CaseResponsePageState extends State<CaseResponsePage> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick video from gallery: $e')),
-      );
+      AppAlert.showError(context, 'Failed to pick video from gallery: $e');
     }
   }
 
@@ -218,19 +215,16 @@ class _CaseResponsePageState extends State<CaseResponsePage> {
         _attachmentMetaId = uploadedMedia.metaId;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${isImage ? 'Image' : 'Video'} uploaded successfully'),
-        ),
+      AppAlert.showSuccess(
+        context,
+        '${isImage ? 'Image' : 'Video'} uploaded successfully',
       );
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _attachmentError = 'Failed to upload attachment';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to upload attachment: $e')),
-      );
+      AppAlert.showError(context, 'Failed to upload attachment: $e');
     } finally {
       if (!mounted) return;
       setState(() {
@@ -270,9 +264,7 @@ class _CaseResponsePageState extends State<CaseResponsePage> {
         accessToken == null ||
         accessToken.trim().isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Missing case or session information')),
-      );
+      AppAlert.showWarning(context, 'Missing case or session information');
       return;
     }
 
@@ -299,9 +291,7 @@ class _CaseResponsePageState extends State<CaseResponsePage> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to submit response: $e')));
+      AppAlert.showError(context, 'Failed to submit response: $e');
     } finally {
       if (!mounted) return;
       setState(() {

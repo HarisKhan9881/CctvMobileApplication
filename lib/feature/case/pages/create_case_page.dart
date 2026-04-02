@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/components/custom_dropdown.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/plain_selection_widget.dart';
@@ -352,9 +353,7 @@ class _CreateCasePageState extends State<CreateCasePage> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick image from gallery: $e')),
-      );
+      AppAlert.showError(context, 'Failed to pick image from gallery: $e');
     }
   }
 
@@ -373,9 +372,7 @@ class _CreateCasePageState extends State<CreateCasePage> {
       );
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick video from gallery: $e')),
-      );
+      AppAlert.showError(context, 'Failed to pick video from gallery: $e');
     }
   }
 
@@ -417,27 +414,22 @@ class _CreateCasePageState extends State<CreateCasePage> {
         _attachmentMetaId = uploadedMedia.metaId;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${isImage ? 'Image' : 'Video'} uploaded successfully'),
-        ),
+      AppAlert.showSuccess(
+        context,
+        '${isImage ? 'Image' : 'Video'} uploaded successfully',
       );
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
         _attachmentError = e.message;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _attachmentError = 'Failed to upload attachment';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to upload attachment: $e')),
-      );
+      AppAlert.showError(context, 'Failed to upload attachment: $e');
     } finally {
       if (!mounted) return;
       setState(() {
@@ -480,9 +472,7 @@ class _CreateCasePageState extends State<CreateCasePage> {
         : int.tryParse(_selectedDefendant!);
 
     if (userId == null || accessToken == null || accessToken.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Session not found. Please login again.')),
-      );
+      AppAlert.showWarning(context, 'Session not found. Please login again.');
       return;
     }
 
@@ -490,9 +480,7 @@ class _CreateCasePageState extends State<CreateCasePage> {
         caseViewStatusId == null ||
         caseAvailableStatusId == null ||
         defendantUserId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select all required options.')),
-      );
+      AppAlert.showWarning(context, 'Please select all required options.');
       return;
     }
 
@@ -520,20 +508,14 @@ class _CreateCasePageState extends State<CreateCasePage> {
       );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Case uploaded successfully')),
-      );
+      AppAlert.showSuccess(context, 'Case uploaded successfully');
       _clearForm();
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to upload case: $e')));
+      AppAlert.showError(context, 'Failed to upload case: $e');
     } finally {
       if (!mounted) return;
       setState(() {

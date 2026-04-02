@@ -8,12 +8,16 @@ class CommentContainer extends StatelessWidget {
   final String authorName;
   final String comment;
   final String timeText;
+  final VoidCallback? onReplyTap;
+  final String replyLabel;
 
   const CommentContainer({
     super.key,
     this.authorName = '',
     this.comment = '',
     this.timeText = '',
+    this.onReplyTap,
+    this.replyLabel = 'Reply',
   });
 
   const CommentContainer.dynamic({
@@ -21,6 +25,8 @@ class CommentContainer extends StatelessWidget {
     required this.authorName,
     required this.comment,
     required this.timeText,
+    this.onReplyTap,
+    this.replyLabel = 'Reply',
   });
 
   @override
@@ -61,11 +67,21 @@ class CommentContainer extends StatelessWidget {
               children: [
                 Text("1 Like", style: context.normal),
                 Space.horizontal(12),
-                Row(
-                  children: [
-                    Icon(Icons.reply, color: kDarkGreyColor),
-                    Text("Reply", style: context.normal),
-                  ],
+                InkWell(
+                  onTap: onReplyTap,
+                  borderRadius: BorderRadius.circular(6),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.reply, color: kDarkGreyColor),
+                        Text(replyLabel, style: context.normal),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),

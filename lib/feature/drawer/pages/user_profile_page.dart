@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/components/custom_dropdown.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/plain_selection_widget.dart';
@@ -125,17 +126,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
       setState(() {
         _countryLoadError = e.message;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _countryLoadError = 'Failed to load countries';
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to load countries: $e')));
+      AppAlert.showError(context, 'Failed to load countries: $e');
     } finally {
       if (!mounted) return;
       setState(() {
@@ -174,17 +171,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
       setState(() {
         _genderLoadError = e.message;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _genderLoadError = 'Failed to load genders';
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to load genders: $e')));
+      AppAlert.showError(context, 'Failed to load genders: $e');
     } finally {
       if (!mounted) return;
       setState(() {
@@ -231,17 +224,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
       setState(() {
         _profileLoadError = e.message;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _profileLoadError = 'Failed to load user profile';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load user profile: $e')),
-      );
+      AppAlert.showError(context, 'Failed to load user profile: $e');
     } finally {
       if (!mounted) return;
       setState(() {
@@ -280,17 +269,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
       setState(() {
         _profileTypeLoadError = e.message;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (e) {
       if (!mounted) return;
       setState(() {
         _profileTypeLoadError = 'Failed to load profile types';
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to load profile types: $e')),
-      );
+      AppAlert.showError(context, 'Failed to load profile types: $e');
     } finally {
       if (!mounted) return;
       setState(() {
@@ -443,20 +428,14 @@ class _UserProfilePageState extends State<UserProfilePage> {
       );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully')),
-      );
+      AppAlert.showSuccess(context, 'Profile updated successfully');
       await _loadUserProfile();
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Failed to update profile: $e')));
+      AppAlert.showError(context, 'Failed to update profile: $e');
     } finally {
       if (!mounted) return;
       setState(() {
@@ -495,19 +474,13 @@ class _UserProfilePageState extends State<UserProfilePage> {
         _uploadedProfileImage = uploadedMedia;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile image uploaded successfully')),
-      );
+      AppAlert.showSuccess(context, 'Profile image uploaded successfully');
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to upload profile image: $e')),
-      );
+      AppAlert.showError(context, 'Failed to upload profile image: $e');
     } finally {
       if (!mounted) return;
       setState(() {

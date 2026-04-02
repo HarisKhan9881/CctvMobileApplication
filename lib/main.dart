@@ -1,3 +1,4 @@
+import 'package:cctv_app/core/deeplink/post_link_manager.dart';
 import 'package:cctv_app/core/session/app_session_manager.dart';
 import 'package:cctv_app/feature/session/session_gate.dart';
 import 'package:flutter/material.dart';
@@ -5,6 +6,7 @@ import 'package:sizer/sizer.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await PostLinkManager.instance.initialize();
   runApp(const MyApp());
 }
 

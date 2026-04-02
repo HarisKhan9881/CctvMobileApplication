@@ -1,3 +1,4 @@
+import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
@@ -103,14 +104,10 @@ class _SigninViewState extends State<SigninView> {
       );
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Login failed: $e')));
+      AppAlert.showError(context, 'Login failed: $e');
     } finally {
       if (!mounted) return;
       setState(() {

@@ -1,3 +1,4 @@
+import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/components/custom_menu_button.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
@@ -571,25 +572,19 @@ class _AdPostContainerState extends State<AdPostContainer> {
           _reactionCountDelta += 1;
         }
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${_reactionLabel(reaction)} reaction added')),
-      );
+      AppAlert.showSuccess(context, '${_reactionLabel(reaction)} reaction added');
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
         selectedReaction = previousReaction;
       });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (_) {
       if (!mounted) return;
       setState(() {
         selectedReaction = previousReaction;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to submit reaction')),
-      );
+      AppAlert.showError(context, 'Failed to submit reaction');
     } finally {
       if (!mounted) return;
       setState(() {
@@ -684,9 +679,7 @@ class _AdPostContainerState extends State<AdPostContainer> {
 
     final commentContent = _commentController.text.trim();
     if (commentContent.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please write a comment')));
+      AppAlert.showWarning(context, 'Please write a comment');
       return;
     }
 
@@ -735,19 +728,13 @@ class _AdPostContainerState extends State<AdPostContainer> {
         _commentController.clear();
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Comment added')));
+      AppAlert.showSuccess(context, 'Comment added');
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Failed to add comment')));
+      AppAlert.showError(context, 'Failed to add comment');
     } finally {
       if (!mounted) return;
       setState(() {
@@ -763,9 +750,7 @@ class _AdPostContainerState extends State<AdPostContainer> {
 
     final commentContent = _replyController.text.trim();
     if (commentContent.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Please write a reply')));
+      AppAlert.showWarning(context, 'Please write a reply');
       return;
     }
 
@@ -826,19 +811,13 @@ class _AdPostContainerState extends State<AdPostContainer> {
         _replyingToAuthor = null;
       });
 
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Reply added')));
+      AppAlert.showSuccess(context, 'Reply added');
     } on ApiException catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(e.message)));
+      AppAlert.showError(context, e.message);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Failed to add reply')));
+      AppAlert.showError(context, 'Failed to add reply');
     } finally {
       if (!mounted) return;
       setState(() {
@@ -1127,11 +1106,7 @@ class _AdPostContainerState extends State<AdPostContainer> {
   void _toggleReplyBox(ActivePostComment comment) {
     final commentId = comment.commentId;
     if (commentId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Reply is not available for this comment'),
-        ),
-      );
+      AppAlert.showWarning(context, 'Reply is not available for this comment');
       return;
     }
 
