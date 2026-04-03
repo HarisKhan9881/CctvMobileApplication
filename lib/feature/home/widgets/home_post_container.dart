@@ -1,4 +1,3 @@
-import 'package:cctv_app/core/deeplink/post_link_manager.dart';
 import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/components/app_bottom_sheet.dart';
 import 'package:cctv_app/core/components/custom_menu_button.dart';
@@ -11,6 +10,7 @@ import 'package:cctv_app/core/network/models/active_post.dart';
 import 'package:cctv_app/core/network/models/general_parameter_option.dart';
 import 'package:cctv_app/core/network/services/case_post_service.dart';
 import 'package:cctv_app/core/network/services/general_parameter_service.dart';
+import 'package:cctv_app/core/share/post_share_helper.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
@@ -19,7 +19,6 @@ import 'package:cctv_app/feature/home/widgets/comment_container.dart';
 import 'package:cctv_app/feature/home/widgets/vote_container.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:video_player/video_player.dart';
 
@@ -75,7 +74,10 @@ class _HomePostContainerState extends State<HomePostContainer> {
   @override
   void didUpdateWidget(covariant HomePostContainer oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.post.postId != widget.post.postId) {
+    final isNewPost = oldWidget.post.postId != widget.post.postId;
+    final hasFreshPostData = !identical(oldWidget.post, widget.post);
+
+    if (isNewPost) {
       _reactionCountDelta = 0;
       _comments = List<ActivePostComment>.from(widget.post.comments);
       _commentController.clear();
@@ -86,8 +88,10 @@ class _HomePostContainerState extends State<HomePostContainer> {
       return;
     }
 
-    if (oldWidget.post.comments.length != widget.post.comments.length) {
+    if (hasFreshPostData) {
+      _reactionCountDelta = 0;
       _comments = List<ActivePostComment>.from(widget.post.comments);
+      _loadCurrentUserReaction();
     }
 
     final oldTotal =
@@ -103,7 +107,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
 
   String _timeLabel(String? value) {
     if (value == null || value.trim().isEmpty) return '';
-    final parsed = DateTime.tryParse(value);
+    final parsed = DateTime.tryParse(value)?.toLocal();
     if (parsed == null) {
       return value.replaceFirst('T', ' ');
     }
@@ -134,11 +138,37 @@ class _HomePostContainerState extends State<HomePostContainer> {
     return '$month ${parsed.day}, ${parsed.year} • $hour:$minute $suffix';
   }
 
-  Future<void> _copyPostLink() async {
-    final postLink = PostLinkManager.buildPostLink(widget.post.postId);
-    await Clipboard.setData(ClipboardData(text: postLink));
-    if (!mounted) return;
-    AppAlert.showInfo(context, 'Post link copied to clipboard');
+  Widget _buildAuthorAvatar(ActivePost post) {
+    final avatarUrl = post.authorAvatarUrl?.trim();
+    if (avatarUrl != null && avatarUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: 30,
+        backgroundColor: kLightGreyColor,
+        backgroundImage: NetworkImage(avatarUrl),
+      );
+    }
+
+    final name = post.authorDisplayName.trim();
+    final initials = name.isEmpty
+        ? 'U'
+        : name
+              .split(' ')
+              .where((part) => part.trim().isNotEmpty)
+              .take(2)
+              .map((part) => part[0].toUpperCase())
+              .join();
+
+    return CircleAvatar(
+      radius: 30,
+      backgroundColor: kTextfieldBlueColor,
+      child: Text(
+        initials,
+        style: context.semiBold.copyWith(
+          color: kPrimaryColor,
+          fontSize: 18,
+        ),
+      ),
+    );
   }
 
   Future<void> _savePost() async {
@@ -187,15 +217,13 @@ class _HomePostContainerState extends State<HomePostContainer> {
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
-    final author = post.createdByUserInfo?.fullName.isNotEmpty == true
-        ? post.createdByUserInfo!.fullName
-        : 'Unknown User';
+    final author = post.authorDisplayName;
     final timeText = _timeLabel(post.createdAt);
     final defendant = post.defendantDetails.isNotEmpty
         ? post.defendantDetails.first
         : null;
-    final ownerName = post.createdByUserInfo?.fullName.isNotEmpty == true
-        ? post.createdByUserInfo!.fullName
+    final ownerName = post.authorDisplayName.isNotEmpty
+        ? post.authorDisplayName
         : 'Owner';
     final defendantName = defendant?.userInfo?.fullName ?? 'Defendant';
 
@@ -219,10 +247,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
                     decoration: BoxDecoration(color: kTransparentColor),
                     child: Row(
                       children: [
-                        CircleAvatar(
-                          radius: 30,
-                          backgroundImage: AssetImage(Assets.pngUser1Image),
-                        ),
+                        _buildAuthorAvatar(post),
                         Space.horizontal(10),
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -415,7 +440,11 @@ class _HomePostContainerState extends State<HomePostContainer> {
                               return;
                             }
                             if (value == 'copy') {
-                              _copyPostLink();
+                              PostShareHelper.sharePost(
+                                context,
+                                post: widget.post,
+                                target: PostShareTarget.copy,
+                              );
                               return;
                             }
                             if (value == 'report') {
@@ -529,6 +558,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
               rightText: defendantName,
               leftVotes: post.casePollCount?.ownerCount ?? 0,
               rightVotes: post.casePollCount?.defendantCount ?? 0,
+              totalVotesCount: post.casePollCount?.totalCount ?? 0,
               selectedOption: _selectedVote,
               isSubmitting: _isSubmittingVote,
               onLeftTap: () => _confirmVote(
@@ -553,50 +583,146 @@ class _HomePostContainerState extends State<HomePostContainer> {
               },
             ),
             Space.vertical(14),
-            _buildReactionSummaryRow(post),
-            const Divider(height: 20),
             _buildPostActionRow(post),
             Space.vertical(20),
             const SizedBox(height: 16),
             if (areCommentsVisible) ...[
-              if (_comments.isEmpty)
-                Text(
-                  "No comments yet",
-                  style: context.normal.copyWith(color: kDarkGreyColor),
-                )
-              else
-                ..._comments.map((comment) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 10),
-                    child: _buildCommentThread(comment),
-                  );
-                }),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: CustomTextField(
-                      controller: _commentController,
-                      hintText: "Write comment here",
-                      hintTextColor: kDarkGreyColor,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _submitComment(),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: kWhiteColor,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: kGreyColor),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(
+                          'Comments',
+                          style: context.semiBold.copyWith(fontSize: 15),
+                        ),
+                        const Spacer(),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 5,
+                          ),
+                          decoration: BoxDecoration(
+                            color: kTextfieldBlueColor,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            '${_comments.length}',
+                            style: context.semiBold.copyWith(
+                              color: kPrimaryColor,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  Space.horizontal(8),
-                  SizedBox(
-                    height: 58,
-                    child: PrimaryButton(
-                      text: _isSubmittingComment ? "..." : "Send",
-                      isMainAxisSizeMin: true,
-                      inactive: _isSubmittingComment,
-                      processing: _isSubmittingComment,
-                      onPressed: () {
-                        _submitComment();
-                      },
+                    Space.vertical(14),
+                    if (_comments.isEmpty)
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 18,
+                        ),
+                        decoration: BoxDecoration(
+                          color: kLightGreyColor,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: kTextfieldBlueColor,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(
+                                Icons.chat_bubble_outline_rounded,
+                                color: kPrimaryColor,
+                                size: 20,
+                              ),
+                            ),
+                            Space.horizontal(12),
+                            Expanded(
+                              child: Text(
+                                'No comments yet. Start the conversation.',
+                                style: context.normal.copyWith(
+                                  color: kDarkGreyColor,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    else
+                      ..._comments.map((comment) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildCommentThread(comment),
+                        );
+                      }),
+                    Space.vertical(4),
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: kLightGreyColor,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: kGreyColor),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          const CircleAvatar(
+                            radius: 18,
+                            backgroundColor: kTextfieldBlueColor,
+                            child: Icon(
+                              Icons.mode_comment_outlined,
+                              size: 18,
+                              color: kPrimaryColor,
+                            ),
+                          ),
+                          Space.horizontal(10),
+                          Expanded(
+                            child: CustomTextField(
+                              controller: _commentController,
+                              hintText: "Share your thoughts...",
+                              hintTextColor: kDarkGreyColor,
+                              fieldColor: kWhiteColor,
+                              showBorder: false,
+                              topPadding: 16,
+                              bottomPadding: 16,
+                              borderRadius: 14,
+                              textInputAction: TextInputAction.send,
+                              onSubmitted: (_) => _submitComment(),
+                            ),
+                          ),
+                          Space.horizontal(8),
+                          SizedBox(
+                            height: 48,
+                            child: PrimaryButton(
+                              text: _isSubmittingComment ? "..." : "Send",
+                              isMainAxisSizeMin: true,
+                              inactive: _isSubmittingComment,
+                              processing: _isSubmittingComment,
+                              onPressed: () {
+                                _submitComment();
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ],
           ],
@@ -918,35 +1044,6 @@ class _HomePostContainerState extends State<HomePostContainer> {
     );
   }
 
-  Widget _buildReactionSummaryRow(ActivePost post) {
-    return Row(
-      children: [
-        Expanded(
-          child: Row(
-            children: [
-              _buildReactionSummaryIcons(),
-              Space.horizontal(8),
-              Flexible(
-                child: Text(
-                  _reactionCount > 0
-                      ? '$_reactionCount'
-                      : 'Be the first to react',
-                  style: context.normal.copyWith(color: kDarkGreyColor),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-        ),
-        Space.horizontal(12),
-        Text(
-          '${_comments.length} comments',
-          style: context.normal.copyWith(color: kDarkGreyColor),
-        ),
-      ],
-    );
-  }
-
   Widget _buildPostActionRow(ActivePost post) {
     return Row(
       children: [
@@ -966,9 +1063,10 @@ class _HomePostContainerState extends State<HomePostContainer> {
             ),
           ),
         ),
+        Space.horizontal(10),
         Expanded(
           child: _buildActionButton(
-            text: 'Comment',
+            text: _comments.length.toString(),
             onTap: () {
               setState(() {
                 areCommentsVisible = !areCommentsVisible;
@@ -977,8 +1075,64 @@ class _HomePostContainerState extends State<HomePostContainer> {
             icon: Icons.mode_comment_outlined,
           ),
         ),
+        Space.horizontal(10),
+        Expanded(child: _buildRepostActionButton(post)),
+        Space.horizontal(10),
         Expanded(child: _buildShareActionButton()),
       ],
+    );
+  }
+
+  Widget _buildRepostActionButton(ActivePost post) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kWhiteColor,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: kGreyColor),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: () {
+          _showRepostBottomSheet(context, post);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                Assets.repostIcon,
+                width: 18,
+                height: 18,
+                color: kPrimaryColor,
+              ),
+              Space.horizontal(6),
+              Flexible(
+                child: Text(
+                  post.repostCount.toString().padLeft(2, '0'),
+                  style: context.semiBold.copyWith(
+                    color: kDarkGreyColor,
+                    fontSize: 13,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showRepostBottomSheet(BuildContext context, ActivePost post) {
+    AppBottomSheet.show(
+      context,
+      borderRadius: 28,
+      body: _RepostBottomSheetContent(
+        post: post,
+        isAdmin: widget.isAdmin,
+        onRepostCreated: widget.onPostUpdated,
+      ),
     );
   }
 
@@ -990,34 +1144,41 @@ class _HomePostContainerState extends State<HomePostContainer> {
     bool isSelected = false,
   }) {
     final foregroundColor = isSelected ? kPrimaryColor : kDarkGreyColor;
-    return InkWell(
-      borderRadius: BorderRadius.circular(10),
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (isLoading)
-              const SizedBox(
-                width: 18,
-                height: 18,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            else
-              Icon(icon, color: foregroundColor, size: 20),
-            Space.horizontal(6),
-            Flexible(
-              child: Text(
-                text,
-                style: context.semiBold.copyWith(
-                  color: foregroundColor,
-                  fontSize: 13,
+    return Container(
+      decoration: BoxDecoration(
+        color: kWhiteColor,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: kGreyColor),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(10),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isLoading)
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              else
+                Icon(icon, color: foregroundColor, size: 20),
+              Space.horizontal(6),
+              Flexible(
+                child: Text(
+                  text,
+                  style: context.semiBold.copyWith(
+                    color: foregroundColor,
+                    fontSize: 13,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                overflow: TextOverflow.ellipsis,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1027,17 +1188,21 @@ class _HomePostContainerState extends State<HomePostContainer> {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: PopupMenuButton<String>(
-        onSelected: (value) {
-          if (value == 'copy') {
-            _copyPostLink();
-          }
-        },
+        onSelected: _handleShareSelection,
         itemBuilder: (context) => [
+          PopupMenuItem(
+            value: 'system',
+            child: CustomMenuButton(
+              onTap: () {},
+              icon: const Icon(Icons.share_outlined, size: 16),
+              title: 'More',
+            ),
+          ),
           PopupMenuItem(
             value: 'whatsapp',
             child: CustomMenuButton(
               onTap: () {},
-              icon: SvgPicture.asset(Assets.svgCopyIcon),
+              icon: SvgPicture.asset(Assets.svgWhatsappIcon),
               iconSize: 15,
               title: 'Whatsapp',
             ),
@@ -1077,6 +1242,46 @@ class _HomePostContainerState extends State<HomePostContainer> {
         ),
       ),
     );
+  }
+
+  Future<void> _handleShareSelection(String value) async {
+    switch (value) {
+      case 'system':
+        await PostShareHelper.sharePost(
+          context,
+          post: widget.post,
+          target: PostShareTarget.system,
+        );
+        return;
+      case 'whatsapp':
+        await PostShareHelper.sharePost(
+          context,
+          post: widget.post,
+          target: PostShareTarget.whatsapp,
+        );
+        return;
+      case 'twitter':
+        await PostShareHelper.sharePost(
+          context,
+          post: widget.post,
+          target: PostShareTarget.twitter,
+        );
+        return;
+      case 'facebook':
+        await PostShareHelper.sharePost(
+          context,
+          post: widget.post,
+          target: PostShareTarget.facebook,
+        );
+        return;
+      case 'copy':
+        await PostShareHelper.sharePost(
+          context,
+          post: widget.post,
+          target: PostShareTarget.copy,
+        );
+        return;
+    }
   }
 
   List<String> _topReactionTypes() {
@@ -1399,33 +1604,47 @@ class _HomePostContainerState extends State<HomePostContainer> {
             timeText: _timeLabel(comment.createdAt),
             onReplyTap: toggleReply,
             replyLabel: isReplying ? 'Cancel' : 'Reply',
+            isReplyActive: isReplying,
           ),
           if (isReplying) ...[
-            const SizedBox(height: 6),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: CustomTextField(
-                    controller: _replyController,
-                    hintText: 'Write reply here',
-                    hintTextColor: kDarkGreyColor,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _submitReply(comment),
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: kLightGreyColor,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: kGreyColor),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: CustomTextField(
+                      controller: _replyController,
+                      hintText: 'Write a reply...',
+                      hintTextColor: kDarkGreyColor,
+                      fieldColor: kWhiteColor,
+                      showBorder: false,
+                      topPadding: 16,
+                      bottomPadding: 16,
+                      borderRadius: 14,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _submitReply(comment),
+                    ),
                   ),
-                ),
-                Space.horizontal(8),
-                SizedBox(
-                  height: 58,
-                  child: PrimaryButton(
-                    text: _isSubmittingReply ? '...' : 'Reply',
-                    isMainAxisSizeMin: true,
-                    inactive: _isSubmittingReply,
-                    processing: _isSubmittingReply,
-                    onPressed: () => _submitReply(comment),
+                  Space.horizontal(8),
+                  SizedBox(
+                    height: 48,
+                    child: PrimaryButton(
+                      text: _isSubmittingReply ? '...' : 'Send',
+                      isMainAxisSizeMin: true,
+                      inactive: _isSubmittingReply,
+                      processing: _isSubmittingReply,
+                      onPressed: () => _submitReply(comment),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 8),
           ],
@@ -1433,8 +1652,16 @@ class _HomePostContainerState extends State<HomePostContainer> {
             InkWell(
               onTap: toggleRepliesAccordion,
               borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+              child: Container(
+                margin: const EdgeInsets.only(top: 4),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 8,
+                  horizontal: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: kTextfieldBlueColor,
+                  borderRadius: BorderRadius.circular(999),
+                ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -2001,6 +2228,249 @@ class _ReportBottomSheetContentState extends State<_ReportBottomSheetContent> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RepostBottomSheetContent extends StatefulWidget {
+  final ActivePost post;
+  final bool isAdmin;
+  final VoidCallback onRepostCreated;
+
+  const _RepostBottomSheetContent({
+    required this.post,
+    required this.isAdmin,
+    required this.onRepostCreated,
+  });
+
+  @override
+  State<_RepostBottomSheetContent> createState() =>
+      _RepostBottomSheetContentState();
+}
+
+class _RepostBottomSheetContentState extends State<_RepostBottomSheetContent> {
+  final TextEditingController _opinionController = TextEditingController();
+  bool _isSubmitting = false;
+
+  String _timeLabel(String? value) {
+    if (value == null || value.trim().isEmpty) return '';
+    final parsed = DateTime.tryParse(value)?.toLocal();
+    if (parsed == null) {
+      return value.replaceFirst('T', ' ');
+    }
+
+    final now = DateTime.now();
+    final difference = now.difference(parsed);
+    if (difference.inMinutes < 1) return 'Just now';
+    if (difference.inHours < 1) return '${difference.inMinutes} mins ago';
+    if (difference.inDays < 1) return '${difference.inHours} hours ago';
+    return '${difference.inDays} days ago';
+  }
+
+  @override
+  void dispose() {
+    _opinionController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitRepost() async {
+    if (_isSubmitting) return;
+
+    try {
+      final accessToken = await const AuthStorage().readAccessToken();
+      final userId = await const AuthStorage().readUserId();
+
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+      if (userId == null) {
+        throw const ApiException('User id not found');
+      }
+
+      setState(() {
+        _isSubmitting = true;
+      });
+
+      await CasePostService().createPostRepost(
+        accessToken: accessToken,
+        postId: widget.post.postId,
+        userId: userId,
+        postDescription: _opinionController.text.trim(),
+        createdBy: userId,
+      );
+
+      if (!mounted) return;
+      Navigator.pop(context);
+      widget.onRepostCreated();
+      AppAlert.showSuccess(context, 'Post reposted successfully');
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      AppAlert.showError(context, e.message);
+    } catch (_) {
+      if (!mounted) return;
+      AppAlert.showError(context, 'Failed to repost post');
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isSubmitting = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final post = widget.post;
+    final author = post.authorDisplayName;
+    final defendant = post.defendantDetails.isNotEmpty
+        ? post.defendantDetails.first
+        : null;
+    final ownerName = author.isNotEmpty ? author : 'Owner';
+    final defendantName = defendant?.userInfo?.fullName ?? 'Defendant';
+    final timeText = _timeLabel(post.createdAt);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Repost', style: context.bold.copyWith(fontSize: 18)),
+          Space.vertical(12),
+          CustomTextField(
+            controller: _opinionController,
+            hintText: 'Enter Your opinion',
+            maxLine: 7,
+            hintTextColor: kDarkGreyColor,
+          ),
+          Space.vertical(16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: kWhiteColor,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: kGreyColor),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    _PostAuthorAvatar(post: post, radius: 20),
+                    Space.horizontal(10),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(author, style: context.semiBold),
+                          Text(
+                            timeText.isEmpty ? 'Just now' : timeText,
+                            style: context.normal.copyWith(
+                              color: kDarkGreyColor,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: kWhiteColor,
+                        border: Border.all(color: kGreyColor),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.all(6),
+                      child: const Icon(
+                        Icons.more_horiz,
+                        color: kBlackColor,
+                        size: 18,
+                      ),
+                    ),
+                  ],
+                ),
+                Space.vertical(16),
+                Text(
+                  post.caseDetail?.caseTitle.isNotEmpty == true
+                      ? post.caseDetail!.caseTitle
+                      : "Who's Right?",
+                  style: context.bold.copyWith(fontSize: 20),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Space.vertical(16),
+                _PostComparisonPreview(
+                  leftMedia: post.caseDetail?.meta,
+                  rightMedia: defendant?.meta,
+                ),
+                Space.vertical(14),
+                VotingResultExample(
+                  leftLabel: 'A.',
+                  leftText: ownerName,
+                  rightLabel: 'B.',
+                  rightText: defendantName,
+                  leftVotes: post.casePollCount?.ownerCount ?? 0,
+                  rightVotes: post.casePollCount?.defendantCount ?? 0,
+                  totalVotesCount: post.casePollCount?.totalCount ?? 0,
+                  selectedOption: null,
+                ),
+              ],
+            ),
+          ),
+          Space.vertical(16),
+          PrimaryButton(
+            text: 'Repost',
+            processing: _isSubmitting,
+            inactive: _isSubmitting,
+            prefixIcon: Padding(
+              padding: const EdgeInsets.all(4.3),
+              child: Image.asset(Assets.repostIcon, height: 16),
+            ),
+            onPressed: _submitRepost,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PostAuthorAvatar extends StatelessWidget {
+  final ActivePost post;
+  final double radius;
+
+  const _PostAuthorAvatar({
+    required this.post,
+    required this.radius,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final avatarUrl = post.authorAvatarUrl?.trim();
+    if (avatarUrl != null && avatarUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: radius,
+        backgroundColor: kLightGreyColor,
+        backgroundImage: NetworkImage(avatarUrl),
+      );
+    }
+
+    final name = post.authorDisplayName.trim();
+    final initials = name.isEmpty
+        ? 'U'
+        : name
+              .split(' ')
+              .where((part) => part.trim().isNotEmpty)
+              .take(2)
+              .map((part) => part[0].toUpperCase())
+              .join();
+
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: kTextfieldBlueColor,
+      child: Text(
+        initials,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+          color: kPrimaryColor,
+          fontWeight: FontWeight.w700,
         ),
       ),
     );

@@ -7,7 +7,7 @@ import 'package:cctv_app/core/network/api_client.dart';
 import 'package:cctv_app/core/network/api_config.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/services/auth_service.dart';
-import 'package:cctv_app/core/network/services/common_parameter_service.dart';
+import 'package:cctv_app/core/realtime/app_websocket_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/validators.dart';
@@ -56,6 +56,26 @@ class _SigninViewState extends State<SigninView> {
     };
   }
 
+  String _loginErrorMessage(ApiException error) {
+    final message = error.message.toLowerCase();
+    final isCredentialIssue =
+        error.statusCode == 401 ||
+        message.contains('invalid credential') ||
+        message.contains('invalid username') ||
+        message.contains('invalid password') ||
+        message.contains('incorrect username') ||
+        message.contains('incorrect password') ||
+        message.contains('username or password') ||
+        message.contains('bad credentials') ||
+        message.contains('unauthorized');
+
+    if (isCredentialIssue) {
+      return 'Credentials issue please check username or password';
+    }
+
+    return error.message;
+  }
+
   Future<void> _submit() async {
     if (isSubmitting) return;
     if (formKey.currentState?.validate() != true) return;
@@ -93,7 +113,7 @@ class _SigninViewState extends State<SigninView> {
         dashboardType: dashboardType,
       );
 
-      await _loadRefreshSettings(accessToken);
+      await AppWebSocketService.instance.connect(accessToken: accessToken);
 
       if (!mounted) return;
       final dashboard = _dashboardFromType(dashboardType);
@@ -104,7 +124,7 @@ class _SigninViewState extends State<SigninView> {
       );
     } on ApiException catch (e) {
       if (!mounted) return;
-      AppAlert.showError(context, e.message);
+      AppAlert.showError(context, _loginErrorMessage(e));
     } catch (e) {
       if (!mounted) return;
       AppAlert.showError(context, 'Login failed: $e');
@@ -113,34 +133,6 @@ class _SigninViewState extends State<SigninView> {
       setState(() {
         isSubmitting = false;
       });
-    }
-  }
-
-  Future<void> _loadRefreshSettings(String accessToken) async {
-    try {
-      final service = const CommonParameterService();
-      final results = await Future.wait([
-        service.getGlobalParameterValue(
-          paramKey: 'POST_REFRESH_IN_SECOND',
-          accessToken: accessToken,
-        ),
-        service.getGlobalParameterValue(
-          paramKey: 'REEL_REFRESH_IN_SECOND',
-          accessToken: accessToken,
-        ),
-        service.getGlobalParameterValue(
-          paramKey: 'NOTIFICATION_REFRESH_IN_SECOND',
-          accessToken: accessToken,
-        ),
-      ]);
-
-      await AuthStorage().saveRefreshIntervals(
-        postSeconds: results[0],
-        reelSeconds: results[1],
-        notificationSeconds: results[2],
-      );
-    } catch (_) {
-      // Ignore refresh-setting failures to avoid blocking login.
     }
   }
 

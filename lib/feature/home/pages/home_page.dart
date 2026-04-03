@@ -12,11 +12,12 @@ import 'package:cctv_app/core/network/models/general_parameter_option.dart';
 import 'package:cctv_app/core/network/services/case_post_service.dart';
 import 'package:cctv_app/core/network/services/general_parameter_service.dart';
 import 'package:cctv_app/core/network/services/user_case_service.dart';
+import 'package:cctv_app/core/realtime/app_websocket_event.dart';
+import 'package:cctv_app/core/realtime/app_websocket_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/home/pages/create_reel_page.dart';
-import 'package:cctv_app/feature/home/pages/private_profile_page.dart';
 import 'package:cctv_app/feature/home/pages/public_profile_page.dart';
 import 'package:cctv_app/feature/home/widgets/home_post_container.dart';
 import 'package:flutter/material.dart';
@@ -38,8 +39,6 @@ class _CategoryTabItem {
 }
 
 class _HomePageState extends State<HomePage> {
-  static const int _defaultPostRefreshSeconds = 0;
-  static const int _defaultReelRefreshSeconds = 0;
   static List<ActivePost> _postsCache = const [];
   static List<ActiveReel> _reelsCache = const [];
   static List<_CategoryTabItem> _categoryTabsCache = const [
@@ -54,8 +53,10 @@ class _HomePageState extends State<HomePage> {
   List<ActivePost> _posts = const [];
   List<ActiveReel> _reels = const [];
   List<_CategoryTabItem> _categoryTabs = const [_CategoryTabItem(label: 'All')];
-  Timer? _postsRefreshTimer;
-  Timer? _reelsRefreshTimer;
+  StreamSubscription<AppWebSocketEvent>? _postsEventSubscription;
+  StreamSubscription<AppWebSocketEvent>? _reelsEventSubscription;
+  bool _postsRefreshQueued = false;
+  bool _reelsRefreshQueued = false;
 
   List<String> get _categoryItems =>
       _categoryTabs.map((tab) => tab.label).toList();
@@ -83,14 +84,14 @@ class _HomePageState extends State<HomePage> {
     _categoryTabs = _categoryTabsCache;
     _isLoadingPosts = _posts.isEmpty;
     _isLoadingReels = _reels.isEmpty;
+    _bindWebSocketEvents();
     _loadInitialData();
-    _startAutoRefreshTimers();
   }
 
   @override
   void dispose() {
-    _postsRefreshTimer?.cancel();
-    _reelsRefreshTimer?.cancel();
+    _postsEventSubscription?.cancel();
+    _reelsEventSubscription?.cancel();
     super.dispose();
   }
 
@@ -98,29 +99,35 @@ class _HomePageState extends State<HomePage> {
     await Future.wait([_loadPostsAndCategories(), _loadReels()]);
   }
 
-  Future<void> _startAutoRefreshTimers() async {
-    final storage = const AuthStorage();
-    final postSeconds =
-        await storage.readPostRefreshSeconds() ?? _defaultPostRefreshSeconds;
-    final reelSeconds =
-        await storage.readReelRefreshSeconds() ?? _defaultReelRefreshSeconds;
+  void _bindWebSocketEvents() {
+    _postsEventSubscription?.cancel();
+    _reelsEventSubscription?.cancel();
 
-    _postsRefreshTimer?.cancel();
-    _reelsRefreshTimer?.cancel();
+    _postsEventSubscription = AppWebSocketService.instance
+        .eventsFor(postRefreshEventTypes)
+        .listen((_) => _schedulePostsRefresh());
 
-    if (postSeconds > 0) {
-      _postsRefreshTimer = Timer.periodic(Duration(seconds: postSeconds), (_) {
-        if (!mounted || _isLoadingPosts) return;
-        _loadPostsAndCategories();
-      });
+    _reelsEventSubscription = AppWebSocketService.instance
+        .eventsFor(reelRefreshEventTypes)
+        .listen((_) => _scheduleReelsRefresh());
+  }
+
+  void _schedulePostsRefresh() {
+    if (!mounted) return;
+    if (_isLoadingPosts) {
+      _postsRefreshQueued = true;
+      return;
     }
+    _loadPostsAndCategories();
+  }
 
-    if (reelSeconds > 0) {
-      _reelsRefreshTimer = Timer.periodic(Duration(seconds: reelSeconds), (_) {
-        if (!mounted || _isLoadingReels) return;
-        _loadReels();
-      });
+  void _scheduleReelsRefresh() {
+    if (!mounted) return;
+    if (_isLoadingReels) {
+      _reelsRefreshQueued = true;
+      return;
     }
+    _loadReels();
   }
 
   Future<void> _loadPostsAndCategories() async {
@@ -192,6 +199,10 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _isLoadingPosts = false;
       });
+      if (_postsRefreshQueued) {
+        _postsRefreshQueued = false;
+        _loadPostsAndCategories();
+      }
     }
   }
 
@@ -231,6 +242,10 @@ class _HomePageState extends State<HomePage> {
       setState(() {
         _isLoadingReels = false;
       });
+      if (_reelsRefreshQueued) {
+        _reelsRefreshQueued = false;
+        _loadReels();
+      }
     }
   }
 
@@ -383,12 +398,18 @@ class _HomePageState extends State<HomePage> {
                           isAdmin: widget.isAdmin,
                           post: post,
                           onClickProfile: () {
+                            final authorUserId = post.authorUserId;
+                            if (authorUserId == null) {
+                              return;
+                            }
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => post.postId.isEven
-                                    ? PrivateProfilePage()
-                                    : PublicProfilePage(),
+                                builder: (context) => PublicProfilePage(
+                                  userId: authorUserId,
+                                  userName: post.authorDisplayName,
+                                  avatarUrl: post.authorAvatarUrl,
+                                ),
                               ),
                             );
                           },

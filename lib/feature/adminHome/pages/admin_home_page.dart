@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cctv_app/core/components/admin_top_header.dart';
 import 'package:cctv_app/core/components/custom_horizontal_listview_widget.dart';
 import 'package:cctv_app/core/components/space.dart';
@@ -8,6 +10,8 @@ import 'package:cctv_app/core/network/models/general_parameter_option.dart';
 import 'package:cctv_app/core/network/services/case_post_service.dart';
 import 'package:cctv_app/core/network/services/dashboard_service.dart';
 import 'package:cctv_app/core/network/services/general_parameter_service.dart';
+import 'package:cctv_app/core/realtime/app_websocket_event.dart';
+import 'package:cctv_app/core/realtime/app_websocket_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
@@ -36,14 +40,39 @@ class _AdminHomePageState extends State<AdminHomePage> {
   String? _postsError;
   List<ActivePost> _recentPosts = const [];
   List<_CategoryTabItem> _categoryTabs = const [_CategoryTabItem(label: 'All')];
+  StreamSubscription<AppWebSocketEvent>? _postsEventSubscription;
+  bool _postsRefreshQueued = false;
 
   final List<String> tabs = ["Daily", "Weekly", "Monthly", "Year"];
 
   @override
   void initState() {
     super.initState();
+    _bindWebSocketEvents();
     _loadSummary();
     _loadChart();
+    _loadRecentPostsAndCategories();
+  }
+
+  @override
+  void dispose() {
+    _postsEventSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _bindWebSocketEvents() {
+    _postsEventSubscription?.cancel();
+    _postsEventSubscription = AppWebSocketService.instance
+        .eventsFor(postRefreshEventTypes)
+        .listen((_) => _scheduleRecentPostsRefresh());
+  }
+
+  void _scheduleRecentPostsRefresh() {
+    if (!mounted) return;
+    if (_isLoadingPosts) {
+      _postsRefreshQueued = true;
+      return;
+    }
     _loadRecentPostsAndCategories();
   }
 
@@ -178,6 +207,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
       setState(() {
         _isLoadingPosts = false;
       });
+      if (_postsRefreshQueued) {
+        _postsRefreshQueued = false;
+        _loadRecentPostsAndCategories();
+      }
     }
   }
 

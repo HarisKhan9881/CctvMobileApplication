@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
+import 'dart:math' as math;
 
 class VotingResultExample extends StatelessWidget {
   final String leftLabel;
@@ -12,6 +13,7 @@ class VotingResultExample extends StatelessWidget {
   final String? selectedOption;
   final int leftVotes;
   final int rightVotes;
+  final int? totalVotesCount;
 
   const VotingResultExample({
     super.key,
@@ -25,13 +27,20 @@ class VotingResultExample extends StatelessWidget {
     this.selectedOption,
     this.leftVotes = 0,
     this.rightVotes = 0,
+    this.totalVotesCount,
   });
 
   @override
   Widget build(BuildContext context) {
-    final totalVotes = leftVotes + rightVotes;
+    final totalVotes = math.max(totalVotesCount ?? 0, leftVotes + rightVotes);
     final leftProgress = totalVotes == 0 ? 0.0 : leftVotes / totalVotes;
     final rightProgress = totalVotes == 0 ? 0.0 : rightVotes / totalVotes;
+    final leftPercentage = totalVotes == 0
+        ? 0
+        : ((leftVotes / totalVotes) * 100).round();
+    final rightPercentage = totalVotes == 0
+        ? 0
+        : ((rightVotes / totalVotes) * 100).round();
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -41,6 +50,7 @@ class VotingResultExample extends StatelessWidget {
             label: leftLabel,
             text: leftText,
             progress: leftProgress,
+            percentage: leftPercentage,
             isSelected: selectedOption == 'owner',
             isWinner: leftVotes > rightVotes,
             onTap: onLeftTap,
@@ -52,6 +62,7 @@ class VotingResultExample extends StatelessWidget {
             label: rightLabel,
             text: rightText,
             progress: rightProgress,
+            percentage: rightPercentage,
             isSelected: selectedOption == 'defendant',
             isWinner: rightVotes > leftVotes,
             onTap: onRightTap,
@@ -65,16 +76,26 @@ class VotingResultExample extends StatelessWidget {
     required String label,
     required String text,
     required double progress,
+    required int percentage,
     required bool isSelected,
     required bool isWinner,
     required VoidCallback? onTap,
   }) {
-    final isActive = isSelected || isWinner;
-    final fillColor = isActive
+    final hasVotes = percentage > 0;
+    final fillColor = isSelected
         ? const Color(0xFF007BFF)
-        : const Color(0xFF007BFF).withValues(alpha: 0.18);
-    final borderColor = isActive ? const Color(0xFF007BFF) : Colors.black26;
-    final foregroundColor = isActive ? Colors.white : Colors.black;
+        : isWinner
+        ? const Color(0xFF007BFF).withValues(alpha: 0.72)
+        : const Color(0xFF007BFF).withValues(alpha: 0.22);
+    final borderColor = isSelected || isWinner
+        ? const Color(0xFF007BFF)
+        : Colors.black26;
+    final labelColor = isSelected ? Colors.white : Colors.black87;
+    final textColor = isSelected ? Colors.white : Colors.black87;
+    final badgeBackground = isSelected
+        ? Colors.white.withValues(alpha: 0.18)
+        : const Color(0xFF007BFF).withValues(alpha: hasVotes ? 0.14 : 0.08);
+    final badgeForeground = isSelected ? Colors.white : const Color(0xFF007BFF);
 
     return GestureDetector(
       onTap: isSubmitting ? null : onTap,
@@ -111,7 +132,7 @@ class VotingResultExample extends StatelessWidget {
                         Text(
                           label,
                           style: TextStyle(
-                            color: foregroundColor,
+                            color: labelColor,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -122,7 +143,7 @@ class VotingResultExample extends StatelessWidget {
                             size: 16,
                             color: Colors.white,
                           ),
-                        ] else if (isSubmitting && isActive) ...[
+                        ] else if (isSubmitting && isSelected) ...[
                           const SizedBox(width: 6),
                           const SizedBox(
                             width: 12,
@@ -139,8 +160,27 @@ class VotingResultExample extends StatelessWidget {
                             text,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: foregroundColor,
+                              color: textColor,
                               fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: badgeBackground,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            '$percentage%',
+                            style: TextStyle(
+                              color: badgeForeground,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 12,
                             ),
                           ),
                         ),

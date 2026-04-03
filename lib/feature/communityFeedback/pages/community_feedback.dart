@@ -6,6 +6,7 @@ import 'package:cctv_app/core/network/models/post_report.dart';
 import 'package:cctv_app/core/network/services/case_post_service.dart';
 import 'package:cctv_app/core/network/services/general_parameter_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
+import 'package:cctv_app/core/utils/app_date_time.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/communityFeedback/pages/feedback_view.dart';
 import 'package:cctv_app/feature/communityFeedback/widget/community_feedback_widget.dart';
@@ -123,37 +124,7 @@ class _CommunityFeedbackState extends State<CommunityFeedback> {
   }
 
   String _formatDate(String? value) {
-    if (value == null || value.trim().isEmpty) {
-      return '';
-    }
-
-    final parsed = DateTime.tryParse(value);
-    if (parsed == null) {
-      return value.replaceFirst('T', ' ');
-    }
-
-    final hour = parsed.hour == 0
-        ? 12
-        : parsed.hour > 12
-        ? parsed.hour - 12
-        : parsed.hour;
-    final minute = parsed.minute.toString().padLeft(2, '0');
-    final suffix = parsed.hour >= 12 ? 'pm' : 'am';
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return '${months[parsed.month - 1]} ${parsed.day}, $hour:$minute $suffix';
+    return AppDateTime.formatShortDateTime(value);
   }
 
   @override

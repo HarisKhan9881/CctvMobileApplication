@@ -1,6 +1,7 @@
 class ActivePost {
   final int postId;
   final String postDescription;
+  final int? createdBy;
   final String? createdAt;
   final ActivePostUserInfo? createdByUserInfo;
   final ActivePostCaseDetail? caseDetail;
@@ -9,10 +10,12 @@ class ActivePost {
   final List<ActivePostReaction> reactions;
   final ActivePostReactionSummary? reactionSummary;
   final ActivePostPollCount? casePollCount;
+  final int repostCount;
 
   const ActivePost({
     required this.postId,
     required this.postDescription,
+    this.createdBy,
     this.createdAt,
     this.createdByUserInfo,
     this.caseDetail,
@@ -21,7 +24,50 @@ class ActivePost {
     required this.reactions,
     this.reactionSummary,
     this.casePollCount,
+    this.repostCount = 0,
   });
+
+  String? get authorAvatarUrl {
+    final directAvatar = createdByUserInfo?.avatarUrl?.trim();
+    if (directAvatar != null && directAvatar.isNotEmpty) {
+      return directAvatar;
+    }
+
+    final caseProfileAvatar =
+        caseDetail?.caseUserProfile?.profileMeta?.metaUrl?.trim();
+    if (caseProfileAvatar != null && caseProfileAvatar.isNotEmpty) {
+      return caseProfileAvatar;
+    }
+
+    return null;
+  }
+
+  String get authorDisplayName {
+    final directName = createdByUserInfo?.fullName.trim() ?? '';
+    if (directName.isNotEmpty) {
+      return directName;
+    }
+
+    final caseProfileName = caseDetail?.caseUserProfile?.fullName.trim() ?? '';
+    if (caseProfileName.isNotEmpty) {
+      return caseProfileName;
+    }
+
+    return 'Unknown User';
+  }
+
+  int? get authorUserId {
+    if (createdBy != null && createdBy! > 0) {
+      return createdBy;
+    }
+
+    final caseProfileUserId = caseDetail?.caseUserProfile?.userId;
+    if (caseProfileUserId != null && caseProfileUserId > 0) {
+      return caseProfileUserId;
+    }
+
+    return null;
+  }
 
   factory ActivePost.fromJson(Map<String, dynamic> json) {
     final postId = json['post_id'];
@@ -29,6 +75,7 @@ class ActivePost {
     return ActivePost(
       postId: postId is int ? postId : int.parse('$postId'),
       postDescription: json['post_description'] as String? ?? '',
+      createdBy: int.tryParse('${json['created_by']}'),
       createdAt: json['created_at'] as String?,
       createdByUserInfo:
           json['created_by_user_info'] is Map<String, dynamic>
@@ -64,6 +111,7 @@ class ActivePost {
               json['case_poll_count'] as Map<String, dynamic>,
             )
           : null,
+      repostCount: int.tryParse('${json['repost_count']}') ?? 0,
     );
   }
 }
@@ -72,20 +120,38 @@ class ActivePostUserInfo {
   final String firstName;
   final String lastName;
   final String? userEmail;
+  final ActivePostMeta? applicationMeta;
+  final String? avatarUrl;
 
   const ActivePostUserInfo({
     required this.firstName,
     required this.lastName,
     this.userEmail,
+    this.applicationMeta,
+    this.avatarUrl,
   });
 
   String get fullName => '$firstName $lastName'.trim();
 
   factory ActivePostUserInfo.fromJson(Map<String, dynamic> json) {
+    final applicationMeta =
+        json['application_meta'] is Map<String, dynamic>
+        ? ActivePostMeta.fromJson(json['application_meta'] as Map<String, dynamic>)
+        : null;
+
     return ActivePostUserInfo(
       firstName: json['first_name'] as String? ?? '',
       lastName: json['last_name'] as String? ?? '',
       userEmail: json['user_email'] as String?,
+      applicationMeta: applicationMeta,
+      avatarUrl:
+          applicationMeta?.metaUrl ??
+          json['meta_url'] as String? ??
+          json['image_url'] as String? ??
+          json['profile_image'] as String? ??
+          json['profile_picture'] as String? ??
+          json['avatar_url'] as String? ??
+          json['user_image'] as String?,
     );
   }
 }
@@ -129,6 +195,7 @@ class ActivePostCaseDetail {
   final int? caseCategoryId;
   final String? caseResolution;
   final ActivePostMeta? meta;
+  final ActivePostCaseUserProfile? caseUserProfile;
 
   const ActivePostCaseDetail({
     required this.caseId,
@@ -137,6 +204,7 @@ class ActivePostCaseDetail {
     this.caseCategoryId,
     this.caseResolution,
     this.meta,
+    this.caseUserProfile,
   });
 
   factory ActivePostCaseDetail.fromJson(Map<String, dynamic> json) {
@@ -150,6 +218,41 @@ class ActivePostCaseDetail {
       caseResolution: json['case_resolution'] as String?,
       meta: json['meta'] is Map<String, dynamic>
           ? ActivePostMeta.fromJson(json['meta'] as Map<String, dynamic>)
+          : null,
+      caseUserProfile: json['case_user_profile'] is Map<String, dynamic>
+          ? ActivePostCaseUserProfile.fromJson(
+              json['case_user_profile'] as Map<String, dynamic>,
+            )
+          : null,
+    );
+  }
+}
+
+class ActivePostCaseUserProfile {
+  final int? userId;
+  final String firstName;
+  final String lastName;
+  final String? userEmail;
+  final ActivePostMeta? profileMeta;
+
+  const ActivePostCaseUserProfile({
+    this.userId,
+    required this.firstName,
+    required this.lastName,
+    this.userEmail,
+    this.profileMeta,
+  });
+
+  String get fullName => '$firstName $lastName'.trim();
+
+  factory ActivePostCaseUserProfile.fromJson(Map<String, dynamic> json) {
+    return ActivePostCaseUserProfile(
+      userId: int.tryParse('${json['user_id']}'),
+      firstName: json['first_name'] as String? ?? '',
+      lastName: json['last_name'] as String? ?? '',
+      userEmail: json['user_email'] as String?,
+      profileMeta: json['profile_meta'] is Map<String, dynamic>
+          ? ActivePostMeta.fromJson(json['profile_meta'] as Map<String, dynamic>)
           : null,
     );
   }

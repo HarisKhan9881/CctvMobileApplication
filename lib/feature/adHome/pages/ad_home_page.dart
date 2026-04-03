@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:cctv_app/core/components/ad_top_header.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/models/active_post.dart';
 import 'package:cctv_app/core/network/services/case_post_service.dart';
+import 'package:cctv_app/core/realtime/app_websocket_event.dart';
+import 'package:cctv_app/core/realtime/app_websocket_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/adHome/widget/ad_post_container.dart';
@@ -23,10 +27,35 @@ class _AdHomePageState extends State<AdHomePage> {
   bool _isLoadingPosts = true;
   String? _postsError;
   List<ActivePost> _posts = const [];
+  StreamSubscription<AppWebSocketEvent>? _postsEventSubscription;
+  bool _refreshQueued = false;
 
   @override
   void initState() {
     super.initState();
+    _bindWebSocketEvents();
+    _loadPosts();
+  }
+
+  @override
+  void dispose() {
+    _postsEventSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _bindWebSocketEvents() {
+    _postsEventSubscription?.cancel();
+    _postsEventSubscription = AppWebSocketService.instance
+        .eventsFor(postRefreshEventTypes)
+        .listen((_) => _schedulePostsRefresh());
+  }
+
+  void _schedulePostsRefresh() {
+    if (!mounted) return;
+    if (_isLoadingPosts) {
+      _refreshQueued = true;
+      return;
+    }
     _loadPosts();
   }
 
@@ -65,6 +94,10 @@ class _AdHomePageState extends State<AdHomePage> {
       setState(() {
         _isLoadingPosts = false;
       });
+      if (_refreshQueued) {
+        _refreshQueued = false;
+        _loadPosts();
+      }
     }
   }
 

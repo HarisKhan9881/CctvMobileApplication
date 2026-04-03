@@ -46,3 +46,11 @@ dependencies {
 flutter {
     source = "../.."
 }
+
+tasks.register<Copy>("renameReleaseApk") {
+    dependsOn("assembleRelease")
+
+    from(layout.buildDirectory.file("outputs/flutter-apk/app-release.apk"))
+    into(layout.buildDirectory.dir("outputs/flutter-apk"))
+    rename { "Cctv-release.apk" }
+}

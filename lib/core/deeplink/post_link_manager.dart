@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:app_links/app_links.dart';
-import 'package:cctv_app/core/network/api_config.dart';
 import 'package:cctv_app/core/session/app_session_manager.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/feature/home/pages/shared_post_page.dart';
@@ -21,8 +20,11 @@ class PostLinkManager {
   bool _isOpeningPost = false;
 
   static String buildPostLink(int postId) {
-    final baseUri = Uri.parse(ApiConfig.baseUrl);
-    return baseUri.replace(fragment: '/$_postPathSegment/$postId').toString();
+    return Uri(
+      scheme: _scheme,
+      host: _postHost,
+      pathSegments: ['$postId'],
+    ).toString();
   }
 
   Future<void> initialize() async {

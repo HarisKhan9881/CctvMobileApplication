@@ -176,6 +176,26 @@ class CasePostService {
     );
   }
 
+  Future<void> createPostRepost({
+    required String accessToken,
+    required int postId,
+    required int userId,
+    required String postDescription,
+    required int createdBy,
+  }) async {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    await _client.postJson(
+      Endpoints.createPostRepost,
+      headers: {'Authorization': 'Bearer $normalizedToken'},
+      body: {
+        'post_id': postId,
+        'user_id': userId,
+        'post_description': postDescription,
+        'created_by': createdBy,
+      },
+    );
+  }
+
   Future<void> createPostChildComment({
     required String accessToken,
     required int postId,

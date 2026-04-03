@@ -5,6 +5,8 @@ import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/models/app_notification_item.dart';
 import 'package:cctv_app/core/network/services/notification_service.dart';
+import 'package:cctv_app/core/realtime/app_websocket_event.dart';
+import 'package:cctv_app/core/realtime/app_websocket_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
@@ -20,16 +22,55 @@ class NotificationPage extends StatefulWidget {
 }
 
 class _NotificationPageState extends State<NotificationPage> {
-  static const int _defaultNotificationRefreshSeconds = 500;
   static List<AppNotificationItem> _notificationCache = const [];
 
   bool _isLoading = true;
   String? _errorMessage;
   List<AppNotificationItem> _notifications = const [];
-  Timer? _notificationRefreshTimer;
+  StreamSubscription<AppWebSocketEvent>? _notificationEventSubscription;
+  bool _refreshQueued = false;
 
   String _notificationThumbnailUrl(AppNotificationItem notification) {
+    if (notification.isReminder) {
+      return '';
+    }
     return notification.parsedMeta?.mediaUrl?.trim() ?? '';
+  }
+
+  String _formatNotificationTimestamp(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return '';
+    }
+
+    final parsed = DateTime.tryParse(value)?.toLocal();
+    if (parsed == null) {
+      return value.replaceFirst('T', ' ');
+    }
+
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
+    final month = months[parsed.month - 1];
+    final hour = parsed.hour == 0
+        ? 12
+        : parsed.hour > 12
+        ? parsed.hour - 12
+        : parsed.hour;
+    final minute = parsed.minute.toString().padLeft(2, '0');
+    final suffix = parsed.hour >= 12 ? 'PM' : 'AM';
+    return '$month ${parsed.day}, ${parsed.year} • $hour:$minute $suffix';
   }
 
   @override
@@ -37,32 +78,30 @@ class _NotificationPageState extends State<NotificationPage> {
     super.initState();
     _notifications = _notificationCache;
     _isLoading = _notifications.isEmpty;
+    _bindWebSocketEvents();
     _loadNotifications();
-    _startAutoRefreshTimer();
   }
 
   @override
   void dispose() {
-    _notificationRefreshTimer?.cancel();
+    _notificationEventSubscription?.cancel();
     super.dispose();
   }
 
-  Future<void> _startAutoRefreshTimer() async {
-    final storage = const AuthStorage();
-    final notificationSeconds =
-        await storage.readNotificationRefreshSeconds() ??
-        _defaultNotificationRefreshSeconds;
+  void _bindWebSocketEvents() {
+    _notificationEventSubscription?.cancel();
+    _notificationEventSubscription = AppWebSocketService.instance
+        .eventsFor(notificationRefreshEventTypes)
+        .listen((_) => _scheduleNotificationsRefresh());
+  }
 
-    _notificationRefreshTimer?.cancel();
-    if (notificationSeconds > 0) {
-      _notificationRefreshTimer = Timer.periodic(
-        Duration(seconds: notificationSeconds),
-        (_) {
-          if (!mounted || _isLoading) return;
-          _loadNotifications();
-        },
-      );
+  void _scheduleNotificationsRefresh() {
+    if (!mounted) return;
+    if (_isLoading) {
+      _refreshQueued = true;
+      return;
     }
+    _loadNotifications();
   }
 
   Future<void> _loadNotifications() async {
@@ -106,6 +145,10 @@ class _NotificationPageState extends State<NotificationPage> {
       setState(() {
         _isLoading = false;
       });
+      if (_refreshQueued) {
+        _refreshQueued = false;
+        _loadNotifications();
+      }
     }
   }
 
@@ -168,16 +211,21 @@ class _NotificationPageState extends State<NotificationPage> {
       ),
       itemBuilder: (context, index) {
         final notification = _notifications[index];
+        final createdAt = _formatNotificationTimestamp(notification.createdAt);
+        final isReminder = notification.isReminder;
+        final thumbnailUrl = _notificationThumbnailUrl(notification);
         return GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) =>
-                    CaseResponsePage(notification: notification),
-              ),
-            );
-          },
+          onTap: isReminder
+              ? null
+              : () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          CaseResponsePage(notification: notification),
+                    ),
+                  );
+                },
           child: Container(
             color: kTransparentColor,
             child: Row(
@@ -194,11 +242,11 @@ class _NotificationPageState extends State<NotificationPage> {
                         style: context.bold.copyWith(fontSize: 16),
                       ),
                       Text(notification.message),
-                      if ((notification.createdAt ?? '').isNotEmpty)
+                      if (createdAt.isNotEmpty)
                         Padding(
                           padding: const EdgeInsets.only(top: 4),
                           child: Text(
-                            notification.createdAt!,
+                            createdAt,
                             style: context.normal.copyWith(
                               fontSize: 12,
                               color: kDarkGreyColor,
@@ -208,10 +256,12 @@ class _NotificationPageState extends State<NotificationPage> {
                     ],
                   ),
                 ),
-                Space.horizontal(12),
-                _NotificationThumbnail(
-                  imageUrl: _notificationThumbnailUrl(notification),
-                ),
+                if (!isReminder && thumbnailUrl.isNotEmpty) ...[
+                  Space.horizontal(12),
+                  _NotificationThumbnail(
+                    imageUrl: thumbnailUrl,
+                  ),
+                ],
               ],
             ),
           ),
@@ -244,15 +294,7 @@ class _NotificationThumbnail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (imageUrl.isEmpty) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(8),
-        child: Image.asset(
-          Assets.pngHighlight2Image,
-          width: 40,
-          height: 40,
-          fit: BoxFit.cover,
-        ),
-      );
+      return const SizedBox.shrink();
     }
 
     return ClipRRect(
@@ -262,14 +304,7 @@ class _NotificationThumbnail extends StatelessWidget {
         width: 40,
         height: 40,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) {
-          return Image.asset(
-            Assets.pngHighlight2Image,
-            width: 40,
-            height: 40,
-            fit: BoxFit.cover,
-          );
-        },
+        errorBuilder: (_, _, _) => const SizedBox.shrink(),
       ),
     );
   }

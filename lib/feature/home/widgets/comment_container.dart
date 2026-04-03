@@ -10,6 +10,7 @@ class CommentContainer extends StatelessWidget {
   final String timeText;
   final VoidCallback? onReplyTap;
   final String replyLabel;
+  final bool isReplyActive;
 
   const CommentContainer({
     super.key,
@@ -18,6 +19,7 @@ class CommentContainer extends StatelessWidget {
     this.timeText = '',
     this.onReplyTap,
     this.replyLabel = 'Reply',
+    this.isReplyActive = false,
   });
 
   const CommentContainer.dynamic({
@@ -27,6 +29,7 @@ class CommentContainer extends StatelessWidget {
     required this.timeText,
     this.onReplyTap,
     this.replyLabel = 'Reply',
+    this.isReplyActive = false,
   });
 
   @override
@@ -37,58 +40,91 @@ class CommentContainer extends StatelessWidget {
         : comment;
     final resolvedTime = timeText.isEmpty ? "14 min" : timeText;
 
-    return Column(
-      children: [
-        Row(
-          children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundImage: AssetImage(Assets.pngUser1Image),
-            ),
-            Space.horizontal(12),
-            Text(resolvedAuthor, style: context.bold),
-            Space.horizontal(12),
-            Text(
-              resolvedTime,
-              style: context.normal.copyWith(color: kDarkGreyColor),
-            ),
-          ],
-        ),
-        Space.vertical(10),
-        Text(
-          resolvedComment,
-          style: context.normal,
-        ),
-        Space.vertical(10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Row(
-              children: [
-                Text("1 Like", style: context.normal),
-                Space.horizontal(12),
-                InkWell(
-                  onTap: onReplyTap,
-                  borderRadius: BorderRadius.circular(6),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 2,
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: kLightGreyColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: kGreyColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: kTextfieldBlueColor,
+                backgroundImage: const AssetImage(Assets.pngUser1Image),
+              ),
+              Space.horizontal(12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      resolvedAuthor,
+                      style: context.semiBold.copyWith(fontSize: 14),
                     ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.reply, color: kDarkGreyColor),
-                        Text(replyLabel, style: context.normal),
-                      ],
+                    Space.vertical(2),
+                    Text(
+                      resolvedTime,
+                      style: context.normal.copyWith(
+                        color: kDarkGreyColor,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          Space.vertical(12),
+          Text(
+            resolvedComment,
+            style: context.normal.copyWith(
+              height: 1.4,
+              color: kBlackColor,
+            ),
+          ),
+          Space.vertical(12),
+          InkWell(
+            onTap: onReplyTap,
+            borderRadius: BorderRadius.circular(999),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: isReplyActive
+                    ? kPrimaryColor.withValues(alpha: 0.12)
+                    : kWhiteColor,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: isReplyActive ? kPrimaryColor : kGreyColor,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.reply_rounded,
+                    size: 16,
+                    color: isReplyActive ? kPrimaryColor : kDarkGreyColor,
+                  ),
+                  Space.horizontal(6),
+                  Text(
+                    replyLabel,
+                    style: context.semiBold.copyWith(
+                      fontSize: 12,
+                      color: isReplyActive ? kPrimaryColor : kDarkGreyColor,
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-            Icon(Icons.thumb_up_off_alt, color: kDarkGreyColor),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 }

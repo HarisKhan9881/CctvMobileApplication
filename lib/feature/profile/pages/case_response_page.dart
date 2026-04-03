@@ -49,7 +49,35 @@ class _CaseResponsePageState extends State<CaseResponsePage> {
       return '';
     }
 
-    return value.replaceFirst('T', ' ');
+    final parsed = DateTime.tryParse(value)?.toLocal();
+    if (parsed == null) {
+      return value.replaceFirst('T', ' ');
+    }
+
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
+    final month = months[parsed.month - 1];
+    final hour = parsed.hour == 0
+        ? 12
+        : parsed.hour > 12
+        ? parsed.hour - 12
+        : parsed.hour;
+    final minute = parsed.minute.toString().padLeft(2, '0');
+    final suffix = parsed.hour >= 12 ? 'PM' : 'AM';
+    return '$month ${parsed.day}, ${parsed.year} • $hour:$minute $suffix';
   }
 
   @override

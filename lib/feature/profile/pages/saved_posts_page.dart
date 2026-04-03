@@ -1,8 +1,12 @@
+import 'dart:async';
+
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/models/active_post.dart';
 import 'package:cctv_app/core/network/services/case_post_service.dart';
+import 'package:cctv_app/core/realtime/app_websocket_event.dart';
+import 'package:cctv_app/core/realtime/app_websocket_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/home/widgets/home_post_container.dart';
@@ -19,10 +23,35 @@ class _SavedPostsPageState extends State<SavedPostsPage> {
   bool _isLoading = true;
   String? _errorMessage;
   List<ActivePost> _posts = const [];
+  StreamSubscription<AppWebSocketEvent>? _postsEventSubscription;
+  bool _refreshQueued = false;
 
   @override
   void initState() {
     super.initState();
+    _bindWebSocketEvents();
+    _loadSavedPosts();
+  }
+
+  @override
+  void dispose() {
+    _postsEventSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _bindWebSocketEvents() {
+    _postsEventSubscription?.cancel();
+    _postsEventSubscription = AppWebSocketService.instance
+        .eventsFor(postRefreshEventTypes)
+        .listen((_) => _scheduleSavedPostsRefresh());
+  }
+
+  void _scheduleSavedPostsRefresh() {
+    if (!mounted) return;
+    if (_isLoading) {
+      _refreshQueued = true;
+      return;
+    }
     _loadSavedPosts();
   }
 
@@ -67,6 +96,10 @@ class _SavedPostsPageState extends State<SavedPostsPage> {
         setState(() {
           _isLoading = false;
         });
+        if (_refreshQueued) {
+          _refreshQueued = false;
+          _loadSavedPosts();
+        }
       }
     }
   }

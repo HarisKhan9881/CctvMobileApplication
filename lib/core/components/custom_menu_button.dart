@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/extensions/context.dart';
 
 class CustomMenuButton extends StatelessWidget {
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
   final Widget icon;
   final String title;
   final Color? iconColor;
@@ -23,30 +23,22 @@ class CustomMenuButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MenuItemButton(
-      onPressed: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            Text(
-              title,
-              style: context.textTheme.titleMedium!.copyWith(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: textColor ?? kBlackColor,
-              ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Text(
+            title,
+            style: context.textTheme.titleMedium!.copyWith(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: textColor ?? kBlackColor,
             ),
-            Space.horizontal(20),
-            // SvgPicture.asset(
-            //   icon,
-            //   height: iconSize ?? 18,
-            //   colorFilter: colorFilter(color: iconColor ?? kBlackColor),
-            // ),
-            icon,
-          ],
-        ),
+          ),
+          Space.horizontal(20),
+          icon,
+        ],
       ),
     );
   }

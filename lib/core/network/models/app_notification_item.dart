@@ -47,6 +47,16 @@ class AppNotificationItem {
     );
   }
 
+  bool get isReminder {
+    final combined = [
+      notificationType,
+      title,
+      message,
+    ].whereType<String>().join(' ').toLowerCase();
+
+    return combined.contains('remind') || combined.contains('reminder');
+  }
+
   static String _titleFromType(String? type) {
     return switch (type) {
       'U' => 'Update',

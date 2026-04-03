@@ -7,7 +7,9 @@ import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/models/active_post.dart';
 import 'package:cctv_app/core/network/services/case_post_service.dart';
+import 'package:cctv_app/core/share/post_share_helper.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
+import 'package:cctv_app/core/utils/app_date_time.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:flutter/material.dart';
@@ -191,39 +193,136 @@ class _AdPostContainerState extends State<AdPostContainer> {
           _buildPostActionRow(),
           if (areCommentsVisible) ...[
             Space.vertical(12),
-            if (_comments.isEmpty)
-              Text(
-                'No comments yet',
-                style: context.normal.copyWith(color: kDarkGreyColor),
-              )
-            else
-              ..._comments.map(_buildCommentThread),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: CustomTextField(
-                    controller: _commentController,
-                    hintText: 'Write comment here',
-                    hintTextColor: kDarkGreyColor,
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _submitComment(),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: kWhiteColor,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: kGreyColor),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        'Comments',
+                        style: context.semiBold.copyWith(fontSize: 15),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: kTextfieldBlueColor,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          '${_comments.length}',
+                          style: context.semiBold.copyWith(
+                            color: kPrimaryColor,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                Space.horizontal(8),
-                SizedBox(
-                  height: 58,
-                  child: PrimaryButton(
-                    text: _isSubmittingComment ? '...' : 'Send',
-                    isMainAxisSizeMin: true,
-                    inactive: _isSubmittingComment,
-                    processing: _isSubmittingComment,
-                    onPressed: () {
-                      _submitComment();
-                    },
+                  Space.vertical(14),
+                  if (_comments.isEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 18,
+                      ),
+                      decoration: BoxDecoration(
+                        color: kLightGreyColor,
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 38,
+                            height: 38,
+                            decoration: BoxDecoration(
+                              color: kTextfieldBlueColor,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.chat_bubble_outline_rounded,
+                              color: kPrimaryColor,
+                              size: 20,
+                            ),
+                          ),
+                          Space.horizontal(12),
+                          Expanded(
+                            child: Text(
+                              'No comments yet. Start the conversation.',
+                              style: context.normal.copyWith(
+                                color: kDarkGreyColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    ..._comments.map(_buildCommentThread),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: kLightGreyColor,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: kGreyColor),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        const CircleAvatar(
+                          radius: 18,
+                          backgroundColor: kTextfieldBlueColor,
+                          child: Icon(
+                            Icons.mode_comment_outlined,
+                            size: 18,
+                            color: kPrimaryColor,
+                          ),
+                        ),
+                        Space.horizontal(10),
+                        Expanded(
+                          child: CustomTextField(
+                            controller: _commentController,
+                            hintText: 'Share your thoughts...',
+                            hintTextColor: kDarkGreyColor,
+                            fieldColor: kWhiteColor,
+                            showBorder: false,
+                            topPadding: 16,
+                            bottomPadding: 16,
+                            borderRadius: 14,
+                            textInputAction: TextInputAction.send,
+                            onSubmitted: (_) => _submitComment(),
+                          ),
+                        ),
+                        Space.horizontal(8),
+                        SizedBox(
+                          height: 48,
+                          child: PrimaryButton(
+                            text: _isSubmittingComment ? '...' : 'Send',
+                            isMainAxisSizeMin: true,
+                            inactive: _isSubmittingComment,
+                            processing: _isSubmittingComment,
+                            onPressed: () {
+                              _submitComment();
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ],
         ],
@@ -248,38 +347,11 @@ class _AdPostContainerState extends State<AdPostContainer> {
   }
 
   String _timeAgo(String? value) {
-    if (value == null || value.trim().isEmpty) return 'Just now';
-    final createdAt = DateTime.tryParse(value)?.toLocal();
-    if (createdAt == null) return value.replaceFirst('T', ' ');
-
-    final now = DateTime.now();
-    final difference = now.difference(createdAt);
-    if (difference.inMinutes < 1) return 'Just now';
-    if (difference.inHours < 1) {
-      return '${difference.inMinutes} min${difference.inMinutes == 1 ? '' : 's'} ago';
-    }
-    if (difference.inDays < 1) {
-      return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} ago';
-    }
-    if (difference.inDays < 7) {
-      return '${difference.inDays} day${difference.inDays == 1 ? '' : 's'} ago';
-    }
-    return '${createdAt.day}/${createdAt.month}/${createdAt.year}';
+    return AppDateTime.formatTimeAgo(value);
   }
 
   String? _timeLeft(String? value) {
-    if (value == null || value.trim().isEmpty) return null;
-    final pollEnd = DateTime.tryParse(value)?.toLocal();
-    if (pollEnd == null) return null;
-
-    final now = DateTime.now();
-    final difference = pollEnd.difference(now);
-    if (difference.isNegative) return 'Closed';
-    if (difference.inHours >= 1) {
-      return '${difference.inHours} hour${difference.inHours == 1 ? '' : 's'} left';
-    }
-    final minutes = difference.inMinutes.clamp(0, 59);
-    return '${minutes} min${minutes == 1 ? '' : 's'} left';
+    return AppDateTime.timeLeft(value);
   }
 
   void _showResolutionDialog(BuildContext context, ActivePost post) {
@@ -386,14 +458,113 @@ class _AdPostContainerState extends State<AdPostContainer> {
           ),
         ),
         Expanded(
-          child: _buildActionButton(
-            text: 'Share',
-            onTap: () {},
-            icon: Icons.share_outlined,
-          ),
+          child: _buildShareActionButton(),
         ),
       ],
     );
+  }
+
+  Widget _buildShareActionButton() {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: PopupMenuButton<String>(
+        onSelected: _handleShareSelection,
+        itemBuilder: (context) => [
+          PopupMenuItem(
+            value: 'system',
+            child: CustomMenuButton(
+              onTap: () {},
+              icon: const Icon(Icons.share_outlined, size: 16),
+              title: 'More',
+            ),
+          ),
+          PopupMenuItem(
+            value: 'whatsapp',
+            child: CustomMenuButton(
+              onTap: () {},
+              icon: SvgPicture.asset(Assets.svgWhatsappIcon),
+              iconSize: 15,
+              title: 'Whatsapp',
+            ),
+          ),
+          PopupMenuItem(
+            value: 'twitter',
+            child: CustomMenuButton(
+              onTap: () {},
+              icon: SvgPicture.asset(Assets.svgTwitterIcon),
+              iconSize: 15,
+              title: 'Twitter/X',
+            ),
+          ),
+          PopupMenuItem(
+            value: 'facebook',
+            child: CustomMenuButton(
+              onTap: () {},
+              icon: SvgPicture.asset(Assets.svgFacebookIcon),
+              iconSize: 15,
+              title: 'Facebook',
+            ),
+          ),
+          PopupMenuItem(
+            value: 'copy',
+            child: CustomMenuButton(
+              onTap: () {},
+              icon: SvgPicture.asset(Assets.svgCopyIcon),
+              iconSize: 15,
+              title: 'CopyLink',
+            ),
+          ),
+        ],
+        child: _buildActionButton(
+          text: 'Share',
+          onTap: null,
+          icon: Icons.share_outlined,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleShareSelection(String value) async {
+    final activePost = post;
+    if (activePost == null) return;
+
+    switch (value) {
+      case 'system':
+        await PostShareHelper.sharePost(
+          context,
+          post: activePost,
+          target: PostShareTarget.system,
+        );
+        return;
+      case 'whatsapp':
+        await PostShareHelper.sharePost(
+          context,
+          post: activePost,
+          target: PostShareTarget.whatsapp,
+        );
+        return;
+      case 'twitter':
+        await PostShareHelper.sharePost(
+          context,
+          post: activePost,
+          target: PostShareTarget.twitter,
+        );
+        return;
+      case 'facebook':
+        await PostShareHelper.sharePost(
+          context,
+          post: activePost,
+          target: PostShareTarget.facebook,
+        );
+        return;
+      case 'copy':
+        await PostShareHelper.sharePost(
+          context,
+          post: activePost,
+          target: PostShareTarget.copy,
+        );
+        return;
+    }
   }
 
   Widget _buildActionButton({
@@ -864,19 +1035,19 @@ class _AdPostContainerState extends State<AdPostContainer> {
 
   Widget _buildCommentThread(ActivePostComment comment) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildCommentItem(comment: comment, isReply: false),
           if (_replyingToCommentId == comment.commentId) ...[
             Padding(
-              padding: const EdgeInsets.only(left: 40, top: 8),
+              padding: const EdgeInsets.only(left: 18, top: 8),
               child: Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: kLightGreyColor.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(12),
+                  color: kLightGreyColor,
+                  borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: kGreyColor),
                 ),
                 child: Column(
@@ -916,15 +1087,20 @@ class _AdPostContainerState extends State<AdPostContainer> {
                             controller: _replyController,
                             focusNode: _replyFocusNode,
                             autoFocus: true,
-                            hintText: 'Write reply here',
+                            hintText: 'Write a reply...',
                             hintTextColor: kDarkGreyColor,
+                            fieldColor: kWhiteColor,
+                            showBorder: false,
+                            topPadding: 16,
+                            bottomPadding: 16,
+                            borderRadius: 14,
                             textInputAction: TextInputAction.send,
                             onSubmitted: (_) => _submitReply(comment),
                           ),
                         ),
                         Space.horizontal(8),
                         SizedBox(
-                          height: 58,
+                          height: 48,
                           child: PrimaryButton(
                             text: _isSubmittingReply ? '...' : 'Send',
                             isMainAxisSizeMin: true,
@@ -944,7 +1120,7 @@ class _AdPostContainerState extends State<AdPostContainer> {
           ],
           if (comment.childComments.isNotEmpty)
             Padding(
-              padding: const EdgeInsets.only(left: 38, top: 8),
+              padding: const EdgeInsets.only(left: 22, top: 8),
               child: Column(
                 children: comment.childComments
                     .map(
@@ -970,103 +1146,91 @@ class _AdPostContainerState extends State<AdPostContainer> {
         : 'User';
     final timeText = _commentTimeLabel(comment.createdAt);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              radius: isReply ? 15 : 17,
-              backgroundImage: const AssetImage(Assets.pngUser1Image),
-            ),
-            Space.horizontal(12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+    final isReplying = _replyingToCommentId == comment.commentId;
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isReply ? kWhiteColor : kLightGreyColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: kGreyColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: isReply ? 16 : 18,
+                backgroundColor: kTextfieldBlueColor,
+                backgroundImage: const AssetImage(Assets.pngUser1Image),
+              ),
+              Space.horizontal(12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      authorName,
+                      style: context.semiBold.copyWith(fontSize: 14),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Space.vertical(2),
+                    Text(
+                      timeText,
+                      style: context.normal.copyWith(
+                        color: kDarkGreyColor,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          Space.vertical(12),
+          Text(
+            comment.commentContent,
+            style: context.normal.copyWith(fontSize: 15, height: 1.4),
+          ),
+          Space.vertical(12),
+          InkWell(
+            onTap: () => _toggleReplyBox(comment),
+            borderRadius: BorderRadius.circular(999),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: isReplying
+                    ? kPrimaryColor.withValues(alpha: 0.12)
+                    : kWhiteColor,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: isReplying ? kPrimaryColor : kGreyColor,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          authorName,
-                          style: context.semiBold.copyWith(fontSize: 14),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Space.horizontal(10),
-                      Expanded(
-                        child: Text(
-                          timeText,
-                          style: context.normal.copyWith(
-                            color: kDarkGreyColor,
-                            fontSize: 12,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
+                  Icon(
+                    Icons.reply_rounded,
+                    size: 16,
+                    color: isReplying ? kPrimaryColor : kDarkGreyColor,
                   ),
-                  Space.vertical(6),
-                  Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      comment.commentContent,
-                      style: context.normal.copyWith(fontSize: 15),
+                  Space.horizontal(6),
+                  Text(
+                    isReplying ? 'Cancel' : 'Reply',
+                    style: context.semiBold.copyWith(
+                      fontSize: 12,
+                      color: isReplying ? kPrimaryColor : kDarkGreyColor,
                     ),
                   ),
                 ],
               ),
             ),
-          ],
-        ),
-        Padding(
-          padding: EdgeInsets.only(left: isReply ? 42 : 46, top: 8),
-          child: Row(
-            children: [
-              Text(
-                '1 Like',
-                style: context.normal.copyWith(
-                  color: kDarkGreyColor,
-                  fontSize: 12,
-                ),
-              ),
-              Space.horizontal(14),
-              TextButton.icon(
-                style: TextButton.styleFrom(
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 4,
-                  ),
-                  foregroundColor: _replyingToCommentId == comment.commentId
-                      ? kPrimaryColor
-                      : kDarkGreyColor,
-                ),
-                onPressed: () => _toggleReplyBox(comment),
-                icon: const Icon(Icons.reply, size: 15),
-                label: Text(
-                  'Reply',
-                  style: context.semiBold.copyWith(fontSize: 12),
-                ),
-              ),
-              const Spacer(),
-              IconButton(
-                onPressed: () {},
-                visualDensity: VisualDensity.compact,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
-                icon: const Icon(
-                  Icons.thumb_up_off_alt,
-                  size: 18,
-                  color: kDarkGreyColor,
-                ),
-              ),
-            ],
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'package:cctv_app/core/deeplink/post_link_manager.dart';
+import 'package:cctv_app/core/realtime/app_websocket_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/feature/bottomNavBar/ad_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/bottomNavBar/admin_bottom_nav_bar.dart';
@@ -30,7 +31,12 @@ class SessionGate extends StatelessWidget {
   Future<Widget> _resolveHome() async {
     final storage = const AuthStorage();
     final hasSession = await storage.hasSession();
-    if (!hasSession) return const SplashPage();
+    if (!hasSession) {
+      await AppWebSocketService.instance.disconnect();
+      return const SplashPage();
+    }
+
+    await AppWebSocketService.instance.connect();
 
     final dashboardType = await storage.readDashboardType();
     final roleDescription = await storage.readRoleDescription();

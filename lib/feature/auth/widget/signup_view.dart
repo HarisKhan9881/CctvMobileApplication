@@ -6,6 +6,7 @@ import 'package:cctv_app/core/network/api_client.dart';
 import 'package:cctv_app/core/network/api_config.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/services/auth_service.dart';
+import 'package:cctv_app/core/realtime/app_websocket_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/validators.dart';
@@ -73,6 +74,8 @@ class _SignupViewState extends State<SignupView> {
         email: response.content?.userEmail ?? email,
         dashboardType: DashboardType.user,
       );
+
+      await AppWebSocketService.instance.connect(accessToken: accessToken);
 
       if (!mounted) return;
       Navigator.pushAndRemoveUntil(

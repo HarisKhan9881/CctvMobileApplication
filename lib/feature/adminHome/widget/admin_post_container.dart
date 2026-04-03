@@ -1,6 +1,7 @@
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/network/models/active_post.dart';
+import 'package:cctv_app/core/utils/app_date_time.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:flutter/material.dart';
@@ -89,19 +90,6 @@ class AdminPostContainer extends StatelessWidget {
   }
 
   String get _subtitleText {
-    final createdAt = post.createdAt?.trim();
-    if (createdAt == null || createdAt.isEmpty) {
-      return 'Unknown date';
-    }
-
-    final parsed = DateTime.tryParse(createdAt);
-    if (parsed == null) {
-      return createdAt;
-    }
-
-    return '${_two(parsed.day)}-${_two(parsed.month)}-${parsed.year} '
-        '${_two(parsed.hour)}:${_two(parsed.minute)}';
+    return AppDateTime.formatAdminDateTime(post.createdAt);
   }
-
-  String _two(int value) => value.toString().padLeft(2, '0');
 }

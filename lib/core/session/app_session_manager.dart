@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
+import 'package:cctv_app/core/realtime/app_websocket_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/feature/auth/pages/auth_page.dart';
 import 'package:flutter/material.dart';
@@ -74,6 +75,7 @@ class AppSessionManager {
     _isLoggingOut = true;
 
     try {
+      await AppWebSocketService.instance.disconnect();
       await const AuthStorage().clear();
 
       final navigator = navigatorKey.currentState;
