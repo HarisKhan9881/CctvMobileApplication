@@ -38,6 +38,16 @@ class _CategoryTabItem {
   const _CategoryTabItem({required this.label, this.categoryId});
 }
 
+class _FeedPostItem {
+  final ActivePost post;
+  final ActivePostRepost? repost;
+
+  const _FeedPostItem({
+    required this.post,
+    this.repost,
+  });
+}
+
 class _HomePageState extends State<HomePage> {
   static List<ActivePost> _postsCache = const [];
   static List<ActiveReel> _reelsCache = const [];
@@ -57,23 +67,67 @@ class _HomePageState extends State<HomePage> {
   StreamSubscription<AppWebSocketEvent>? _reelsEventSubscription;
   bool _postsRefreshQueued = false;
   bool _reelsRefreshQueued = false;
+  final Map<int, GlobalKey> _postKeys = <int, GlobalKey>{};
+  int? _highlightedPostId;
 
   List<String> get _categoryItems =>
       _categoryTabs.map((tab) => tab.label).toList();
 
-  List<ActivePost> get _filteredPosts {
+  List<_FeedPostItem> get _filteredPosts {
     if (selectedIndex < 0 || selectedIndex >= _categoryTabs.length) {
-      return _posts;
+      return _expandPosts(_posts);
     }
 
     final selectedCategoryId = _categoryTabs[selectedIndex].categoryId;
     if (selectedCategoryId == null) {
-      return _posts;
+      return _expandPosts(_posts);
     }
 
-    return _posts.where((post) {
+    final filteredPosts = _posts.where((post) {
       return post.caseDetail?.caseCategoryId == selectedCategoryId;
     }).toList();
+    return _expandPosts(filteredPosts);
+  }
+
+  List<_FeedPostItem> _expandPosts(List<ActivePost> posts) {
+    final items = <_FeedPostItem>[];
+    for (final post in posts) {
+      for (final repost in post.reposts) {
+        items.add(_FeedPostItem(post: post, repost: repost));
+      }
+      items.add(_FeedPostItem(post: post));
+    }
+    return items;
+  }
+
+  Future<void> _focusPostInFeed(int postId) async {
+    if (!mounted) return;
+
+    if (_filteredPosts.every((item) => item.post.postId != postId)) {
+      return;
+    }
+
+    setState(() {
+      _highlightedPostId = postId;
+    });
+
+    await WidgetsBinding.instance.endOfFrame;
+    final targetContext = _postKeys[postId]?.currentContext;
+    if (targetContext != null && mounted) {
+      await Scrollable.ensureVisible(
+        targetContext,
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeInOut,
+        alignment: 0.12,
+      );
+    }
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (!mounted || _highlightedPostId != postId) return;
+      setState(() {
+        _highlightedPostId = null;
+      });
+    });
   }
 
   @override
@@ -391,23 +445,43 @@ class _HomePageState extends State<HomePage> {
                       ),
                     )
                   else
-                    ..._filteredPosts.map((post) {
+                    ..._filteredPosts.map((item) {
+                      final post = item.post;
+                      final postKey = _postKeys.putIfAbsent(
+                        post.postId,
+                        () => GlobalKey(),
+                      );
                       return Padding(
+                        key: item.repost == null ? postKey : null,
                         padding: const EdgeInsets.only(bottom: 20),
                         child: HomePostContainer(
                           isAdmin: widget.isAdmin,
                           post: post,
+                          repost: item.repost,
+                          onOpenOriginalPostInFeed: item.repost != null
+                              ? () => _focusPostInFeed(post.postId)
+                              : null,
+                          highlightPost:
+                              item.repost == null &&
+                              _highlightedPostId == post.postId,
                           onClickProfile: () {
-                            final authorUserId = post.authorUserId;
+                            final repostUserId = item.repost?.userId;
+                            final authorUserId = repostUserId ?? post.authorUserId;
                             if (authorUserId == null) {
                               return;
                             }
+
+                            final repostName =
+                                item.repost?.repostUserDetail?.fullName.trim() ??
+                                '';
                             Navigator.push(
                               context,
                               MaterialPageRoute(
                                 builder: (context) => PublicProfilePage(
                                   userId: authorUserId,
-                                  userName: post.authorDisplayName,
+                                  userName: repostName.isNotEmpty
+                                      ? repostName
+                                      : post.authorDisplayName,
                                   avatarUrl: post.authorAvatarUrl,
                                 ),
                               ),

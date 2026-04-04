@@ -65,6 +65,37 @@ class UserService {
     return UserProfile.fromJson(content);
   }
 
+  Future<List<UserProfile>> getAllRecentAdminsWithProfiles({
+    required String accessToken,
+    int skip = 0,
+    int limit = 4,
+  }) async {
+    final normalizedToken = await AppSessionManager.instance
+        .requireValidAccessToken(accessToken);
+    final url = Uri.parse(
+      '${ApiConfig.baseUrl}/api/v1/user/getAllRecentAdminsWithProfiles'
+      '?skip=$skip&limit=$limit',
+    );
+    final response = await http.get(
+      url,
+      headers: {
+        'accept': 'application/json',
+        'Authorization': 'Bearer $normalizedToken',
+      },
+    );
+
+    final json = await NetworkResponseHandler.parseJsonResponse(response);
+    final content = json['CONTENT'];
+    if (content is! List) {
+      return const [];
+    }
+
+    return content
+        .whereType<Map<String, dynamic>>()
+        .map(UserProfile.fromJson)
+        .toList();
+  }
+
   Future<void> updateUser({
     required String accessToken,
     required int userId,

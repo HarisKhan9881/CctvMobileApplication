@@ -27,12 +27,18 @@ class HomePostContainer extends StatefulWidget {
   final VoidCallback onClickProfile;
   final VoidCallback onPostUpdated;
   final ActivePost post;
+  final ActivePostRepost? repost;
+  final VoidCallback? onOpenOriginalPostInFeed;
+  final bool highlightPost;
   const HomePostContainer({
     super.key,
     required this.isAdmin,
     required this.onClickProfile,
     required this.onPostUpdated,
     required this.post,
+    this.repost,
+    this.onOpenOriginalPostInFeed,
+    this.highlightPost = false,
   });
 
   @override
@@ -171,6 +177,252 @@ class _HomePostContainerState extends State<HomePostContainer> {
     );
   }
 
+  String _buildInitials(String value) {
+    final initials = value
+        .split(' ')
+        .where((part) => part.trim().isNotEmpty)
+        .take(2)
+        .map((part) => part[0].toUpperCase())
+        .join();
+    return initials.isEmpty ? 'U' : initials;
+  }
+
+  Widget _buildRepostSection(ActivePostRepost repost, ActivePost post) {
+    final repostAuthor = repost.repostUserDetail?.fullName.trim() ?? '';
+    final repostTime = _timeLabel(repost.createdAt);
+    final repostText = repost.description.trim();
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: kLightGreyColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: kGreyColor),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: kTextfieldBlueColor,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.asset(
+                      Assets.repostIcon,
+                      width: 14,
+                      height: 14,
+                      color: kPrimaryColor,
+                    ),
+                    Space.horizontal(6),
+                    Text(
+                      'Repost',
+                      style: context.semiBold.copyWith(
+                        color: kPrimaryColor,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (repostTime.isNotEmpty) ...[
+                Space.horizontal(8),
+                Expanded(
+                  child: Text(
+                    repostTime,
+                    style: context.normal.copyWith(
+                      fontSize: 12,
+                      color: kDarkGreyColor,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ],
+          ),
+          if (repostAuthor.isNotEmpty) ...[
+            Space.vertical(10),
+            Text(
+              repostAuthor,
+              style: context.semiBold.copyWith(fontSize: 14),
+            ),
+          ],
+          if (repostText.isNotEmpty) ...[
+            Space.vertical(10),
+            Text(
+              repostText,
+              style: context.normal.copyWith(
+                fontSize: 14,
+                color: kBlackColor,
+              ),
+            ),
+          ],
+          Space.vertical(12),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(16),
+              onTap: widget.onOpenOriginalPostInFeed,
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: kWhiteColor,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: kGreyColor),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        _PostAuthorAvatar(post: post, radius: 18),
+                        Space.horizontal(10),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                post.authorDisplayName,
+                                style: context.semiBold.copyWith(fontSize: 14),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if ((post.caseDetail?.caseTitle.trim().isNotEmpty ??
+                                  false))
+                                Text(
+                                  post.caseDetail!.caseTitle.trim(),
+                                  style: context.normal.copyWith(
+                                    fontSize: 12,
+                                    color: kDarkGreyColor,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (post.postDescription.trim().isNotEmpty) ...[
+                      Space.vertical(10),
+                      Text(
+                        post.postDescription.trim(),
+                        style: context.normal.copyWith(fontSize: 13),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                    if (post.caseDetail?.meta?.hasMedia == true ||
+                        (post.defendantDetails.isNotEmpty &&
+                            post.defendantDetails.first.meta?.hasMedia == true)) ...[
+                      Space.vertical(12),
+                      _PostComparisonPreview(
+                        leftMedia: post.caseDetail?.meta,
+                        rightMedia: post.defendantDetails.isNotEmpty
+                            ? post.defendantDetails.first.meta
+                            : null,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStandaloneRepostCard(
+    BuildContext context, {
+    required ActivePost post,
+    required ActivePostRepost repost,
+  }) {
+    final repostAuthor = repost.repostUserDetail?.fullName.trim() ?? '';
+    final authorName = repostAuthor.isNotEmpty ? repostAuthor : 'Unknown User';
+    final timeText = _timeLabel(repost.createdAt);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: kWhiteColor,
+        borderRadius: BorderRadius.circular(20.0),
+        border: Border.all(
+          color: widget.highlightPost ? kPrimaryColor : kGreyColor,
+          width: widget.highlightPost ? 2 : 1,
+        ),
+        boxShadow: widget.highlightPost
+            ? [
+                BoxShadow(
+                  color: kPrimaryColor.withValues(alpha: 0.14),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
+                ),
+              ]
+            : null,
+      ),
+      margin: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                GestureDetector(
+                  onTap: widget.onClickProfile,
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundColor: kTextfieldBlueColor,
+                        child: Text(
+                          _buildInitials(authorName),
+                          style: context.semiBold.copyWith(
+                            color: kPrimaryColor,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ),
+                      Space.horizontal(10),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(authorName, style: context.semiBold),
+                          Text(
+                            timeText.isEmpty ? 'Just now' : timeText,
+                            style: context.normal,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: kWhiteColor,
+                    border: Border.all(color: kGreyColor),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  padding: const EdgeInsets.all(6.0),
+                  child: const Icon(Icons.more_horiz, color: kBlackColor),
+                ),
+              ],
+            ),
+            Space.vertical(20),
+            _buildRepostSection(repost, post),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _savePost() async {
     if (_isSavingPost) return;
 
@@ -217,6 +469,16 @@ class _HomePostContainerState extends State<HomePostContainer> {
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
+    final repost = widget.repost;
+
+    if (repost != null) {
+      return _buildStandaloneRepostCard(
+        context,
+        post: post,
+        repost: repost,
+      );
+    }
+
     final author = post.authorDisplayName;
     final timeText = _timeLabel(post.createdAt);
     final defendant = post.defendantDetails.isNotEmpty

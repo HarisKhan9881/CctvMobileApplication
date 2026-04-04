@@ -3,7 +3,9 @@ import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
+import 'package:cctv_app/core/network/models/user_profile.dart';
 import 'package:cctv_app/core/network/services/dashboard_service.dart';
+import 'package:cctv_app/core/network/services/user_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/profile/pages/ad_profile_page.dart';
@@ -28,36 +30,16 @@ class _SuperAdminHomePageState extends State<SuperAdminHomePage> {
   bool _isLoadingChart = false;
   String? _chartError;
   List<_ChartPoint> _chartPoints = const [];
-
-  final List<_RecentAdminItem> _recentAdmins = const [
-    _RecentAdminItem(
-      name: 'Dennis Callis',
-      status: 'Online',
-      timeLabel: 'Jul 7, 2025 7:16 am',
-      initials: 'DC',
-      accentColor: Color(0xFFE7D6C6),
-    ),
-    _RecentAdminItem(
-      name: 'Patricia Sanders',
-      status: 'Online',
-      timeLabel: 'Jul 20, 2025 5:18 pm',
-      initials: 'PS',
-      accentColor: Color(0xFFD8F0E6),
-    ),
-    _RecentAdminItem(
-      name: 'Stephanie Sharkey',
-      status: 'Offline',
-      timeLabel: 'Jul 29, 2025 8:42 am',
-      initials: 'SS',
-      accentColor: Color(0xFFE5E5E5),
-    ),
-  ];
+  bool _isLoadingRecentAdmins = false;
+  String? _recentAdminsError;
+  List<UserProfile> _recentAdmins = const [];
 
   @override
   void initState() {
     super.initState();
     _loadSummary();
     _loadChart();
+    _loadRecentAdmins();
   }
 
   Future<void> _loadSummary() async {
@@ -139,6 +121,46 @@ class _SuperAdminHomePageState extends State<SuperAdminHomePage> {
       if (!mounted) return;
       setState(() {
         _isLoadingChart = false;
+      });
+    }
+  }
+
+  Future<void> _loadRecentAdmins() async {
+    setState(() {
+      _isLoadingRecentAdmins = true;
+      _recentAdminsError = null;
+    });
+
+    try {
+      final accessToken = await const AuthStorage().readAccessToken();
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+
+      final admins = await const UserService().getAllRecentAdminsWithProfiles(
+        accessToken: accessToken,
+        skip: 0,
+        limit: 4,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _recentAdmins = admins;
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _recentAdminsError = e.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _recentAdminsError = 'Failed to load recent admins';
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingRecentAdmins = false;
       });
     }
   }
@@ -308,6 +330,96 @@ class _SuperAdminHomePageState extends State<SuperAdminHomePage> {
   String _formatDayLabel(DateTime date) => '${_two(date.month)}/${_two(date.day)}';
   String _formatMonthLabel(DateTime date) => _two(date.month);
   String _two(int value) => value.toString().padLeft(2, '0');
+
+  String _formatRecentAdminTime(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Recently added';
+    }
+
+    final parsed = DateTime.tryParse(value)?.toLocal();
+    if (parsed == null) {
+      return value.replaceFirst('T', ' ');
+    }
+
+    const months = [
+      'Jan',
+      'Feb',
+      'Mar',
+      'Apr',
+      'May',
+      'Jun',
+      'Jul',
+      'Aug',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dec',
+    ];
+
+    final month = months[parsed.month - 1];
+    final hour = parsed.hour == 0
+        ? 12
+        : parsed.hour > 12
+        ? parsed.hour - 12
+        : parsed.hour;
+    final minute = parsed.minute.toString().padLeft(2, '0');
+    final suffix = parsed.hour >= 12 ? 'pm' : 'am';
+    return '$month ${parsed.day}, ${parsed.year} $hour:$minute $suffix';
+  }
+
+  Widget _buildRecentAdminsSection() {
+    if (_isLoadingRecentAdmins) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 24),
+        child: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    if (_recentAdminsError != null) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              _recentAdminsError!,
+              style: const TextStyle(color: kDarkGreyColor),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: _loadRecentAdmins,
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (_recentAdmins.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 12),
+        child: Text(
+          'No recent admins found',
+          style: TextStyle(color: kDarkGreyColor),
+        ),
+      );
+    }
+
+    return Column(
+      children: _recentAdmins
+          .take(4)
+          .map(
+            (admin) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _RecentAdminCard(
+                admin: admin,
+                timeLabel: _formatRecentAdminTime(admin.createdAt),
+              ),
+            ),
+          )
+          .toList(),
+    );
+  }
 
   double _maxChartValue(List<_ChartPoint> points) {
     var maxValue = 0.0;
@@ -561,12 +673,7 @@ class _SuperAdminHomePageState extends State<SuperAdminHomePage> {
               Space.vertical(18),
               Text('Recent add admin', style: context.bold.copyWith(fontSize: 24)),
               Space.vertical(10),
-              ..._recentAdmins.map(
-                (admin) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: _RecentAdminCard(item: admin),
-                ),
-              ),
+              _buildRecentAdminsSection(),
             ],
           ),
         ),
@@ -705,12 +812,39 @@ class _MiniBarGlyph extends StatelessWidget {
 }
 
 class _RecentAdminCard extends StatelessWidget {
-  final _RecentAdminItem item;
+  final UserProfile admin;
+  final String timeLabel;
 
-  const _RecentAdminCard({required this.item});
+  const _RecentAdminCard({
+    required this.admin,
+    required this.timeLabel,
+  });
+
+  String _buildInitials(String name) {
+    final parts = name
+        .split(' ')
+        .where((part) => part.trim().isNotEmpty)
+        .take(2)
+        .toList();
+    if (parts.isEmpty) return 'A';
+    return parts.map((part) => part[0].toUpperCase()).join();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final fullName = '${admin.firstName} ${admin.lastName}'.trim();
+    final avatarUrl = admin.applicationMeta?.metaUrl?.trim();
+    final status = (admin.isActive ?? '').toUpperCase() == 'Y'
+        ? 'Online'
+        : 'Offline';
+    final item = _RecentAdminItem(
+      name: fullName,
+      status: status,
+      timeLabel: timeLabel,
+      initials: _buildInitials(fullName),
+      accentColor: kTextfieldBlueColor,
+    );
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -720,24 +854,30 @@ class _RecentAdminCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: item.accentColor,
-            child: Text(
-              item.initials,
-              style: const TextStyle(
-                color: kBlackColor,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
+          avatarUrl != null && avatarUrl.isNotEmpty
+              ? CircleAvatar(
+                  radius: 24,
+                  backgroundColor: kTextfieldBlueColor,
+                  backgroundImage: NetworkImage(avatarUrl),
+                )
+              : CircleAvatar(
+                  radius: 24,
+                  backgroundColor: kTextfieldBlueColor,
+                  child: Text(
+                    _buildInitials(fullName),
+                    style: const TextStyle(
+                      color: kPrimaryColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
           Space.horizontal(12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  item.name,
+                  fullName.isEmpty ? admin.email : fullName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),

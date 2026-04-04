@@ -59,6 +59,7 @@ class AppWebSocketEvent {
 
 const Set<AppWebSocketEventType> postRefreshEventTypes = {
   AppWebSocketEventType.post,
+  AppWebSocketEventType.comment,
   AppWebSocketEventType.poll,
 };
 

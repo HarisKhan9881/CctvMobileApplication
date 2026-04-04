@@ -11,6 +11,7 @@ class ActivePost {
   final ActivePostReactionSummary? reactionSummary;
   final ActivePostPollCount? casePollCount;
   final int repostCount;
+  final List<ActivePostRepost> reposts;
 
   const ActivePost({
     required this.postId,
@@ -25,6 +26,7 @@ class ActivePost {
     this.reactionSummary,
     this.casePollCount,
     this.repostCount = 0,
+    this.reposts = const [],
   });
 
   String? get authorAvatarUrl {
@@ -112,6 +114,72 @@ class ActivePost {
             )
           : null,
       repostCount: int.tryParse('${json['repost_count']}') ?? 0,
+      reposts: (json['reposts'] as List? ?? const [])
+          .whereType<Map<String, dynamic>>()
+          .map(ActivePostRepost.fromJson)
+          .toList(),
+    );
+  }
+}
+
+class ActivePostRepost {
+  final int? repostId;
+  final int? postId;
+  final int? userId;
+  final String description;
+  final String? isActive;
+  final int? createdBy;
+  final String? createdAt;
+  final ActivePostRepostUserDetail? repostUserDetail;
+
+  const ActivePostRepost({
+    this.repostId,
+    this.postId,
+    this.userId,
+    required this.description,
+    this.isActive,
+    this.createdBy,
+    this.createdAt,
+    this.repostUserDetail,
+  });
+
+  factory ActivePostRepost.fromJson(Map<String, dynamic> json) {
+    return ActivePostRepost(
+      repostId: int.tryParse('${json['repost_id']}'),
+      postId: int.tryParse('${json['post_id']}'),
+      userId: int.tryParse('${json['user_id']}'),
+      description: json['description'] as String? ?? '',
+      isActive: json['is_active'] as String?,
+      createdBy: int.tryParse('${json['created_by']}'),
+      createdAt: json['created_at'] as String?,
+      repostUserDetail:
+          json['repost_user_detail'] is Map<String, dynamic>
+          ? ActivePostRepostUserDetail.fromJson(
+              json['repost_user_detail'] as Map<String, dynamic>,
+            )
+          : null,
+    );
+  }
+}
+
+class ActivePostRepostUserDetail {
+  final String firstName;
+  final String lastName;
+  final String? userEmail;
+
+  const ActivePostRepostUserDetail({
+    required this.firstName,
+    required this.lastName,
+    this.userEmail,
+  });
+
+  String get fullName => '$firstName $lastName'.trim();
+
+  factory ActivePostRepostUserDetail.fromJson(Map<String, dynamic> json) {
+    return ActivePostRepostUserDetail(
+      firstName: json['first_name'] as String? ?? '',
+      lastName: json['last_name'] as String? ?? '',
+      userEmail: json['user_email'] as String?,
     );
   }
 }
