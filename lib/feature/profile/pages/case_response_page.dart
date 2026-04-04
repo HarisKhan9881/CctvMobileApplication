@@ -398,9 +398,7 @@ class _CaseResponsePageState extends State<CaseResponsePage> {
                     isImage: isImage,
                     controller: _videoController,
                     initialization: _videoInitialization,
-                  )
-                else
-                  const _EmptyAttachmentState(),
+                  ),
                 Space.vertical(20),
                 Text(
                   "Resolution",
@@ -591,14 +589,14 @@ class _NotificationMediaPreview extends StatelessWidget {
             fit: BoxFit.contain,
             width: double.infinity,
             height: 220,
-            errorBuilder: (_, _, _) => const _EmptyAttachmentState(),
+            errorBuilder: (_, _, _) => const SizedBox.shrink(),
           ),
         ),
       );
     }
 
     if (controller == null || initialization == null) {
-      return const _EmptyAttachmentState();
+      return const SizedBox.shrink();
     }
 
     return FutureBuilder<void>(
@@ -611,7 +609,7 @@ class _NotificationMediaPreview extends StatelessWidget {
         }
 
         if (!controller!.value.isInitialized) {
-          return const _EmptyAttachmentState();
+          return const SizedBox.shrink();
         }
 
         return ClipRRect(
@@ -706,14 +704,6 @@ class _EmptyAttachmentState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: Image.asset(
-        Assets.pngHighlight2Image,
-        fit: BoxFit.cover,
-        width: double.infinity,
-        height: 220,
-      ),
-    );
+    return const SizedBox.shrink();
   }
 }

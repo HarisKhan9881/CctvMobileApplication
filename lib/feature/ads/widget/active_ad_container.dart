@@ -14,117 +14,113 @@ class ActiveAdContainer extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: kGreyColor),
       ),
-      padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      padding: const EdgeInsets.all(10),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: Image.asset(Assets.pngHighlight2Image, fit: BoxFit.fill),
+            borderRadius: BorderRadius.circular(12),
+            child: Image.asset(
+              Assets.pngHighlight2Image,
+              width: 104,
+              height: 132,
+              fit: BoxFit.cover,
+            ),
           ),
-          Space.horizontal(8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Summer Sale – 30% Off",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-              ),
-              Space.vertical(6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "Start Date",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Space.vertical(6),
-                      Text(
-                        "Run Days",
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+          Space.horizontal(10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Summer Sale - 30% Off',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
                   ),
-                  Space.horizontal(60),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        "May 1, 2025",
-                        style: TextStyle(fontSize: 14, color: kDarkGreyColor),
-                      ),
-                      Space.vertical(6),
-                      Text(
-                        "12 days",
-                        style: TextStyle(fontSize: 14, color: kDarkGreyColor),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Space.vertical(6),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  PrimaryButton(
-                    text: "End",
-                    height: 32,
-                    isMainAxisSizeMin: true,
-                    buttonColor: kRedColor,
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    onPressed: () {
-                      showEndAdDialog(context);
-                    },
-                  ),
-                  Space.horizontal(10),
-                  PrimaryButton(
-                    text: "Pause",
-                    height: 32,
-                    isMainAxisSizeMin: true,
-                    showBorder: true,
-                    buttonColor: kWhiteColor,
-                    borderColor: kGreyColor,
-                    textColor: kBlackColor,
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    onPressed: () {
-                      showPauseAdDialog(context);
-                    },
-                  ),
-                  Space.horizontal(10),
-                  PrimaryButton(
-                    text: "Stats",
-                    height: 32,
-                    isMainAxisSizeMin: true,
-                    showBorder: true,
-                    buttonColor: kWhiteColor,
-                    borderColor: kGreyColor,
-                    textColor: kBlackColor,
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => StatsPage()),
-                      );
-                    },
-                  ),
-                ],
-              ),
-            ],
+                ),
+                Space.vertical(10),
+                _buildInfoRow('Start Date', 'May 1, 2025'),
+                Space.vertical(6),
+                _buildInfoRow('Run Days', '12 days'),
+                Space.vertical(12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    PrimaryButton(
+                      text: 'End',
+                      height: 32,
+                      isMainAxisSizeMin: true,
+                      buttonColor: kRedColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      onPressed: () {
+                        showEndAdDialog(context);
+                      },
+                    ),
+                    PrimaryButton(
+                      text: 'Pause',
+                      height: 32,
+                      isMainAxisSizeMin: true,
+                      showBorder: true,
+                      buttonColor: kWhiteColor,
+                      borderColor: kGreyColor,
+                      textColor: kBlackColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      onPressed: () {
+                        showPauseAdDialog(context);
+                      },
+                    ),
+                    PrimaryButton(
+                      text: 'Stats',
+                      height: 32,
+                      isMainAxisSizeMin: true,
+                      showBorder: true,
+                      buttonColor: kWhiteColor,
+                      borderColor: kGreyColor,
+                      textColor: kBlackColor,
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => StatsPage()),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.right,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 14, color: kDarkGreyColor),
+          ),
+        ),
+      ],
     );
   }
 
@@ -135,29 +131,27 @@ class ActiveAdContainer extends StatelessWidget {
         return AlertDialog(
           backgroundColor: kWhiteColor,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                "Are you sure?",
+              const Text(
+                'Are you sure?',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               Space.vertical(10),
               const Text(
-                "Stopping this ad will immediately pause its visibility on the app. Users will no longer see it until you reactivate.",
+                'Stopping this ad will immediately pause its visibility on the app. Users will no longer see it until you reactivate.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
               ),
               Space.vertical(10),
               const Text(
-                "Do you still want to proceed?",
+                'Do you still want to proceed?',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
               ),
               Space.vertical(20),
-
               Row(
                 children: [
                   Expanded(
@@ -167,13 +161,13 @@ class ActiveAdContainer extends StatelessWidget {
                         border: Border.all(color: kRedColor),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 10,
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        "No",
+                        'No',
                         style: context.normal.copyWith(color: kBlackColor),
                       ),
                     ),
@@ -186,13 +180,13 @@ class ActiveAdContainer extends StatelessWidget {
                         border: Border.all(color: kRedColor),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 10,
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        "Yes",
+                        'Yes',
                         style: context.normal.copyWith(color: kWhiteColor),
                       ),
                     ),
@@ -213,29 +207,27 @@ class ActiveAdContainer extends StatelessWidget {
         return AlertDialog(
           backgroundColor: kWhiteColor,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                "Are you sure?",
+              const Text(
+                'Are you sure?',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               Space.vertical(10),
               const Text(
-                "Pausing this ad will temporarily stop its visibility. You can resume it anytime from your dashboard.",
+                'Pausing this ad will temporarily stop its visibility. You can resume it anytime from your dashboard.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
               ),
               Space.vertical(10),
               const Text(
-                "Do you still want to proceed?",
+                'Do you still want to proceed?',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
               ),
               Space.vertical(20),
-
               Row(
                 children: [
                   Expanded(
@@ -245,13 +237,13 @@ class ActiveAdContainer extends StatelessWidget {
                         border: Border.all(color: kPrimaryColor),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 10,
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        "No",
+                        'No',
                         style: context.normal.copyWith(color: kBlackColor),
                       ),
                     ),
@@ -264,13 +256,13 @@ class ActiveAdContainer extends StatelessWidget {
                         border: Border.all(color: kPrimaryColor),
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      padding: EdgeInsets.symmetric(
+                      padding: const EdgeInsets.symmetric(
                         horizontal: 12,
                         vertical: 10,
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        "Yes",
+                        'Yes',
                         style: context.normal.copyWith(color: kWhiteColor),
                       ),
                     ),

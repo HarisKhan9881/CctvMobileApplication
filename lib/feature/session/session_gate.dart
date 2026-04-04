@@ -44,7 +44,10 @@ class SessionGate extends StatelessWidget {
 
     final resolvedType =
         dashboardType ??
-        _dashboardTypeFromRole(roleDescription: roleDescription, roleId: roleId);
+        _dashboardTypeFromRole(
+          roleDescription: roleDescription,
+          roleId: roleId,
+        );
     final initialIndex = await storage.readLastTabIndex(resolvedType);
 
     return switch (resolvedType) {
@@ -54,18 +57,16 @@ class SessionGate extends StatelessWidget {
     };
   }
 
-  DashboardType _dashboardTypeFromRole({
-    String? roleDescription,
-    int? roleId,
-  }) {
+  DashboardType _dashboardTypeFromRole({String? roleDescription, int? roleId}) {
     final normalizedRole = roleDescription?.trim().toLowerCase();
+    if (normalizedRole == 'super admin') return DashboardType.admin;
     if (normalizedRole == 'admin') return DashboardType.admin;
     if (normalizedRole == 'ad') return DashboardType.ad;
     if (normalizedRole == 'user') return DashboardType.user;
 
     return switch (roleId) {
       2 => DashboardType.admin,
-      3 => DashboardType.ad,
+      3 => DashboardType.admin,
       1 => DashboardType.user,
       _ => DashboardType.user,
     };

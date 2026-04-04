@@ -146,6 +146,7 @@ class ActivePostUserInfo {
       applicationMeta: applicationMeta,
       avatarUrl:
           applicationMeta?.metaUrl ??
+          json['profile_meta_url'] as String? ??
           json['meta_url'] as String? ??
           json['image_url'] as String? ??
           json['profile_image'] as String? ??

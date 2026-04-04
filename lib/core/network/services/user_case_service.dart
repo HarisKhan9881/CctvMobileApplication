@@ -63,6 +63,24 @@ class UserCaseService {
         .toList();
   }
 
+  Future<ActiveReel?> getUserReel({
+    required String accessToken,
+    required int userId,
+  }) async {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    final json = await _client.get(
+      '${Endpoints.getUserReel}?user_id=$userId',
+      headers: {'Authorization': 'Bearer $normalizedToken'},
+    );
+
+    final content = json['CONTENT'];
+    if (content is! Map<String, dynamic>) {
+      return null;
+    }
+
+    return ActiveReel.fromJson(content);
+  }
+
   Future<List<PendingCase>> getPendingCases({
     required String accessToken,
     required int userId,

@@ -1,6 +1,7 @@
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/network/services/user_service.dart';
 import 'package:cctv_app/core/session/app_session_manager.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
@@ -21,6 +22,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
   String selectedLang = "English";
   String displayName = "User";
   String displayEmail = "";
+  String? profileImageUrl;
 
   @override
   void initState() {
@@ -30,6 +32,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
   Future<void> _loadName() async {
     final storage = const AuthStorage();
+    final accessToken = await storage.readAccessToken();
+    final userId = await storage.readUserId();
     final first = await storage.readFirstName();
     final last = await storage.readLastName();
     final email = await storage.readEmail();
@@ -37,11 +41,27 @@ class _CustomDrawerState extends State<CustomDrawer> {
       if (first != null && first.trim().isNotEmpty) first.trim(),
       if (last != null && last.trim().isNotEmpty) last.trim(),
     ].join(' ');
+    String? resolvedProfileImageUrl;
+
+    if (accessToken != null &&
+        accessToken.trim().isNotEmpty &&
+        userId != null) {
+      try {
+        final profile = await const UserService().getUserById(
+          accessToken: accessToken,
+          userId: userId,
+        );
+        resolvedProfileImageUrl = profile.applicationMeta?.metaUrl?.trim();
+      } catch (_) {
+        resolvedProfileImageUrl = null;
+      }
+    }
 
     if (!mounted) return;
     setState(() {
       displayName = name.isEmpty ? displayName : name;
       displayEmail = (email ?? '').trim();
+      profileImageUrl = resolvedProfileImageUrl;
     });
   }
 
@@ -63,7 +83,21 @@ class _CustomDrawerState extends State<CustomDrawer> {
                   children: [
                     CircleAvatar(
                       radius: 35,
-                      backgroundImage: AssetImage(Assets.pngUser1Image),
+                      backgroundColor: kTextfieldBlueColor,
+                      backgroundImage:
+                          profileImageUrl != null && profileImageUrl!.isNotEmpty
+                          ? NetworkImage(profileImageUrl!)
+                          : null,
+                      child:
+                          profileImageUrl != null && profileImageUrl!.isNotEmpty
+                          ? null
+                          : Text(
+                              _buildInitials(displayName),
+                              style: context.bold.copyWith(
+                                color: kWhiteColor,
+                                fontSize: 20,
+                              ),
+                            ),
                     ),
                     Space.horizontal(12),
                     Column(
@@ -316,5 +350,24 @@ class _CustomDrawerState extends State<CustomDrawer> {
         ),
       ],
     );
+  }
+
+  String _buildInitials(String name) {
+    final parts = name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (parts.length >= 2) {
+      return '${parts.first[0]}${parts[1][0]}'.toUpperCase();
+    }
+
+    if (parts.length == 1) {
+      final value = parts.first;
+      return value.substring(0, value.length >= 2 ? 2 : 1).toUpperCase();
+    }
+
+    return 'U';
   }
 }

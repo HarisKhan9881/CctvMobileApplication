@@ -1,3 +1,4 @@
+import 'package:cctv_app/core/components/current_user_avatar.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/utils/assets.dart';
@@ -15,17 +16,14 @@ class AdTopHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        GestureDetector(
+        CurrentUserAvatar(
+          radius: 24,
           onTap: () {
             Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => AdProfilePage()),
             );
           },
-          child: CircleAvatar(
-            radius: 24,
-            backgroundImage: AssetImage(Assets.pngUser1Image),
-          ),
         ),
         Space.horizontal(10),
         Expanded(

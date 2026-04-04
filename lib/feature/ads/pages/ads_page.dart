@@ -19,6 +19,12 @@ class AdsPage extends StatefulWidget {
 
 class _AdsPageState extends State<AdsPage> {
   int selectedIndex = 0;
+  static const _tabs = [
+    'Active Ads',
+    'Pending Ads',
+    'Scheduled Ads',
+    'Cancel Ads',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -46,149 +52,63 @@ class _AdsPageState extends State<AdsPage> {
           ),
           Space.vertical(20),
           Text(
-            selectedIndex == 0
-                ? "Active Ads"
-                : selectedIndex == 1
-                ? "Pending Ads"
-                : selectedIndex == 2
-                ? "Scheduled Ads"
-                : "Cancel Ads",
+            _tabs[selectedIndex],
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
           ),
           Space.vertical(8),
-          Row(
-            children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedIndex = 0;
-                    });
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: selectedIndex == 0
-                              ? kPrimaryColor
-                              : kTransparentColor,
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: List.generate(_tabs.length, (index) {
+                final isSelected = selectedIndex == index;
+                return Padding(
+                  padding: EdgeInsets.only(right: index == _tabs.length - 1 ? 0 : 8),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(999),
+                    onTap: () {
+                      setState(() {
+                        selectedIndex = index;
+                      });
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected ? kPrimaryColor.withValues(alpha: 0.1) : kWhiteColor,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(
+                          color: isSelected ? kPrimaryColor : kGreyColor,
+                        ),
+                      ),
+                      child: Text(
+                        _tabs[index],
+                        style: context.medium.copyWith(
+                          fontSize: 13,
+                          color: isSelected ? kPrimaryColor : kDarkGreyColor,
                         ),
                       ),
                     ),
-                    margin: EdgeInsets.only(left: 2),
-                    alignment: Alignment.center,
-                    child: Text(
-                      "Active Ads",
-                      style: context.normal.copyWith(
-                        color: selectedIndex == 0
-                            ? kBlackColor
-                            : kDarkGreyColor,
-                      ),
-                    ),
                   ),
-                ),
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    print("1 ok");
-                    setState(() {
-                      selectedIndex = 1;
-                    });
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: selectedIndex == 1
-                              ? kPrimaryColor
-                              : kTransparentColor,
-                        ),
-                      ),
-                    ),
-                    margin: EdgeInsets.only(left: 2),
-                    alignment: Alignment.center,
-                    child: Text(
-                      "Pending Ads",
-                      style: context.normal.copyWith(
-                        color: selectedIndex == 1
-                            ? kBlackColor
-                            : kDarkGreyColor,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedIndex = 2;
-                    });
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: selectedIndex == 2
-                              ? kPrimaryColor
-                              : kTransparentColor,
-                        ),
-                      ),
-                    ),
-                    margin: EdgeInsets.only(left: 2),
-                    alignment: Alignment.center,
-                    child: Text(
-                      "Scheduled Ads",
-                      style: context.normal.copyWith(
-                        color: selectedIndex == 2
-                            ? kBlackColor
-                            : kDarkGreyColor,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedIndex = 3;
-                    });
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border(
-                        bottom: BorderSide(
-                          color: selectedIndex == 3
-                              ? kPrimaryColor
-                              : kTransparentColor,
-                        ),
-                      ),
-                    ),
-                    margin: EdgeInsets.only(left: 2),
-                    alignment: Alignment.center,
-                    child: Text(
-                      "Cancel Ads",
-                      style: context.normal.copyWith(
-                        color: selectedIndex == 3
-                            ? kBlackColor
-                            : kDarkGreyColor,
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ],
+                );
+              }),
+            ),
           ),
           Space.vertical(8),
-          selectedIndex == 0
-              ? ActiveAdView()
-              : selectedIndex == 1
-              ? PendingAdView()
-              : selectedIndex == 2
-              ? ScheduleAdView()
-              : CancelAdView(),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: selectedIndex == 0
+                  ? const ActiveAdView()
+                  : selectedIndex == 1
+                  ? const PendingAdView()
+                  : selectedIndex == 2
+                  ? const ScheduleAdView()
+                  : const CancelAdView(),
+            ),
+          ),
         ],
       ),
     );

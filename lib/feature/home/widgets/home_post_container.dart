@@ -678,44 +678,44 @@ class _HomePostContainerState extends State<HomePostContainer> {
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(color: kGreyColor),
                       ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.end,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const CircleAvatar(
-                            radius: 18,
-                            backgroundColor: kTextfieldBlueColor,
-                            child: Icon(
-                              Icons.mode_comment_outlined,
-                              size: 18,
-                              color: kPrimaryColor,
+                          CustomTextField(
+                            controller: _commentController,
+                            hintText: "Share your thoughts...",
+                            hintTextColor: kDarkGreyColor,
+                            fieldColor: kWhiteColor,
+                            showBorder: false,
+                            topPadding: 11,
+                            bottomPadding: 11,
+                            inputFontSize: 14,
+                            borderRadius: 12,
+                            textInputAction: TextInputAction.send,
+                            onSubmitted: (_) => _submitComment(),
+                            prefix: const Padding(
+                              padding: EdgeInsets.only(left: 12, right: 6),
+                              child: Icon(
+                                Icons.mode_comment_outlined,
+                                size: 18,
+                                color: kPrimaryColor,
+                              ),
                             ),
                           ),
-                          Space.horizontal(10),
-                          Expanded(
-                            child: CustomTextField(
-                              controller: _commentController,
-                              hintText: "Share your thoughts...",
-                              hintTextColor: kDarkGreyColor,
-                              fieldColor: kWhiteColor,
-                              showBorder: false,
-                              topPadding: 16,
-                              bottomPadding: 16,
-                              borderRadius: 14,
-                              textInputAction: TextInputAction.send,
-                              onSubmitted: (_) => _submitComment(),
-                            ),
-                          ),
-                          Space.horizontal(8),
-                          SizedBox(
-                            height: 48,
-                            child: PrimaryButton(
-                              text: _isSubmittingComment ? "..." : "Send",
-                              isMainAxisSizeMin: true,
-                              inactive: _isSubmittingComment,
-                              processing: _isSubmittingComment,
-                              onPressed: () {
-                                _submitComment();
-                              },
+                          const SizedBox(height: 10),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: SizedBox(
+                              height: 40,
+                              child: PrimaryButton(
+                                text: _isSubmittingComment ? "..." : "Send",
+                                isMainAxisSizeMin: true,
+                                inactive: _isSubmittingComment,
+                                processing: _isSubmittingComment,
+                                onPressed: () {
+                                  _submitComment();
+                                },
+                              ),
                             ),
                           ),
                         ],
@@ -1558,6 +1558,15 @@ class _HomePostContainerState extends State<HomePostContainer> {
     }).toList();
   }
 
+  String _commentAuthorName(ActivePostComment comment) {
+    final firstName = comment.userInfo?.firstName.trim() ?? '';
+    final lastName = comment.userInfo?.lastName.trim() ?? '';
+    final fullName = [if (firstName.isNotEmpty) firstName, if (lastName.isNotEmpty) lastName]
+        .join(' ')
+        .trim();
+    return fullName.isEmpty ? 'User' : fullName;
+  }
+
   Widget _buildCommentThread(
     ActivePostComment comment, {
     double leftPadding = 0,
@@ -1597,9 +1606,8 @@ class _HomePostContainerState extends State<HomePostContainer> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CommentContainer.dynamic(
-            authorName: comment.userInfo?.fullName.isNotEmpty == true
-                ? comment.userInfo!.fullName
-                : 'User',
+            authorName: _commentAuthorName(comment),
+            avatarUrl: comment.userInfo?.avatarUrl,
             comment: comment.commentContent,
             timeText: _timeLabel(comment.createdAt),
             onReplyTap: toggleReply,
@@ -1615,32 +1623,34 @@ class _HomePostContainerState extends State<HomePostContainer> {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: kGreyColor),
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: CustomTextField(
-                      controller: _replyController,
-                      hintText: 'Write a reply...',
-                      hintTextColor: kDarkGreyColor,
-                      fieldColor: kWhiteColor,
-                      showBorder: false,
-                      topPadding: 16,
-                      bottomPadding: 16,
-                      borderRadius: 14,
-                      textInputAction: TextInputAction.send,
-                      onSubmitted: (_) => _submitReply(comment),
-                    ),
+                  CustomTextField(
+                    controller: _replyController,
+                    hintText: 'Write a reply...',
+                    hintTextColor: kDarkGreyColor,
+                    fieldColor: kWhiteColor,
+                    showBorder: false,
+                    topPadding: 10,
+                    bottomPadding: 10,
+                    inputFontSize: 14,
+                    borderRadius: 12,
+                    textInputAction: TextInputAction.send,
+                    onSubmitted: (_) => _submitReply(comment),
                   ),
-                  Space.horizontal(8),
-                  SizedBox(
-                    height: 48,
-                    child: PrimaryButton(
-                      text: _isSubmittingReply ? '...' : 'Send',
-                      isMainAxisSizeMin: true,
-                      inactive: _isSubmittingReply,
-                      processing: _isSubmittingReply,
-                      onPressed: () => _submitReply(comment),
+                  const SizedBox(height: 10),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: SizedBox(
+                      height: 40,
+                      child: PrimaryButton(
+                        text: _isSubmittingReply ? '...' : 'Send',
+                        isMainAxisSizeMin: true,
+                        inactive: _isSubmittingReply,
+                        processing: _isSubmittingReply,
+                        onPressed: () => _submitReply(comment),
+                      ),
                     ),
                   ),
                 ],
@@ -2488,27 +2498,37 @@ class _PostComparisonPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
+    final visibleTiles = <Widget>[
+      if (leftMedia != null && leftMedia!.hasMedia)
         Expanded(
           child: _ComparisonMediaTile(
             media: leftMedia,
-            fallbackAsset: Assets.pngPost1Image,
             borderRadius: const BorderRadius.horizontal(
               left: Radius.circular(12),
             ),
           ),
         ),
-        const SizedBox(width: 8),
+      if (rightMedia != null && rightMedia!.hasMedia)
         Expanded(
           child: _ComparisonMediaTile(
             media: rightMedia,
-            fallbackAsset: Assets.pngHighlight1Image,
             borderRadius: const BorderRadius.horizontal(
               right: Radius.circular(12),
             ),
           ),
         ),
+    ];
+
+    if (visibleTiles.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Row(
+      children: [
+        for (var i = 0; i < visibleTiles.length; i++) ...[
+          if (i > 0) const SizedBox(width: 8),
+          visibleTiles[i],
+        ],
       ],
     );
   }
@@ -2516,12 +2536,10 @@ class _PostComparisonPreview extends StatelessWidget {
 
 class _ComparisonMediaTile extends StatefulWidget {
   final ActivePostMeta? media;
-  final String fallbackAsset;
   final BorderRadius borderRadius;
 
   const _ComparisonMediaTile({
     required this.media,
-    required this.fallbackAsset,
     required this.borderRadius,
   });
 
@@ -2614,12 +2632,16 @@ class _ComparisonMediaTileState extends State<_ComparisonMediaTile> {
   Widget _buildMedia() {
     final media = widget.media;
     if (media == null || !media.hasMedia) {
-      return Image.asset(widget.fallbackAsset, fit: BoxFit.cover);
+      return const SizedBox.shrink();
     }
 
     if (!media.isImage) {
       if (_videoController == null || _videoInitialization == null) {
-        return Image.asset(widget.fallbackAsset, fit: BoxFit.cover);
+        return Container(
+          color: kBlackColor.withValues(alpha: 0.85),
+          alignment: Alignment.center,
+          child: const CircularProgressIndicator(color: kWhiteColor),
+        );
       }
 
       return FutureBuilder<void>(
@@ -2657,8 +2679,11 @@ class _ComparisonMediaTileState extends State<_ComparisonMediaTile> {
         child: Image.network(
           media.metaUrl!,
           fit: BoxFit.cover,
-          errorBuilder: (_, _, _) =>
-              Image.asset(widget.fallbackAsset, fit: BoxFit.cover),
+          errorBuilder: (_, _, _) => Container(
+            color: kLightGreyColor,
+            alignment: Alignment.center,
+            child: const Icon(Icons.broken_image_outlined, color: kDarkGreyColor),
+          ),
         ),
       ),
     );
@@ -2683,7 +2708,6 @@ class _ComparisonMediaTileState extends State<_ComparisonMediaTile> {
         pageBuilder: (context, animation, secondaryAnimation) {
           return _FullscreenMediaViewer(
             mediaUrl: media.metaUrl!,
-            fallbackAsset: widget.fallbackAsset,
             isImage: media.isImage,
           );
         },
@@ -2706,12 +2730,10 @@ class _ComparisonMediaTileState extends State<_ComparisonMediaTile> {
 
 class _FullscreenMediaViewer extends StatefulWidget {
   final String mediaUrl;
-  final String fallbackAsset;
   final bool isImage;
 
   const _FullscreenMediaViewer({
     required this.mediaUrl,
-    required this.fallbackAsset,
     required this.isImage,
   });
 
@@ -2781,8 +2803,11 @@ class _FullscreenMediaViewerState extends State<_FullscreenMediaViewer> {
         child: Image.network(
           widget.mediaUrl,
           fit: BoxFit.contain,
-          errorBuilder: (_, _, _) =>
-              Image.asset(widget.fallbackAsset, fit: BoxFit.contain),
+          errorBuilder: (_, _, _) => const Icon(
+            Icons.broken_image_outlined,
+            color: kWhiteColor,
+            size: 48,
+          ),
         ),
       ),
     );
@@ -2790,8 +2815,8 @@ class _FullscreenMediaViewerState extends State<_FullscreenMediaViewer> {
 
   Widget _buildVideo() {
     if (_controller == null || _initialization == null) {
-      return Center(
-        child: Image.asset(widget.fallbackAsset, fit: BoxFit.contain),
+      return const Center(
+        child: CircularProgressIndicator(color: kWhiteColor),
       );
     }
 

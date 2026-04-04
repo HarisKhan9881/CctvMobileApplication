@@ -1164,7 +1164,18 @@ class _AdPostContainerState extends State<AdPostContainer> {
               CircleAvatar(
                 radius: isReply ? 16 : 18,
                 backgroundColor: kTextfieldBlueColor,
-                backgroundImage: const AssetImage(Assets.pngUser1Image),
+                backgroundImage: comment.userInfo?.avatarUrl?.trim().isNotEmpty == true
+                    ? NetworkImage(comment.userInfo!.avatarUrl!.trim())
+                    : null,
+                child: comment.userInfo?.avatarUrl?.trim().isNotEmpty == true
+                    ? null
+                    : Text(
+                        _buildInitials(authorName),
+                        style: context.semiBold.copyWith(
+                          color: kWhiteColor,
+                          fontSize: isReply ? 10 : 12,
+                        ),
+                      ),
               ),
               Space.horizontal(12),
               Expanded(

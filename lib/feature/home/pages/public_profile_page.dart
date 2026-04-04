@@ -3,11 +3,14 @@ import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/models/active_post.dart';
+import 'package:cctv_app/core/network/models/active_reel.dart';
 import 'package:cctv_app/core/network/services/case_post_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/home/widgets/home_post_container.dart';
 import 'package:flutter/material.dart';
+import 'package:video_player/video_player.dart';
+import 'package:cctv_app/core/network/services/user_case_service.dart';
 
 class PublicProfilePage extends StatefulWidget {
   final int userId;
@@ -29,11 +32,14 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
   bool _isLoading = true;
   String? _errorMessage;
   List<ActivePost> _posts = const [];
+  bool _isLoadingReel = true;
+  ActiveReel? _userReel;
 
   @override
   void initState() {
     super.initState();
     _loadPosts();
+    _loadUserReel();
   }
 
   Future<void> _loadPosts() async {
@@ -75,6 +81,39 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
     }
   }
 
+  Future<void> _loadUserReel() async {
+    setState(() {
+      _isLoadingReel = true;
+    });
+
+    try {
+      final accessToken = await const AuthStorage().readAccessToken();
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+
+      final reel = await UserCaseService().getUserReel(
+        accessToken: accessToken,
+        userId: widget.userId,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _userReel = reel;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _userReel = null;
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingReel = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -85,7 +124,9 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
         title: Text('Profile', style: context.bold.copyWith(fontSize: 18)),
       ),
       body: RefreshIndicator(
-        onRefresh: _loadPosts,
+        onRefresh: () async {
+          await Future.wait([_loadPosts(), _loadUserReel()]);
+        },
         child: SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -129,6 +170,17 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                 'The description of my profile',
                 style: context.normal.copyWith(color: kDarkGreyColor),
               ),
+              Space.vertical(16),
+              if (_isLoadingReel)
+                const Center(child: CircularProgressIndicator())
+              else if (_userReel != null) ...[
+                Text(
+                  'Reels',
+                  style: context.semiBold.copyWith(fontSize: 14),
+                ),
+                Space.vertical(10),
+                _ProfileReelCard(reel: _userReel!),
+              ],
               Space.vertical(16),
               Text(
                 'Total post',
@@ -190,6 +242,246 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
       itemCount: _posts.length,
       itemBuilder: (context, index) {
         return _ProfilePostCard(post: _posts[index]);
+      },
+    );
+  }
+}
+
+class _ProfileReelCard extends StatelessWidget {
+  final ActiveReel reel;
+
+  const _ProfileReelCard({required this.reel});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => _ProfileFullscreenReelViewer(reel: reel)),
+        );
+      },
+      child: SizedBox(
+        width: 84,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 74,
+              height: 74,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [
+                    kPrimaryColor,
+                    kPrimaryColor.withValues(alpha: 0.35),
+                  ],
+                ),
+              ),
+              child: ClipOval(child: _ProfileReelMediaPreview(reel: reel)),
+            ),
+            Space.vertical(8),
+            Text(
+              reel.reelDescription.trim().isEmpty ? 'Reel' : reel.reelDescription,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: context.normal.copyWith(fontSize: 11),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProfileReelMediaPreview extends StatelessWidget {
+  final ActiveReel reel;
+
+  const _ProfileReelMediaPreview({required this.reel});
+
+  @override
+  Widget build(BuildContext context) {
+    final mediaUrl = reel.mediaUrl;
+    if (mediaUrl == null || mediaUrl.trim().isEmpty) {
+      return Container(
+        color: kLightGreyColor,
+        alignment: Alignment.center,
+        child: const Icon(Icons.hide_image_outlined, color: kDarkGreyColor),
+      );
+    }
+
+    if (reel.isImage) {
+      return Image.network(
+        mediaUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (_, _, _) => Container(
+          color: kLightGreyColor,
+          alignment: Alignment.center,
+          child: const Icon(Icons.broken_image_outlined, color: kDarkGreyColor),
+        ),
+      );
+    }
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        Container(color: kBlackColor),
+        const Center(
+          child: Icon(
+            Icons.play_circle_fill_rounded,
+            color: kWhiteColor,
+            size: 28,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ProfileFullscreenReelViewer extends StatefulWidget {
+  final ActiveReel reel;
+
+  const _ProfileFullscreenReelViewer({required this.reel});
+
+  @override
+  State<_ProfileFullscreenReelViewer> createState() =>
+      _ProfileFullscreenReelViewerState();
+}
+
+class _ProfileFullscreenReelViewerState
+    extends State<_ProfileFullscreenReelViewer> {
+  VideoPlayerController? _controller;
+  Future<void>? _initialization;
+
+  bool get _isImage => widget.reel.isImage;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!_isImage && widget.reel.mediaUrl != null) {
+      _controller = VideoPlayerController.networkUrl(
+        Uri.parse(widget.reel.mediaUrl!),
+      );
+      _initialization = _controller!.initialize().then((_) {
+        _controller!
+          ..setLooping(true)
+          ..play();
+        if (mounted) {
+          setState(() {});
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: kBlackColor,
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Positioned.fill(child: _isImage ? _buildImage() : _buildVideo()),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: Material(
+                color: Colors.black.withValues(alpha: 0.35),
+                shape: const CircleBorder(),
+                child: IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close, color: kWhiteColor),
+                ),
+              ),
+            ),
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 24,
+              child: Text(
+                widget.reel.reelDescription.trim().isEmpty
+                    ? 'No description'
+                    : widget.reel.reelDescription,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: kWhiteColor,
+                ),
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildImage() {
+    final mediaUrl = widget.reel.mediaUrl;
+    if (mediaUrl == null || mediaUrl.trim().isEmpty) {
+      return const Center(
+        child: Icon(Icons.broken_image_outlined, color: kWhiteColor, size: 48),
+      );
+    }
+
+    return Center(
+      child: InteractiveViewer(
+        minScale: 1,
+        maxScale: 4,
+        child: Image.network(
+          mediaUrl,
+          fit: BoxFit.contain,
+          errorBuilder: (_, _, _) => const Icon(
+            Icons.broken_image_outlined,
+            color: kWhiteColor,
+            size: 48,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildVideo() {
+    if (_controller == null || _initialization == null) {
+      return const Center(
+        child: Icon(Icons.videocam_off_outlined, color: kWhiteColor, size: 48),
+      );
+    }
+
+    return FutureBuilder<void>(
+      future: _initialization,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done ||
+            !_controller!.value.isInitialized) {
+          return const Center(
+            child: CircularProgressIndicator(color: kWhiteColor),
+          );
+        }
+
+        return GestureDetector(
+          onTap: () {
+            setState(() {
+              if (_controller!.value.isPlaying) {
+                _controller!.pause();
+              } else {
+                _controller!.play();
+              }
+            });
+          },
+          child: Center(
+            child: AspectRatio(
+              aspectRatio: _controller!.value.aspectRatio == 0
+                  ? 9 / 16
+                  : _controller!.value.aspectRatio,
+              child: VideoPlayer(_controller!),
+            ),
+          ),
+        );
       },
     );
   }

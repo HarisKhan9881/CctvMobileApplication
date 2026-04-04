@@ -1,3 +1,4 @@
+import 'package:cctv_app/core/components/current_user_avatar.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/utils/assets.dart';
@@ -18,10 +19,7 @@ class AdminTopHeader extends StatelessWidget {
           onTap: () {
             Scaffold.of(context).openDrawer();
           },
-          child: CircleAvatar(
-            radius: 24,
-            backgroundImage: AssetImage(Assets.pngUser1Image),
-          ),
+          child: const CurrentUserAvatar(radius: 24),
         ),
         Space.horizontal(10),
         Expanded(
