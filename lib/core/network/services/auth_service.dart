@@ -14,6 +14,7 @@ class AuthService {
     required String lastName,
     required String email,
     required String password,
+    int? metaId,
   }) async {
     final json = await _client.postJson(
       Endpoints.signUp,
@@ -23,6 +24,7 @@ class AuthService {
         'user_email': email,
         'user_password': password,
         'role_id': signUpRoleId,
+        if (metaId != null) 'meta_id': metaId,
       },
       treatUnauthorizedAsSessionExpired: false,
     );

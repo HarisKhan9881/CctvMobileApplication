@@ -70,6 +70,25 @@ class _HomePostContainerState extends State<HomePostContainer> {
           widget.post.reactions.length) +
       _reactionCountDelta;
 
+  int get _likeCount {
+    final summary = widget.post.reactionSummary?.byType ?? const {};
+    final likeValue =
+        summary['Like'] ??
+        summary['LIKE'] ??
+        summary['like'];
+    final parsedLikeCount = int.tryParse('$likeValue');
+    if (parsedLikeCount != null) {
+      return parsedLikeCount + _reactionCountDelta;
+    }
+
+    final reactionLikes = widget.post.reactions
+        .where(
+          (reaction) => _normalizeReactionType(reaction.reactionType) == 'Like',
+        )
+        .length;
+    return reactionLikes + _reactionCountDelta;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -845,6 +864,8 @@ class _HomePostContainerState extends State<HomePostContainer> {
               },
             ),
             Space.vertical(14),
+            _buildLikesSummary(),
+            Space.vertical(14),
             _buildPostActionRow(post),
             Space.vertical(20),
             const SizedBox(height: 16),
@@ -1251,6 +1272,10 @@ class _HomePostContainerState extends State<HomePostContainer> {
     return _normalizeReactionType(reaction);
   }
 
+  String get _reactionButtonText {
+    return 'Like $_likeCount';
+  }
+
   Future<void> _loadCurrentUserReaction() async {
     final userId = await const AuthStorage().readUserId();
     if (!mounted) return;
@@ -1306,6 +1331,22 @@ class _HomePostContainerState extends State<HomePostContainer> {
     );
   }
 
+  Widget _buildLikesSummary() {
+    return Row(
+      children: [
+        _buildReactionSummaryIcons(),
+        Space.horizontal(8),
+        Text(
+          'Total Likes: $_likeCount',
+          style: context.semiBold.copyWith(
+            fontSize: 13,
+            color: kDarkGreyColor,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildPostActionRow(ActivePost post) {
     return Row(
       children: [
@@ -1315,7 +1356,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
               _showReactionPopup(details.globalPosition);
             },
             child: _buildActionButton(
-              text: _reactionLabel(selectedReaction),
+              text: _reactionButtonText,
               onTap: isReactionPopupVisible
                   ? null
                   : () => _submitReaction('Like'),

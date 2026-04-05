@@ -1,13 +1,51 @@
+import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
-import 'package:cctv_app/core/utils/assets.dart';
+import 'package:cctv_app/core/network/models/user_profile.dart';
+import 'package:cctv_app/core/utils/app_date_time.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:flutter/material.dart';
 
 class AdminProfilePage extends StatelessWidget {
-  const AdminProfilePage({super.key});
+  final UserProfile admin;
+
+  const AdminProfilePage({super.key, required this.admin});
+
+  String get _displayName {
+    final fullName = '${admin.firstName} ${admin.lastName}'.trim();
+    if (fullName.isNotEmpty && fullName != '-') {
+      return fullName;
+    }
+    return admin.email;
+  }
+
+  String get _statusLabel {
+    return (admin.isActive ?? '').toUpperCase() == 'Y' ? 'Active' : 'Inactive';
+  }
+
+  String get _avatarUrl => admin.applicationMeta?.metaUrl?.trim() ?? '';
+
+  String get _locationLabel {
+    final parts =
+        [
+              admin.cityId?.toString(),
+              admin.stateId?.toString(),
+              admin.countryId?.toString(),
+            ]
+            .where((part) => part != null && part.trim().isNotEmpty)
+            .cast<String>()
+            .toList();
+
+    if (parts.isEmpty) {
+      return admin.roleDescription?.trim().isNotEmpty == true
+          ? admin.roleDescription!.trim()
+          : 'Admin';
+    }
+
+    return parts.join(', ');
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,24 +66,34 @@ class AdminProfilePage extends StatelessWidget {
                 children: [
                   Stack(
                     children: [
-                      CircleAvatar(
-                        radius: 40,
-                        backgroundColor: kLightGreyColor,
-                        backgroundImage: const AssetImage(
-                          Assets.pngHighlight1Image,
-                        ),
-                      ),
+                      _avatarUrl.isNotEmpty
+                          ? CircleAvatar(
+                              radius: 40,
+                              backgroundColor: kLightGreyColor,
+                              backgroundImage: NetworkImage(_avatarUrl),
+                            )
+                          : CircleAvatar(
+                              radius: 40,
+                              backgroundColor: kTextfieldBlueColor,
+                              child: Text(
+                                _buildInitials(_displayName),
+                                style: context.bold.copyWith(
+                                  fontSize: 24,
+                                  color: kPrimaryColor,
+                                ),
+                              ),
+                            ),
                       Positioned(
                         bottom: 0,
                         right: 0,
                         child: Container(
                           padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
+                          decoration: const BoxDecoration(
                             color: kPrimaryColor,
                             shape: BoxShape.circle,
                           ),
                           child: const Icon(
-                            Icons.camera_alt_outlined,
+                            Icons.person,
                             color: kWhiteColor,
                             size: 16,
                           ),
@@ -59,17 +107,17 @@ class AdminProfilePage extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Patricia Sanders",
-                          style: TextStyle(
+                          _displayName,
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                             color: kBlackColor,
                           ),
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Text(
-                          "2323 Dancing Dove Lane, Long Island City, NY 11101",
-                          style: TextStyle(
+                          _locationLabel,
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.normal,
                             color: kDarkGreyColor,
@@ -93,7 +141,7 @@ class AdminProfilePage extends StatelessWidget {
                     isMainAxisSizeMin: true,
                     height: 40,
                     buttonColor: kRedColor,
-                    prefixIcon: Icon(Icons.delete, color: kWhiteColor),
+                    prefixIcon: const Icon(Icons.delete, color: kWhiteColor),
                     onPressed: () {
                       showDeleteDialog(context);
                     },
@@ -106,7 +154,7 @@ class AdminProfilePage extends StatelessWidget {
                 children: [
                   Text("Email Address", style: context.semiBold),
                   Text(
-                    "abc@gmail.com",
+                    admin.email.isEmpty ? '-' : admin.email,
                     style: context.normal.copyWith(color: kDarkGreyColor),
                   ),
                 ],
@@ -119,8 +167,12 @@ class AdminProfilePage extends StatelessWidget {
                 children: [
                   Text("Account Status", style: context.semiBold),
                   Text(
-                    "Active",
-                    style: context.normal.copyWith(color: kDarkGreyColor),
+                    _statusLabel,
+                    style: context.normal.copyWith(
+                      color: _statusLabel == 'Active'
+                          ? Colors.green
+                          : kDarkGreyColor,
+                    ),
                   ),
                 ],
               ),
@@ -132,7 +184,10 @@ class AdminProfilePage extends StatelessWidget {
                 children: [
                   Text("Date Joined", style: context.semiBold),
                   Text(
-                    "Apr 20, 2025",
+                    AppDateTime.formatDateTime(
+                      admin.createdAt,
+                      fallback: 'Unknown date',
+                    ),
                     style: context.normal.copyWith(color: kDarkGreyColor),
                   ),
                 ],
@@ -145,7 +200,10 @@ class AdminProfilePage extends StatelessWidget {
                 children: [
                   Text("Last Login Date & Time", style: context.semiBold),
                   Text(
-                    "May 2, 2025 5:00 pm",
+                    AppDateTime.formatDateTime(
+                      admin.createdAt,
+                      fallback: 'Unknown',
+                    ),
                     style: context.normal.copyWith(color: kDarkGreyColor),
                   ),
                 ],
@@ -158,7 +216,7 @@ class AdminProfilePage extends StatelessWidget {
                 children: [
                   Text("Tasks or Projects Done", style: context.semiBold),
                   Text(
-                    "305",
+                    "${admin.userId}",
                     style: context.normal.copyWith(color: kDarkGreyColor),
                   ),
                 ],
@@ -166,24 +224,49 @@ class AdminProfilePage extends StatelessWidget {
               Space.vertical(10),
               Divider(thickness: 1),
               Space.vertical(20),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Share profile", style: context.semiBold),
-                  Icon(Icons.upload_file_sharp, color: kDarkGreyColor),
-                ],
-              ),
-              Space.vertical(10),
-              Divider(thickness: 1),
-              Space.vertical(20),
-              Text("Important note", style: context.semiBold),
-              Space.vertical(10),
-              CustomTextField(maxLine: 5, hintText: "Notes"),
+              // Row(
+              //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              //   children: [
+              //     Text("Share profile", style: context.semiBold),
+              //     GestureDetector(
+              //       onTap: () {
+              //         AppAlert.showInfo(
+              //           context,
+              //           admin.email.isEmpty ? _displayName : admin.email,
+              //         );
+              //       },
+              //       child: const Icon(
+              //         Icons.upload_file_sharp,
+              //         color: kDarkGreyColor,
+              //       ),
+              //     ),
+              //   ],
+              // ),
+              // Space.vertical(10),
+              // Divider(thickness: 1),
+              // Space.vertical(20),
+              // Text("Important note", style: context.semiBold),
+              // Space.vertical(10),
+              // CustomTextField(
+              //   maxLine: 5,
+              //   hintText:
+              //       "Role: ${admin.roleDescription ?? 'Admin'}\nDOB: ${admin.dob ?? '-'}\nUser ID: ${admin.userId}",
+              // ),
             ],
           ),
         ),
       ),
     );
+  }
+
+  String _buildInitials(String value) {
+    final parts = value
+        .split(' ')
+        .where((part) => part.trim().isNotEmpty)
+        .take(2)
+        .toList();
+    if (parts.isEmpty) return 'A';
+    return parts.map((part) => part[0].toUpperCase()).join();
   }
 
   void showDeleteDialog(BuildContext context) {
@@ -213,39 +296,51 @@ class AdminProfilePage extends StatelessWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: kWhiteColor,
-                        border: Border.all(color: kRedColor),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        "No",
-                        style: context.normal.copyWith(color: kBlackColor),
+                    child: GestureDetector(
+                      onTap: () => Navigator.pop(dialogContext),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: kWhiteColor,
+                          border: Border.all(color: kRedColor),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          "No",
+                          style: context.normal.copyWith(color: kBlackColor),
+                        ),
                       ),
                     ),
                   ),
                   Space.horizontal(10),
                   Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: kRedColor,
-                        border: Border.all(color: kRedColor),
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        "Yes",
-                        style: context.normal.copyWith(color: kWhiteColor),
+                    child: GestureDetector(
+                      onTap: () {
+                        Navigator.pop(dialogContext);
+                        AppAlert.showWarning(
+                          context,
+                          'Delete admin is not connected yet',
+                        );
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: kRedColor,
+                          border: Border.all(color: kRedColor),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          "Yes",
+                          style: context.normal.copyWith(color: kWhiteColor),
+                        ),
                       ),
                     ),
                   ),

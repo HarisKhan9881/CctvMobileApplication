@@ -4,6 +4,7 @@ import 'package:cctv_app/core/network/api_config.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/network_response_handler.dart';
 import 'package:cctv_app/core/network/models/user_profile.dart';
+import 'package:cctv_app/core/network/models/user_role.dart';
 import 'package:cctv_app/core/network/models/user_option.dart';
 import 'package:cctv_app/core/session/app_session_manager.dart';
 import 'package:http/http.dart' as http;
@@ -93,6 +94,97 @@ class UserService {
     return content
         .whereType<Map<String, dynamic>>()
         .map(UserProfile.fromJson)
+        .toList();
+  }
+
+  Future<List<UserProfile>> getAllRecentAdmins({
+    required String accessToken,
+    int skip = 0,
+    int limit = 4,
+  }) async {
+    final normalizedToken = await AppSessionManager.instance
+        .requireValidAccessToken(accessToken);
+    final url = Uri.parse(
+      '${ApiConfig.baseUrl}/api/v1/user/getAllRecentAdmins'
+      '?skip=$skip&limit=$limit',
+    );
+    final response = await http.get(
+      url,
+      headers: {
+        'accept': 'application/json',
+        'Authorization': 'Bearer $normalizedToken',
+      },
+    );
+
+    final json = await NetworkResponseHandler.parseJsonResponse(response);
+    final content = json['CONTENT'];
+    if (content is! List) {
+      return const [];
+    }
+
+    return content
+        .whereType<Map<String, dynamic>>()
+        .map(UserProfile.fromJson)
+        .toList();
+  }
+
+  Future<List<UserProfile>> getAllAdminsWithProfiles({
+    required String accessToken,
+    int skip = 0,
+    int limit = 100,
+  }) async {
+    final normalizedToken = await AppSessionManager.instance
+        .requireValidAccessToken(accessToken);
+    final url = Uri.parse(
+      '${ApiConfig.baseUrl}/api/v1/user/getAllAdminsWithProfiles'
+      '?skip=$skip&limit=$limit',
+    );
+    final response = await http.get(
+      url,
+      headers: {
+        'accept': 'application/json',
+        'Authorization': 'Bearer $normalizedToken',
+      },
+    );
+
+    final json = await NetworkResponseHandler.parseJsonResponse(response);
+    final content = json['CONTENT'];
+    if (content is! List) {
+      return const [];
+    }
+
+    return content
+        .whereType<Map<String, dynamic>>()
+        .map(UserProfile.fromJson)
+        .toList();
+  }
+
+  Future<List<UserRole>> getRoles({
+    required String accessToken,
+    bool onlyActive = true,
+  }) async {
+    final normalizedToken = await AppSessionManager.instance
+        .requireValidAccessToken(accessToken);
+    final url = Uri.parse(
+      '${ApiConfig.baseUrl}/api/v1/user/getRoles?only_active=$onlyActive',
+    );
+    final response = await http.get(
+      url,
+      headers: {
+        'accept': 'application/json',
+        'Authorization': 'Bearer $normalizedToken',
+      },
+    );
+
+    final json = await NetworkResponseHandler.parseJsonResponse(response);
+    final content = json['CONTENT'];
+    if (content is! List) {
+      return const [];
+    }
+
+    return content
+        .whereType<Map<String, dynamic>>()
+        .map(UserRole.fromJson)
         .toList();
   }
 

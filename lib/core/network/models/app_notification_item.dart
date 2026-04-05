@@ -59,7 +59,7 @@ class AppNotificationItem {
 
   static String _titleFromType(String? type) {
     return switch (type) {
-      'U' => 'Update',
+      'U' => 'Notification',
       'A' => 'Alert',
       'P' => 'Post',
       _ => 'Notification',
