@@ -10,6 +10,9 @@ class AppNotificationItem {
   final String? notificationMeta;
   final AppNotificationMeta? parsedMeta;
   final String? createdAt;
+  final String? userFirstName;
+  final String? userLastName;
+  final String? userAvatarUrl;
 
   const AppNotificationItem({
     required this.notificationId,
@@ -21,6 +24,9 @@ class AppNotificationItem {
     this.notificationMeta,
     this.parsedMeta,
     this.createdAt,
+    this.userFirstName,
+    this.userLastName,
+    this.userAvatarUrl,
   });
 
   factory AppNotificationItem.fromJson(Map<String, dynamic> json) {
@@ -29,6 +35,12 @@ class AppNotificationItem {
     final detail = (json['notification_detail'] as String?)?.trim();
     final type = (json['notification_type'] as String?)?.trim();
     final status = (json['notification_status'] as String?)?.trim();
+    final user = json['user'] is Map<String, dynamic>
+        ? json['user'] as Map<String, dynamic>
+        : null;
+    final profileMeta = user?['profile_meta'] is Map<String, dynamic>
+        ? user!['profile_meta'] as Map<String, dynamic>
+        : null;
 
     return AppNotificationItem(
       notificationId: notificationId is int
@@ -44,8 +56,14 @@ class AppNotificationItem {
       notificationMeta: json['notification_meta'] as String?,
       parsedMeta: AppNotificationMeta.tryParse(json['notification_meta']),
       createdAt: json['created_at'] as String?,
+      userFirstName: user?['first_name'] as String?,
+      userLastName: user?['last_name'] as String?,
+      userAvatarUrl: profileMeta?['meta_url'] as String?,
     );
   }
+
+  String get userFullName =>
+      '${userFirstName?.trim() ?? ''} ${userLastName?.trim() ?? ''}'.trim();
 
   bool get isReminder {
     final combined = [

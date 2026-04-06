@@ -8,6 +8,7 @@ class CommunityFeedbackWidget extends StatelessWidget {
   final String title;
   final String? categoryLabel;
   final String createdAt;
+  final String? imageUrl;
   final VoidCallback? onView;
 
   const CommunityFeedbackWidget({
@@ -15,6 +16,7 @@ class CommunityFeedbackWidget extends StatelessWidget {
     required this.title,
     required this.createdAt,
     this.categoryLabel,
+    this.imageUrl,
     this.onView,
   });
 
@@ -44,11 +46,9 @@ class CommunityFeedbackWidget extends StatelessWidget {
                   offset: Offset(0, 4),
                 ),
               ],
-              image: DecorationImage(
-                image: AssetImage(Assets.pngHighlight2Image),
-                fit: BoxFit.cover,
-              ),
             ),
+            clipBehavior: Clip.antiAlias,
+            child: _FeedbackImage(imageUrl: imageUrl),
           ),
           Space.horizontal(10),
           Expanded(
@@ -106,6 +106,27 @@ class CommunityFeedbackWidget extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _FeedbackImage extends StatelessWidget {
+  final String? imageUrl;
+
+  const _FeedbackImage({this.imageUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final trimmedUrl = imageUrl?.trim() ?? '';
+    if (trimmedUrl.isEmpty) {
+      return Image.asset(Assets.pngHighlight2Image, fit: BoxFit.cover);
+    }
+
+    return Image.network(
+      trimmedUrl,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) =>
+          Image.asset(Assets.pngHighlight2Image, fit: BoxFit.cover),
     );
   }
 }

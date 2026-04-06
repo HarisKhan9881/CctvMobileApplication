@@ -30,6 +30,8 @@ class _CommunityFeedbackState extends State<CommunityFeedback> {
   List<GeneralParameterOption> _categories = const [];
   List<PostReport> _reports = const [];
   Map<int, int?> _postCategoryIds = const {};
+  Map<int, String?> _postImageUrls = const {};
+  Map<int, ActivePost> _postsById = const {};
 
   @override
   void initState() {
@@ -66,6 +68,12 @@ class _CommunityFeedbackState extends State<CommunityFeedback> {
         _postCategoryIds = {
           for (final post in posts)
             post.postId: post.caseDetail?.caseCategoryId,
+        };
+        _postImageUrls = {
+          for (final post in posts) post.postId: post.caseDetail?.meta?.metaUrl,
+        };
+        _postsById = {
+          for (final post in posts) post.postId: post,
         };
         _categoryTabs = _buildCategoryTabs(_categories);
         if (selectedIndex >= _categoryTabs.length) {
@@ -202,11 +210,18 @@ class _CommunityFeedbackState extends State<CommunityFeedback> {
                         : report.reportAdditionalInformation,
                     categoryLabel: categoryLabel,
                     createdAt: _formatDate(report.createdAt),
+                    imageUrl: _postImageUrls[report.postId],
                     onView: () {
+                      final selectedPost = _postsById[report.postId];
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const FeedbackView(),
+                          builder: (context) => FeedbackView(
+                            report: report,
+                            post: selectedPost,
+                            categoryLabel: categoryLabel,
+                            imageUrl: _postImageUrls[report.postId],
+                          ),
                         ),
                       );
                     },

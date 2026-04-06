@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:sizer/sizer.dart';
-import 'dart:math' as math;
 
 class VotingResultExample extends StatelessWidget {
   final String leftLabel;
@@ -32,15 +31,13 @@ class VotingResultExample extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final totalVotes = math.max(totalVotesCount ?? 0, leftVotes + rightVotes);
+    final apiTotalVotes = totalVotesCount ?? 0;
+    final calculatedTotalVotes = leftVotes + rightVotes;
+    final totalVotes = apiTotalVotes > 0 ? apiTotalVotes : calculatedTotalVotes;
     final leftProgress = totalVotes == 0 ? 0.0 : leftVotes / totalVotes;
     final rightProgress = totalVotes == 0 ? 0.0 : rightVotes / totalVotes;
-    final leftPercentage = totalVotes == 0
-        ? 0
-        : ((leftVotes / totalVotes) * 100).round();
-    final rightPercentage = totalVotes == 0
-        ? 0
-        : ((rightVotes / totalVotes) * 100).round();
+    final leftPercentage = _buildPercentage(leftVotes, totalVotes);
+    final rightPercentage = _buildPercentage(rightVotes, totalVotes);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -70,6 +67,11 @@ class VotingResultExample extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  int _buildPercentage(int votes, int totalVotes) {
+    if (totalVotes <= 0) return 0;
+    return ((votes / totalVotes) * 100).round().clamp(0, 100);
   }
 
   Widget _buildVoteOption({

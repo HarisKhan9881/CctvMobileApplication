@@ -231,7 +231,7 @@ class _NotificationPageState extends State<NotificationPage> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(backgroundImage: AssetImage(Assets.pngUser1Image)),
+                _NotificationUserAvatar(notification: notification),
                 Space.horizontal(12),
                 Expanded(
                   child: Column(
@@ -307,5 +307,53 @@ class _NotificationThumbnail extends StatelessWidget {
         errorBuilder: (_, _, _) => const SizedBox.shrink(),
       ),
     );
+  }
+}
+
+class _NotificationUserAvatar extends StatelessWidget {
+  final AppNotificationItem notification;
+
+  const _NotificationUserAvatar({required this.notification});
+
+  @override
+  Widget build(BuildContext context) {
+    final avatarUrl = notification.userAvatarUrl?.trim() ?? '';
+    final name = notification.userFullName;
+    final initials = _buildInitials(name);
+
+    if (avatarUrl.isNotEmpty) {
+      return CircleAvatar(
+        radius: 20,
+        backgroundColor: kLightGreyColor,
+        backgroundImage: NetworkImage(avatarUrl),
+        onBackgroundImageError: (_, _) {},
+      );
+    }
+
+    return CircleAvatar(
+      radius: 20,
+      backgroundColor: kTextfieldBlueColor,
+      child: Text(
+        initials.isEmpty ? 'U' : initials,
+        style: context.bold.copyWith(
+          fontSize: 13,
+          color: kPrimaryColor,
+        ),
+      ),
+    );
+  }
+
+  String _buildInitials(String name) {
+    final parts = name
+        .split(' ')
+        .where((part) => part.trim().isNotEmpty)
+        .take(2)
+        .toList();
+
+    if (parts.isEmpty) {
+      return '';
+    }
+
+    return parts.map((part) => part[0].toUpperCase()).join();
   }
 }

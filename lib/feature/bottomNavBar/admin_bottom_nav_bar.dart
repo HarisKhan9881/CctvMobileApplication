@@ -6,7 +6,6 @@ import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/utils.dart';
 import 'package:cctv_app/feature/adAdmin/pages/ad_admin_page.dart';
 import 'package:cctv_app/feature/adminHome/pages/admin_home_page.dart';
-import 'package:cctv_app/feature/ads/pages/ads_page.dart';
 import 'package:cctv_app/feature/announcement/pages/announcement_page.dart';
 import 'package:cctv_app/feature/home/pages/home_page.dart';
 import 'package:cctv_app/feature/profile/pages/notification_page.dart';
@@ -58,7 +57,6 @@ class _AdminBottomNavBarState extends State<AdminBottomNavBar> {
   List<Widget> get _pages => _isSuperAdmin
       ? [
           SuperAdminHomePage(),
-          AdsPage(),
           AdAdminPage(),
           AnnouncementPage(),
         ]
@@ -82,18 +80,9 @@ class _AdminBottomNavBarState extends State<AdminBottomNavBar> {
           ),
           BottomNavigationBarItem(
             icon: SvgPicture.asset(
-              Assets.svgAdsIcon,
-              colorFilter: colorFilter(
-                color: selectedIndex == 1 ? kPrimaryColor : kDarkGreyColor,
-              ),
-            ),
-            label: 'Ads',
-          ),
-          BottomNavigationBarItem(
-            icon: SvgPicture.asset(
               Assets.svgAdminIcon,
               colorFilter: colorFilter(
-                color: selectedIndex == 2 ? kPrimaryColor : kDarkGreyColor,
+                color: selectedIndex == 1 ? kPrimaryColor : kDarkGreyColor,
               ),
             ),
             label: 'Admins',
@@ -102,7 +91,7 @@ class _AdminBottomNavBarState extends State<AdminBottomNavBar> {
             icon: SvgPicture.asset(
               Assets.svgAnnouncementIcon,
               colorFilter: colorFilter(
-                color: selectedIndex == 3 ? kPrimaryColor : kDarkGreyColor,
+                color: selectedIndex == 2 ? kPrimaryColor : kDarkGreyColor,
               ),
             ),
             label: 'Announce',

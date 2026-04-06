@@ -1,6 +1,7 @@
-import 'package:cctv_app/core/components/custom_switch_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/services/app_feedback_controller.dart';
+import 'package:cctv_app/core/storage/app_settings_storage.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:flutter/material.dart';
 
@@ -12,242 +13,262 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  // yahan sab switches ke liye variables
-  bool generalNotification = false;
-  bool sound = false;
-  bool vibrate = false;
-  bool appUpdates = false;
-  bool billReminder = false;
-  bool promotion = false;
-  bool discountAvailable = false;
-  bool paymentRequest = false;
-  bool newServiceAvailable = false;
-  bool newTipsAvailable = false;
+  final AppSettingsStorage _settingsStorage = const AppSettingsStorage();
+  final Map<String, bool> _settings = {
+    AppSettingsKeys.generalNotification: true,
+    AppSettingsKeys.sound: true,
+    AppSettingsKeys.vibrate: true,
+    AppSettingsKeys.appUpdates: false,
+    AppSettingsKeys.billReminder: false,
+    AppSettingsKeys.promotion: false,
+    AppSettingsKeys.discountAvailable: false,
+    AppSettingsKeys.paymentRequest: false,
+    AppSettingsKeys.newServiceAvailable: false,
+    AppSettingsKeys.newTipsAvailable: false,
+  };
+
+  bool _isLoading = true;
+
+  static const List<_SettingsSection> _sections = [
+    _SettingsSection(
+      title: 'Common',
+      items: [
+        _SettingsItem(
+          keyName: AppSettingsKeys.generalNotification,
+          label: 'General Notification',
+        ),
+        _SettingsItem(keyName: AppSettingsKeys.sound, label: 'Sound'),
+        _SettingsItem(keyName: AppSettingsKeys.vibrate, label: 'Vibrate'),
+      ],
+    ),
+    _SettingsSection(
+      title: 'System & Services Update',
+      items: [
+        _SettingsItem(
+          keyName: AppSettingsKeys.appUpdates,
+          label: 'App Updates',
+        ),
+        _SettingsItem(
+          keyName: AppSettingsKeys.billReminder,
+          label: 'Bill Reminder',
+        ),
+        _SettingsItem(
+          keyName: AppSettingsKeys.promotion,
+          label: 'Promotion',
+        ),
+        _SettingsItem(
+          keyName: AppSettingsKeys.discountAvailable,
+          label: 'Discount Available',
+        ),
+        _SettingsItem(
+          keyName: AppSettingsKeys.paymentRequest,
+          label: 'Payment Request',
+        ),
+      ],
+    ),
+    _SettingsSection(
+      title: 'Others',
+      items: [
+        _SettingsItem(
+          keyName: AppSettingsKeys.newServiceAvailable,
+          label: 'New Service Available',
+        ),
+        _SettingsItem(
+          keyName: AppSettingsKeys.newTipsAvailable,
+          label: 'New Tips Available',
+        ),
+      ],
+    ),
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSettings();
+  }
+
+  Future<void> _loadSettings() async {
+    final saved = await _settingsStorage.readAll();
+    if (!mounted) return;
+    setState(() {
+      _settings.addAll(saved);
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _updateSetting(String keyName, bool value) async {
+    setState(() {
+      _settings[keyName] = value;
+    });
+
+    await _settingsStorage.writeBool(keyName, value);
+
+    final notificationsEnabled =
+        _settings[AppSettingsKeys.generalNotification] ?? true;
+    final soundEnabled = notificationsEnabled &&
+        (_settings[AppSettingsKeys.sound] ?? false);
+    final vibrateEnabled = notificationsEnabled &&
+        (_settings[AppSettingsKeys.vibrate] ?? false);
+
+    if (keyName == AppSettingsKeys.generalNotification ||
+        keyName == AppSettingsKeys.sound ||
+        keyName == AppSettingsKeys.vibrate) {
+      await AppFeedbackController.instance.playTogglePreview(
+        soundEnabled: soundEnabled,
+        vibrateEnabled: vibrateEnabled,
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kWhiteColor,
+      backgroundColor: const Color(0xFFF8F8F8),
       appBar: AppBar(
         backgroundColor: kWhiteColor,
+        surfaceTintColor: kWhiteColor,
         centerTitle: true,
-        title: const Text("Settings"),
+        title: const Text('Settings'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : ListView.separated(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+              itemCount: _sections.length,
+              separatorBuilder: (_, __) => Space.vertical(18),
+              itemBuilder: (context, index) {
+                final section = _sections[index];
+                return _SettingsSectionCard(
+                  title: section.title,
+                  children: section.items.map((item) {
+                    return _SettingsTile(
+                      title: item.label,
+                      value: _settings[item.keyName] ?? false,
+                      onChanged: (value) => _updateSetting(item.keyName, value),
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+    );
+  }
+}
+
+class _SettingsSectionCard extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+
+  const _SettingsSectionCard({
+    required this.title,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: kWhiteColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: kGreyColor.withValues(alpha: 0.55)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+            child: Text(
+              title,
+              style: context.semiBold.copyWith(fontSize: 18),
+            ),
+          ),
+          ..._withDividers(children),
+        ],
+      ),
+    );
+  }
+
+  List<Widget> _withDividers(List<Widget> children) {
+    final widgets = <Widget>[];
+    for (var i = 0; i < children.length; i++) {
+      widgets.add(children[i]);
+      if (i != children.length - 1) {
+        widgets.add(
+          Divider(
+            height: 1,
+            indent: 16,
+            endIndent: 16,
+            color: kGreyColor.withValues(alpha: 0.45),
+          ),
+        );
+      }
+    }
+    return widgets;
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final String title;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const _SettingsTile({
+    required this.title,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: () => onChanged(!value),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
             children: [
-              Text("Common", style: context.semiBold.copyWith(fontSize: 18)),
-              Space.vertical(12),
-
-              // General Notification
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "General Notification",
-                    style: context.normal.copyWith(fontSize: 16),
+              Expanded(
+                child: Text(
+                  title,
+                  style: context.normal.copyWith(
+                    fontSize: 16,
+                    color: kBlackColor,
                   ),
-                  CustomSwitchButton(
-                    onToggle: (val) {
-                      setState(() {
-                        generalNotification = val;
-                      });
-                    },
-                    isToggled: generalNotification,
-                  ),
-                ],
+                ),
               ),
-              Space.vertical(16),
-
-              // Sound
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Sound", style: context.normal.copyWith(fontSize: 16)),
-                  CustomSwitchButton(
-                    onToggle: (val) {
-                      setState(() {
-                        sound = val;
-                      });
-                    },
-                    isToggled: sound,
-                  ),
-                ],
+              Switch.adaptive(
+                value: value,
+                activeColor: kWhiteColor,
+                activeTrackColor: kPrimaryColor,
+                inactiveThumbColor: kWhiteColor,
+                inactiveTrackColor: kContainerGreyColor,
+                onChanged: onChanged,
               ),
-              Space.vertical(16),
-
-              // Vibrate
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text("Vibrate", style: context.normal.copyWith(fontSize: 16)),
-                  CustomSwitchButton(
-                    onToggle: (val) {
-                      setState(() {
-                        vibrate = val;
-                      });
-                    },
-                    isToggled: vibrate,
-                  ),
-                ],
-              ),
-
-              Space.vertical(20),
-              Text(
-                "System & services update",
-                style: context.semiBold.copyWith(fontSize: 18),
-              ),
-              Space.vertical(12),
-
-              // App Updates
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "App updates",
-                    style: context.normal.copyWith(fontSize: 16),
-                  ),
-                  CustomSwitchButton(
-                    onToggle: (val) {
-                      setState(() {
-                        appUpdates = val;
-                      });
-                    },
-                    isToggled: appUpdates,
-                  ),
-                ],
-              ),
-              Space.vertical(16),
-
-              // Bill Reminder
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Bill Reminder",
-                    style: context.normal.copyWith(fontSize: 16),
-                  ),
-                  CustomSwitchButton(
-                    onToggle: (val) {
-                      setState(() {
-                        billReminder = val;
-                      });
-                    },
-                    isToggled: billReminder,
-                  ),
-                ],
-              ),
-              Space.vertical(16),
-
-              // Promotion
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Promotion",
-                    style: context.normal.copyWith(fontSize: 16),
-                  ),
-                  CustomSwitchButton(
-                    onToggle: (val) {
-                      setState(() {
-                        promotion = val;
-                      });
-                    },
-                    isToggled: promotion,
-                  ),
-                ],
-              ),
-              Space.vertical(16),
-
-              // Discount Available
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Discount Available",
-                    style: context.normal.copyWith(fontSize: 16),
-                  ),
-                  CustomSwitchButton(
-                    onToggle: (val) {
-                      setState(() {
-                        discountAvailable = val;
-                      });
-                    },
-                    isToggled: discountAvailable,
-                  ),
-                ],
-              ),
-              Space.vertical(16),
-
-              // Payment Request
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "Payment Request",
-                    style: context.normal.copyWith(fontSize: 16),
-                  ),
-                  CustomSwitchButton(
-                    onToggle: (val) {
-                      setState(() {
-                        paymentRequest = val;
-                      });
-                    },
-                    isToggled: paymentRequest,
-                  ),
-                ],
-              ),
-
-              Space.vertical(20),
-              Text("Others", style: context.semiBold.copyWith(fontSize: 18)),
-              Space.vertical(12),
-
-              // New Service Available
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "New Service Available",
-                    style: context.normal.copyWith(fontSize: 16),
-                  ),
-                  CustomSwitchButton(
-                    onToggle: (val) {
-                      setState(() {
-                        newServiceAvailable = val;
-                      });
-                    },
-                    isToggled: newServiceAvailable,
-                  ),
-                ],
-              ),
-              Space.vertical(16),
-
-              // New Tips Available
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    "New Tips Available",
-                    style: context.normal.copyWith(fontSize: 16),
-                  ),
-                  CustomSwitchButton(
-                    onToggle: (val) {
-                      setState(() {
-                        newTipsAvailable = val;
-                      });
-                    },
-                    isToggled: newTipsAvailable,
-                  ),
-                ],
-              ),
-              Space.vertical(16),
             ],
           ),
         ),
       ),
     );
   }
+}
+
+class _SettingsSection {
+  final String title;
+  final List<_SettingsItem> items;
+
+  const _SettingsSection({
+    required this.title,
+    required this.items,
+  });
+}
+
+class _SettingsItem {
+  final String keyName;
+  final String label;
+
+  const _SettingsItem({
+    required this.keyName,
+    required this.label,
+  });
 }

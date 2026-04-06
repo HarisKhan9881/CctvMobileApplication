@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:cctv_app/core/services/app_feedback_controller.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:flutter/material.dart';
 
@@ -29,6 +32,7 @@ class AppAlert {
   ) {
     final messenger = ScaffoldMessenger.maybeOf(context);
     if (messenger == null) return;
+    unawaited(AppFeedbackController.instance.playAlertFeedback());
 
     final theme = Theme.of(context);
     final style = _styleFor(type);
