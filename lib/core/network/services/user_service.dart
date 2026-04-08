@@ -12,6 +12,52 @@ import 'package:http/http.dart' as http;
 class UserService {
   const UserService();
 
+  Future<Map<String, dynamic>> createUser({
+    required String accessToken,
+    required String firstName,
+    required String lastName,
+    required String email,
+    required String password,
+    required int roleId,
+    required int createdBy,
+    int countryId = 0,
+    int stateId = 0,
+    int cityId = 0,
+    String? dob,
+    int genderId = 0,
+    int profileTypeId = 0,
+    int metaId = 0,
+  }) async {
+    final normalizedToken = await AppSessionManager.instance
+        .requireValidAccessToken(accessToken);
+    final url = Uri.parse('${ApiConfig.baseUrl}/api/v1/user/createUser');
+    final response = await http.post(
+      url,
+      headers: {
+        'accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $normalizedToken',
+      },
+      body: jsonEncode({
+        'first_name': firstName,
+        'last_name': lastName,
+        'user_email': email,
+        'user_password': password,
+        'country_id': countryId,
+        'state_id': stateId,
+        'city_id': cityId,
+        'dob': dob ?? '',
+        'gender_id': genderId,
+        'profile_type_id': profileTypeId,
+        'meta_id': metaId,
+        'role_id': roleId,
+        'created_by': createdBy,
+      }),
+    );
+
+    return NetworkResponseHandler.parseJsonResponse(response);
+  }
+
   Future<List<UserOption>> getAllUsers({
     required String accessToken,
   }) async {
@@ -204,6 +250,24 @@ class UserService {
         'Authorization': 'Bearer $normalizedToken',
       },
       body: jsonEncode(body),
+    );
+
+    await NetworkResponseHandler.parseJsonResponse(response);
+  }
+
+  Future<void> deleteUser({
+    required String accessToken,
+    required int userId,
+  }) async {
+    final normalizedToken = await AppSessionManager.instance
+        .requireValidAccessToken(accessToken);
+    final url = Uri.parse('${ApiConfig.baseUrl}/api/v1/user/deleteUser/$userId');
+    final response = await http.delete(
+      url,
+      headers: {
+        'accept': 'application/json',
+        'Authorization': 'Bearer $normalizedToken',
+      },
     );
 
     await NetworkResponseHandler.parseJsonResponse(response);

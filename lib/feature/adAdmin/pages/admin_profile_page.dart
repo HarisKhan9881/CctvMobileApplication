@@ -3,48 +3,97 @@ import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/models/user_profile.dart';
+import 'package:cctv_app/core/network/services/user_service.dart';
+import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/app_date_time.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:flutter/material.dart';
 
-class AdminProfilePage extends StatelessWidget {
+class AdminProfilePage extends StatefulWidget {
   final UserProfile admin;
 
   const AdminProfilePage({super.key, required this.admin});
 
+  @override
+  State<AdminProfilePage> createState() => _AdminProfilePageState();
+}
+
+class _AdminProfilePageState extends State<AdminProfilePage> {
+  bool _isDeleting = false;
+
   String get _displayName {
-    final fullName = '${admin.firstName} ${admin.lastName}'.trim();
+    final fullName = '${widget.admin.firstName} ${widget.admin.lastName}'.trim();
     if (fullName.isNotEmpty && fullName != '-') {
       return fullName;
     }
-    return admin.email;
+    return widget.admin.email;
   }
 
   String get _statusLabel {
-    return (admin.isActive ?? '').toUpperCase() == 'Y' ? 'Active' : 'Inactive';
+    return (widget.admin.isActive ?? '').toUpperCase() == 'Y' ? 'Active' : 'Inactive';
   }
 
-  String get _avatarUrl => admin.applicationMeta?.metaUrl?.trim() ?? '';
+  String get _avatarUrl => widget.admin.applicationMeta?.metaUrl?.trim() ?? '';
 
   String get _locationLabel {
     final parts =
         [
-              admin.cityId?.toString(),
-              admin.stateId?.toString(),
-              admin.countryId?.toString(),
+              widget.admin.cityId?.toString(),
+              widget.admin.stateId?.toString(),
+              widget.admin.countryId?.toString(),
             ]
             .where((part) => part != null && part.trim().isNotEmpty)
             .cast<String>()
             .toList();
 
     if (parts.isEmpty) {
-      return admin.roleDescription?.trim().isNotEmpty == true
-          ? admin.roleDescription!.trim()
+      return widget.admin.roleDescription?.trim().isNotEmpty == true
+          ? widget.admin.roleDescription!.trim()
           : 'Admin';
     }
 
     return parts.join(', ');
+  }
+
+  Future<void> _deleteAdmin() async {
+    final userId = widget.admin.userId;
+    if (userId == null || userId <= 0) {
+      AppAlert.showError(context, 'Invalid user id');
+      return;
+    }
+
+    setState(() {
+      _isDeleting = true;
+    });
+
+    try {
+      final accessToken = await const AuthStorage().readAccessToken();
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+
+      await const UserService().deleteUser(
+        accessToken: accessToken,
+        userId: userId,
+      );
+
+      if (!mounted) return;
+      AppAlert.showSuccess(context, 'Admin deleted successfully');
+      Navigator.pop(context, true);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      AppAlert.showError(context, e.message);
+    } catch (e) {
+      if (!mounted) return;
+      AppAlert.showError(context, 'Failed to delete admin: $e');
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isDeleting = false;
+      });
+    }
   }
 
   @override
@@ -141,8 +190,11 @@ class AdminProfilePage extends StatelessWidget {
                     isMainAxisSizeMin: true,
                     height: 40,
                     buttonColor: kRedColor,
+                    processing: _isDeleting,
+                    inactive: _isDeleting,
                     prefixIcon: const Icon(Icons.delete, color: kWhiteColor),
                     onPressed: () {
+                      if (_isDeleting) return;
                       showDeleteDialog(context);
                     },
                   ),
@@ -154,7 +206,7 @@ class AdminProfilePage extends StatelessWidget {
                 children: [
                   Text("Email Address", style: context.semiBold),
                   Text(
-                    admin.email.isEmpty ? '-' : admin.email,
+                    widget.admin.email.isEmpty ? '-' : widget.admin.email,
                     style: context.normal.copyWith(color: kDarkGreyColor),
                   ),
                 ],
@@ -185,7 +237,7 @@ class AdminProfilePage extends StatelessWidget {
                   Text("Date Joined", style: context.semiBold),
                   Text(
                     AppDateTime.formatDateTime(
-                      admin.createdAt,
+                      widget.admin.createdAt,
                       fallback: 'Unknown date',
                     ),
                     style: context.normal.copyWith(color: kDarkGreyColor),
@@ -201,7 +253,7 @@ class AdminProfilePage extends StatelessWidget {
                   Text("Last Login Date & Time", style: context.semiBold),
                   Text(
                     AppDateTime.formatDateTime(
-                      admin.createdAt,
+                      widget.admin.createdAt,
                       fallback: 'Unknown',
                     ),
                     style: context.normal.copyWith(color: kDarkGreyColor),
@@ -216,7 +268,7 @@ class AdminProfilePage extends StatelessWidget {
                 children: [
                   Text("Tasks or Projects Done", style: context.semiBold),
                   Text(
-                    "${admin.userId}",
+                    "${widget.admin.userId}",
                     style: context.normal.copyWith(color: kDarkGreyColor),
                   ),
                 ],
@@ -319,12 +371,9 @@ class AdminProfilePage extends StatelessWidget {
                   Space.horizontal(10),
                   Expanded(
                     child: GestureDetector(
-                      onTap: () {
+                      onTap: _isDeleting ? null : () async {
                         Navigator.pop(dialogContext);
-                        AppAlert.showWarning(
-                          context,
-                          'Delete admin is not connected yet',
-                        );
+                        await _deleteAdmin();
                       },
                       child: Container(
                         decoration: BoxDecoration(

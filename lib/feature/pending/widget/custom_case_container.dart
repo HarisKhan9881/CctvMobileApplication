@@ -3,9 +3,9 @@ import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
+import 'package:cctv_app/core/network/models/pending_case.dart';
 import 'package:cctv_app/core/network/services/case_post_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
-import 'package:cctv_app/core/network/models/pending_case.dart';
 import 'package:cctv_app/core/utils/app_date_time.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
@@ -15,8 +15,15 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 class CustomCaseContainer extends StatefulWidget {
   final PendingCase pendingCase;
+  final Future<void> Function()? onDeleteConfirmed;
+  final bool isDeleting;
 
-  const CustomCaseContainer({super.key, required this.pendingCase});
+  const CustomCaseContainer({
+    super.key,
+    required this.pendingCase,
+    this.onDeleteConfirmed,
+    this.isDeleting = false,
+  });
 
   @override
   State<CustomCaseContainer> createState() => _CustomCaseContainerState();
@@ -83,7 +90,7 @@ class _CustomCaseContainerState extends State<CustomCaseContainer> {
               Expanded(
                 child: PrimaryButton(
                   height: 40,
-                  text: "Reminder",
+                  text: 'Reminder',
                   prefixIcon: SvgPicture.asset(Assets.svgRemindIcon),
                   prefixIconSize: 16,
                   textFontSize: 12,
@@ -95,9 +102,7 @@ class _CustomCaseContainerState extends State<CustomCaseContainer> {
               ),
               Space.horizontal(8),
               GestureDetector(
-                onTap: () {
-                  showDeleteDialog(context);
-                },
+                onTap: widget.isDeleting ? null : () => showDeleteDialog(context),
                 child: Container(
                   height: 40,
                   decoration: BoxDecoration(
@@ -105,10 +110,17 @@ class _CustomCaseContainerState extends State<CustomCaseContainer> {
                     border: Border.all(color: kGreyColor),
                   ),
                   padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: SvgPicture.asset(
-                    Assets.svgDeleteIcon,
-                    colorFilter: colorFilter(color: kDarkGreyColor),
-                  ),
+                  alignment: Alignment.center,
+                  child: widget.isDeleting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : SvgPicture.asset(
+                          Assets.svgDeleteIcon,
+                          colorFilter: colorFilter(color: kDarkGreyColor),
+                        ),
                 ),
               ),
             ],
@@ -218,8 +230,7 @@ class _CustomCaseContainerState extends State<CustomCaseContainer> {
     showDialog(
       context: context,
       barrierDismissible: false,
-
-      builder: (BuildContext context) {
+      builder: (dialogContext) {
         return Dialog(
           backgroundColor: kWhiteColor,
           shape: RoundedRectangleBorder(
@@ -230,9 +241,8 @@ class _CustomCaseContainerState extends State<CustomCaseContainer> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // 🔴 Title Text
                 const Text(
-                  "Are you sure you want\nto delete?",
+                  'Are you sure you want\nto delete?',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: Colors.red,
@@ -241,22 +251,41 @@ class _CustomCaseContainerState extends State<CustomCaseContainer> {
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // ❌ Cancel Button
                 PrimaryButton(
-                  text: "No",
+                  text: 'No',
                   borderColor: kGreyColor,
                   textColor: kBlackColor,
                   buttonColor: kWhiteColor,
                   showBorder: true,
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pop(dialogContext);
                   },
                 ),
                 Space.vertical(12),
+                PrimaryButton(
+                  text: 'Yes',
+                  processing: widget.isDeleting,
+                  inactive: widget.isDeleting,
+                  onPressed: () async {
+                    Navigator.pop(dialogContext);
+                    if (widget.onDeleteConfirmed == null) return;
 
-                // ✅ Yes Button
-                PrimaryButton(text: "Yes", onPressed: () {}),
+                    try {
+                      await widget.onDeleteConfirmed!.call();
+                      if (!mounted) return;
+                      AppAlert.showSuccess(
+                        context,
+                        'Case deleted successfully',
+                      );
+                    } on ApiException catch (e) {
+                      if (!mounted) return;
+                      AppAlert.showError(context, e.message);
+                    } catch (e) {
+                      if (!mounted) return;
+                      AppAlert.showError(context, 'Failed to delete case: $e');
+                    }
+                  },
+                ),
               ],
             ),
           ),

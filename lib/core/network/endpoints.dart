@@ -10,6 +10,7 @@ class Endpoints {
   static const String getUserReel = '/api/v1/user_case/get_user_reel';
   static const String getPendingCasesByUserId =
       '/api/v1/user_case/getPendingCasesByUserId';
+  static const String deleteUserCase = '/api/v1/user_case/delete_user_case';
   static const String getPostsByUserId = '/api/v1/case_post/getPostsByUserId';
   static const String getSavedPostByUserId =
       '/api/v1/case_post/getSavedPostByUserId';

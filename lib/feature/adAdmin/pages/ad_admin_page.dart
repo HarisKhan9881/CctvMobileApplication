@@ -63,11 +63,17 @@ class _AdAdminPageState extends State<AdAdminPage> {
         skip: 0,
         limit: 100,
       );
+      final activeRecentAdmins = recentAdmins
+          .where((admin) => (admin.isActive ?? '').toUpperCase() == 'Y')
+          .toList();
+      final activeAllAdmins = allAdmins
+          .where((admin) => (admin.isActive ?? '').toUpperCase() == 'Y')
+          .toList();
 
       if (!mounted) return;
       setState(() {
-        _recentAdmins = recentAdmins.take(4).toList();
-        _allAdmins = allAdmins;
+        _recentAdmins = activeRecentAdmins.take(4).toList();
+        _allAdmins = activeAllAdmins;
       });
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -124,6 +130,7 @@ class _AdAdminPageState extends State<AdAdminPage> {
             child: AdminContainerWidget(
               admin: admins[index],
               showOnlineStatus: showOnlineStatus,
+              onAdminDeleted: _loadAdmins,
             ),
           );
         }),
@@ -146,7 +153,10 @@ class _AdAdminPageState extends State<AdAdminPage> {
       children: List.generate(admins.length, (index) {
         return Padding(
           padding: EdgeInsets.only(bottom: index == admins.length - 1 ? 0 : 10),
-          child: AdminListTile(admin: admins[index]),
+          child: AdminListTile(
+            admin: admins[index],
+            onAdminDeleted: _loadAdmins,
+          ),
         );
       }),
     );
@@ -168,13 +178,17 @@ class _AdAdminPageState extends State<AdAdminPage> {
                 isMainAxisSizeMin: true,
                 text: "Add new Admin",
                 postfixIcon: const Icon(Icons.person, color: kWhiteColor),
-                onPressed: () {
-                  Navigator.push(
+                onPressed: () async {
+                  final created = await Navigator.push<bool>(
                     context,
                     MaterialPageRoute(
                       builder: (context) => const AddNewAdminPage(),
                     ),
-                  ).then((_) => _loadAdmins());
+                  );
+
+                  if (created == true) {
+                    _loadAdmins();
+                  }
                 },
               ),
             ),
@@ -243,8 +257,13 @@ class _AdAdminPageState extends State<AdAdminPage> {
 
 class AdminListTile extends StatelessWidget {
   final UserProfile admin;
+  final VoidCallback? onAdminDeleted;
 
-  const AdminListTile({super.key, required this.admin});
+  const AdminListTile({
+    super.key,
+    required this.admin,
+    this.onAdminDeleted,
+  });
 
   String get _displayName {
     final fullName = '${admin.firstName} ${admin.lastName}'.trim();
@@ -314,13 +333,16 @@ class AdminListTile extends StatelessWidget {
       ),
       padding: const EdgeInsets.all(10),
       child: GestureDetector(
-        onTap: () {
-          Navigator.push(
+        onTap: () async {
+          final deleted = await Navigator.push<bool>(
             context,
             MaterialPageRoute(
               builder: (context) => AdminProfilePage(admin: admin),
             ),
           );
+          if (deleted == true) {
+            onAdminDeleted?.call();
+          }
         },
         child: Row(
           children: [

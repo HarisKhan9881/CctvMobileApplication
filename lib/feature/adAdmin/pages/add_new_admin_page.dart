@@ -2,19 +2,15 @@ import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
-import 'package:cctv_app/core/network/api_client.dart';
-import 'package:cctv_app/core/network/api_config.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/models/uploaded_media.dart';
 import 'package:cctv_app/core/network/models/user_role.dart';
 import 'package:cctv_app/core/network/services/application_cloud_service.dart';
-import 'package:cctv_app/core/network/services/auth_service.dart';
 import 'package:cctv_app/core/network/services/user_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/core/utils/validators.dart';
-import 'package:cctv_app/feature/bottomNavBar/admin_bottom_nav_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -59,6 +55,44 @@ class _AddNewAdminPageState extends State<AddNewAdminPage> {
   String? _rolesError;
   List<UserRole> _roles = const [];
   UploadedMedia? _uploadedProfileImage;
+
+  int _resolveRoleId(UserRole role) {
+    final normalizedDescription = role.roleDescription.trim().toLowerCase();
+    if (normalizedDescription == 'admin') {
+      return 1;
+    }
+    if (normalizedDescription == 'user') {
+      return 2;
+    }
+    return role.roleId;
+  }
+
+  String? _buildDob() {
+    final day = _selectedDay;
+    final month = _selectedMonth;
+    final year = _selectedYear;
+    if (day == null || month == null || year == null) {
+      return null;
+    }
+
+    final monthIndex = _months.indexOf(month);
+    if (monthIndex < 0) return null;
+
+    final parsedDay = int.tryParse(day);
+    final parsedYear = int.tryParse(year);
+    if (parsedDay == null || parsedYear == null) return null;
+
+    final date = DateTime(parsedYear, monthIndex + 1, parsedDay);
+    if (date.year != parsedYear ||
+        date.month != monthIndex + 1 ||
+        date.day != parsedDay) {
+      return null;
+    }
+
+    final twoDigitMonth = (monthIndex + 1).toString().padLeft(2, '0');
+    final twoDigitDay = parsedDay.toString().padLeft(2, '0');
+    return '$parsedYear-$twoDigitMonth-$twoDigitDay';
+  }
 
   List<String> get _days =>
       List<String>.generate(31, (index) => '${index + 1}');
@@ -214,30 +248,32 @@ class _AddNewAdminPageState extends State<AddNewAdminPage> {
     });
 
     try {
-      final service = AuthService(
-        ApiClient(baseUrl: ApiConfig.baseUrl),
-        signUpRoleId: _selectedRole!.roleId,
-      );
+      final accessToken = await const AuthStorage().readAccessToken();
+      final createdBy = await const AuthStorage().readUserId();
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+      if (createdBy == null || createdBy <= 0) {
+        throw const ApiException('Creator user id not found');
+      }
 
-      await service.signUp(
+      await const UserService().createUser(
+        accessToken: accessToken,
         firstName: _firstNameController.text.trim(),
         lastName: _lastNameController.text.trim().isEmpty
             ? '-'
             : _lastNameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
-        metaId: _uploadedProfileImage?.metaId,
+        roleId: _resolveRoleId(_selectedRole!),
+        createdBy: createdBy,
+        dob: _buildDob(),
+        metaId: _uploadedProfileImage?.metaId ?? 0,
       );
 
       if (!mounted) return;
       AppAlert.showSuccess(context, 'Profile created successfully');
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const AdminBottomNavBar(initialIndex: 2),
-        ),
-        (_) => false,
-      );
+      Navigator.pop(context, true);
     } on ApiException catch (e) {
       if (!mounted) return;
       AppAlert.showError(context, e.message);

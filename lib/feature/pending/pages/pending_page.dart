@@ -20,6 +20,7 @@ class _PendingPageState extends State<PendingPage> {
   bool _isLoading = true;
   String? _error;
   List<PendingCase> _pendingCases = const [];
+  final Set<int> _deletingCaseIds = <int>{};
 
   @override
   void initState() {
@@ -65,6 +66,38 @@ class _PendingPageState extends State<PendingPage> {
       if (!mounted) return;
       setState(() {
         _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _deletePendingCase(PendingCase pendingCase) async {
+    final caseId = pendingCase.caseId;
+    if (_deletingCaseIds.contains(caseId)) return;
+
+    setState(() {
+      _deletingCaseIds.add(caseId);
+    });
+
+    try {
+      final accessToken = await const AuthStorage().readAccessToken();
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+
+      await UserCaseService().deleteUserCase(
+        accessToken: accessToken,
+        caseId: caseId,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _pendingCases =
+            _pendingCases.where((item) => item.caseId != caseId).toList();
+      });
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _deletingCaseIds.remove(caseId);
       });
     }
   }
@@ -133,6 +166,8 @@ class _PendingPageState extends State<PendingPage> {
       itemBuilder: (context, index) {
         return CustomCaseContainer(
           pendingCase: _pendingCases[index],
+          isDeleting: _deletingCaseIds.contains(_pendingCases[index].caseId),
+          onDeleteConfirmed: () => _deletePendingCase(_pendingCases[index]),
         );
       },
     );

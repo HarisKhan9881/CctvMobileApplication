@@ -423,15 +423,6 @@ class _HomePostContainerState extends State<HomePostContainer> {
                     ],
                   ),
                 ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: kWhiteColor,
-                    border: Border.all(color: kGreyColor),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.all(6.0),
-                  child: const Icon(Icons.more_horiz, color: kBlackColor),
-                ),
               ],
             ),
             Space.vertical(20),

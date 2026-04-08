@@ -1,10 +1,8 @@
 import 'package:cctv_app/core/components/current_user_avatar.dart';
-import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/communityFeedback/pages/community_feedback.dart';
-import 'package:cctv_app/feature/home/pages/history_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -21,21 +19,7 @@ class AdminTopHeader extends StatelessWidget {
           },
           child: const CurrentUserAvatar(radius: 24),
         ),
-        Space.horizontal(10),
-        Expanded(
-          child: CustomTextField(
-            topPadding: 10,
-            bottomPadding: 10,
-            onTap: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const HistoryScreen()),
-            ),
-            hintText: "Search",
-            prefix: Icon(Icons.search, color: kDarkGreyColor),
-            hintTextColor: kDarkGreyColor,
-          ),
-        ),
-        Space.horizontal(10),
+        const Spacer(),
         GestureDetector(
           onTap: () {
             Navigator.push(

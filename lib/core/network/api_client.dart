@@ -72,4 +72,21 @@ class ApiClient {
       treatUnauthorizedAsSessionExpired: treatUnauthorizedAsSessionExpired,
     );
   }
+
+  Future<Map<String, dynamic>> delete(
+    String path, {
+    Map<String, String>? headers,
+    bool treatUnauthorizedAsSessionExpired = true,
+  }) async {
+    final uri = Uri.parse('$baseUrl$path');
+    final response = await _client.delete(
+      uri,
+      headers: {'Accept': 'application/json', ...?headers},
+    );
+
+    return NetworkResponseHandler.parseJsonResponse(
+      response,
+      treatUnauthorizedAsSessionExpired: treatUnauthorizedAsSessionExpired,
+    );
+  }
 }

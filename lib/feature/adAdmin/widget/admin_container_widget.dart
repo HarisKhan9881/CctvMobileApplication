@@ -9,12 +9,14 @@ class AdminContainerWidget extends StatelessWidget {
   final UserProfile admin;
   final bool showOnlineStatus;
   final double width;
+  final VoidCallback? onAdminDeleted;
 
   const AdminContainerWidget({
     super.key,
     required this.admin,
     this.showOnlineStatus = false,
     this.width = 138,
+    this.onAdminDeleted,
   });
 
   String get _displayName {
@@ -49,13 +51,16 @@ class AdminContainerWidget extends StatelessWidget {
     final avatarUrl = admin.applicationMeta?.metaUrl?.trim();
 
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        final deleted = await Navigator.push<bool>(
           context,
           MaterialPageRoute(
             builder: (context) => AdminProfilePage(admin: admin),
           ),
         );
+        if (deleted == true) {
+          onAdminDeleted?.call();
+        }
       },
       child: Container(
         width: width,

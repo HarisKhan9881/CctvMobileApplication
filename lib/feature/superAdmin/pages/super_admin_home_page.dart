@@ -1,6 +1,6 @@
 import 'package:cctv_app/core/components/current_user_avatar.dart';
-import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/space.dart';
+import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/models/user_profile.dart';
@@ -33,6 +33,7 @@ class _SuperAdminHomePageState extends State<SuperAdminHomePage> {
   bool _isLoadingRecentAdmins = false;
   String? _recentAdminsError;
   List<UserProfile> _recentAdmins = const [];
+  final Set<int> _deletingAdminIds = <int>{};
 
   @override
   void initState() {
@@ -142,10 +143,13 @@ class _SuperAdminHomePageState extends State<SuperAdminHomePage> {
         skip: 0,
         limit: 4,
       );
+      final activeAdmins = admins
+          .where((admin) => (admin.isActive ?? '').toUpperCase() == 'Y')
+          .toList();
 
       if (!mounted) return;
       setState(() {
-        _recentAdmins = admins;
+        _recentAdmins = activeAdmins;
       });
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -162,6 +166,74 @@ class _SuperAdminHomePageState extends State<SuperAdminHomePage> {
       setState(() {
         _isLoadingRecentAdmins = false;
       });
+    }
+  }
+
+  Future<void> _deleteAdmin(UserProfile admin) async {
+    final userId = admin.userId;
+    if (userId == null || userId <= 0) {
+      AppAlert.showError(context, 'Invalid user id');
+      return;
+    }
+    if (_deletingAdminIds.contains(userId)) return;
+
+    setState(() {
+      _deletingAdminIds.add(userId);
+    });
+
+    try {
+      final accessToken = await const AuthStorage().readAccessToken();
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+
+      await const UserService().deleteUser(
+        accessToken: accessToken,
+        userId: userId,
+      );
+
+      if (!mounted) return;
+      AppAlert.showSuccess(context, 'Admin deleted successfully');
+      await _loadRecentAdmins();
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      AppAlert.showError(context, e.message);
+    } catch (e) {
+      if (!mounted) return;
+      AppAlert.showError(context, 'Failed to delete admin: $e');
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _deletingAdminIds.remove(userId);
+      });
+    }
+  }
+
+  Future<void> _confirmDeleteAdmin(UserProfile admin) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: kWhiteColor,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+          title: const Text('Are you sure?'),
+          content: const Text('Want to delete admin profile?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('No'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Yes'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete == true) {
+      await _deleteAdmin(admin);
     }
   }
 
@@ -414,6 +486,12 @@ class _SuperAdminHomePageState extends State<SuperAdminHomePage> {
               child: _RecentAdminCard(
                 admin: admin,
                 timeLabel: _formatRecentAdminTime(admin.createdAt),
+                isDeleting: admin.userId != null && _deletingAdminIds.contains(admin.userId),
+                onMenuSelected: (value) {
+                  if (value == 'remove') {
+                    _confirmDeleteAdmin(admin);
+                  }
+                },
               ),
             ),
           )
@@ -556,17 +634,7 @@ class _SuperAdminHomePageState extends State<SuperAdminHomePage> {
                       );
                     },
                   ),
-                  Space.horizontal(10),
-                  Expanded(
-                    child: CustomTextField(
-                      topPadding: 10,
-                      bottomPadding: 10,
-                      hintText: 'Search',
-                      prefix: const Icon(Icons.search, color: kDarkGreyColor),
-                      hintTextColor: kDarkGreyColor,
-                    ),
-                  ),
-                  Space.horizontal(10),
+                  const Spacer(),
                   GestureDetector(
                     onTap: () {
                       Navigator.push(
@@ -814,10 +882,14 @@ class _MiniBarGlyph extends StatelessWidget {
 class _RecentAdminCard extends StatelessWidget {
   final UserProfile admin;
   final String timeLabel;
+  final bool isDeleting;
+  final ValueChanged<String>? onMenuSelected;
 
   const _RecentAdminCard({
     required this.admin,
     required this.timeLabel,
+    this.isDeleting = false,
+    this.onMenuSelected,
   });
 
   String _buildInitials(String name) {
@@ -894,7 +966,15 @@ class _RecentAdminCard extends StatelessWidget {
           ),
           PopupMenuButton<String>(
             color: kWhiteColor,
-            icon: const Icon(Icons.more_vert, color: kDarkGreyColor),
+            enabled: !isDeleting,
+            onSelected: onMenuSelected,
+            icon: isDeleting
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.more_vert, color: kDarkGreyColor),
             itemBuilder: (context) => const [
               PopupMenuItem<String>(
                 value: 'quick',

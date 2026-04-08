@@ -101,4 +101,15 @@ class UserCaseService {
         .map(PendingCase.fromJson)
         .toList();
   }
+
+  Future<Map<String, dynamic>> deleteUserCase({
+    required String accessToken,
+    required int caseId,
+  }) {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    return _client.delete(
+      '${Endpoints.deleteUserCase}?case_id=$caseId',
+      headers: {'Authorization': 'Bearer $normalizedToken'},
+    );
+  }
 }
