@@ -15,6 +15,7 @@ import 'package:cctv_app/core/network/services/general_parameter_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/theme/app_colors.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
+import 'package:cctv_app/feature/home/pages/history_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -251,19 +252,29 @@ class _AnnouncementPageState extends State<AnnouncementPage> {
             Space.vertical(20),
             Align(
               alignment: Alignment.centerRight,
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: kGreyColor),
-                ),
-                padding: EdgeInsets.all(10),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.history),
-                    Space.horizontal(4),
-                    Text("History", style: context.normal),
-                  ],
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HistoryScreen(),
+                    ),
+                  );
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: kGreyColor),
+                  ),
+                  padding: const EdgeInsets.all(10),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.history),
+                      Space.horizontal(4),
+                      Text("History", style: context.normal),
+                    ],
+                  ),
                 ),
               ),
             ),

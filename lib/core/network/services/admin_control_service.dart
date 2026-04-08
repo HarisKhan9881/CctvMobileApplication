@@ -1,5 +1,7 @@
 import 'package:cctv_app/core/network/api_client.dart';
 import 'package:cctv_app/core/network/api_config.dart';
+import 'package:cctv_app/core/network/endpoints.dart';
+import 'package:cctv_app/core/network/models/application_alert.dart';
 
 class AdminControlService {
   final ApiClient _client;
@@ -24,7 +26,7 @@ class AdminControlService {
   }) {
     final normalizedToken = _normalizeBearerToken(accessToken);
     return _client.postJson(
-      '/api/v1/admin_control/createApplicationAlert',
+      Endpoints.createApplicationAlert,
       headers: {'Authorization': 'Bearer $normalizedToken'},
       body: {
         'category': category,
@@ -33,5 +35,26 @@ class AdminControlService {
         'created_by': createdBy,
       },
     );
+  }
+
+  Future<List<ApplicationAlert>> getAllApplicationAlerts({
+    required String accessToken,
+    bool onlyActive = true,
+  }) async {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    final json = await _client.get(
+      '${Endpoints.getAllApplicationAlerts}?only_active=$onlyActive',
+      headers: {'Authorization': 'Bearer $normalizedToken'},
+    );
+
+    final content = json['CONTENT'];
+    if (content is! List) {
+      return const [];
+    }
+
+    return content
+        .whereType<Map<String, dynamic>>()
+        .map(ApplicationAlert.fromJson)
+        .toList();
   }
 }
