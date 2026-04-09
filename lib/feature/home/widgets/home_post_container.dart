@@ -8,6 +8,7 @@ import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/models/active_post.dart';
 import 'package:cctv_app/core/network/models/general_parameter_option.dart';
+import 'package:cctv_app/core/network/services/admin_control_service.dart';
 import 'package:cctv_app/core/network/services/case_post_service.dart';
 import 'package:cctv_app/core/network/services/general_parameter_service.dart';
 import 'package:cctv_app/core/share/post_share_helper.dart';
@@ -49,6 +50,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
   bool areCommentsVisible = false;
   bool isMuted = false;
   bool isWarning = false;
+  bool _isSendingWarning = false;
   String? selectedReaction;
   bool isReactionPopupVisible = false;
   OverlayEntry? reactionOverlay;
@@ -58,6 +60,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
   bool _isSubmittingReply = false;
   bool _isSavingPost = false;
   int _reactionCountDelta = 0;
+  int _likeCountDelta = 0;
   String? _selectedVote;
   int? _replyingCommentId;
   final Set<int> _expandedReplyCommentIds = <int>{};
@@ -78,7 +81,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
         summary['like'];
     final parsedLikeCount = int.tryParse('$likeValue');
     if (parsedLikeCount != null) {
-      return parsedLikeCount + _reactionCountDelta;
+      return parsedLikeCount + _likeCountDelta;
     }
 
     final reactionLikes = widget.post.reactions
@@ -86,7 +89,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
           (reaction) => _normalizeReactionType(reaction.reactionType) == 'Like',
         )
         .length;
-    return reactionLikes + _reactionCountDelta;
+    return reactionLikes + _likeCountDelta;
   }
 
   @override
@@ -104,6 +107,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
 
     if (isNewPost) {
       _reactionCountDelta = 0;
+      _likeCountDelta = 0;
       _comments = List<ActivePostComment>.from(widget.post.comments);
       _commentController.clear();
       _replyController.clear();
@@ -115,6 +119,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
 
     if (hasFreshPostData) {
       _reactionCountDelta = 0;
+      _likeCountDelta = 0;
       _comments = List<ActivePostComment>.from(widget.post.comments);
       _loadCurrentUserReaction();
     }
@@ -127,6 +132,30 @@ class _HomePostContainerState extends State<HomePostContainer> {
         widget.post.reactions.length;
     if (oldTotal != newTotal) {
       _reactionCountDelta = 0;
+    }
+
+    final oldLikeTotal = oldWidget.post.reactionSummary?.byType['Like'] ??
+        oldWidget.post.reactionSummary?.byType['LIKE'] ??
+        oldWidget.post.reactionSummary?.byType['like'] ??
+        oldWidget.post.reactions
+            .where(
+              (reaction) =>
+                  _normalizeReactionType(reaction.reactionType) == 'Like',
+            )
+            .length;
+    final newLikeTotal = widget.post.reactionSummary?.byType['Like'] ??
+        widget.post.reactionSummary?.byType['LIKE'] ??
+        widget.post.reactionSummary?.byType['like'] ??
+        widget.post.reactions
+            .where(
+              (reaction) =>
+                  _normalizeReactionType(reaction.reactionType) == 'Like',
+            )
+            .length;
+    final normalizedOldLikeTotal = int.tryParse('$oldLikeTotal') ?? 0;
+    final normalizedNewLikeTotal = int.tryParse('$newLikeTotal') ?? 0;
+    if (normalizedOldLikeTotal != normalizedNewLikeTotal) {
+      _likeCountDelta = 0;
     }
   }
 
@@ -476,6 +505,53 @@ class _HomePostContainerState extends State<HomePostContainer> {
     }
   }
 
+  Future<void> _sendWarning() async {
+    if (_isSendingWarning) return;
+
+    final targetUserId = widget.post.authorUserId;
+    if (targetUserId == null || targetUserId <= 0) {
+      AppAlert.showError(context, 'User id not found for this post');
+      return;
+    }
+
+    setState(() {
+      _isSendingWarning = true;
+    });
+
+    try {
+      final authStorage = const AuthStorage();
+      final accessToken = await authStorage.readAccessToken();
+
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+
+      await AdminControlService().sendWarningToUser(
+        accessToken: accessToken,
+        userId: targetUserId,
+        alertNote: 'Warning sent for post ${widget.post.postId}',
+        attachedMetaId: widget.post.postId,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        isWarning = true;
+      });
+      AppAlert.showSuccess(context, 'Warning sent successfully');
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      AppAlert.showError(context, e.message);
+    } catch (_) {
+      if (!mounted) return;
+      AppAlert.showError(context, 'Failed to send warning');
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isSendingWarning = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
@@ -538,6 +614,8 @@ class _HomePostContainerState extends State<HomePostContainer> {
                 widget.isAdmin
                     ? GestureDetector(
                         onTap: () {
+                          isMuted = false;
+                          isWarning = false;
                           AppBottomSheet.show(
                             context,
                             body: StatefulBuilder(
@@ -550,10 +628,13 @@ class _HomePostContainerState extends State<HomePostContainer> {
                                     children: [
                                       Align(
                                         alignment: Alignment.centerRight,
-                                        child: CircleAvatar(
-                                          backgroundColor: kLightGreyColor,
-                                          child: SvgPicture.asset(
-                                            Assets.svgCancelIcon,
+                                        child: GestureDetector(
+                                          onTap: () => Navigator.of(context).pop(),
+                                          child: CircleAvatar(
+                                            backgroundColor: kLightGreyColor,
+                                            child: SvgPicture.asset(
+                                              Assets.svgCancelIcon,
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -570,6 +651,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
                                         onTap: () {
                                           setState(() {
                                             isMuted = true;
+                                            isWarning = false;
                                           });
                                           setStateBottomSheet(() {});
                                         },
@@ -595,10 +677,11 @@ class _HomePostContainerState extends State<HomePostContainer> {
                                       Divider(),
                                       Space.vertical(8),
                                       GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            isWarning = true;
-                                          });
+                                        onTap: () async {
+                                          if (_isSendingWarning) return;
+
+                                          await _sendWarning();
+                                          if (!mounted || !context.mounted) return;
                                           setStateBottomSheet(() {});
                                         },
                                         child: Container(
@@ -610,7 +693,9 @@ class _HomePostContainerState extends State<HomePostContainer> {
                                               ),
                                               Space.horizontal(12),
                                               Text(
-                                                'Send Warning',
+                                                _isSendingWarning
+                                                    ? 'Sending Warning...'
+                                                    : 'Send Warning',
                                                 style: context.normal.copyWith(
                                                   fontSize: 14,
                                                 ),
@@ -659,7 +744,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
                                             ),
                                             Space.horizontal(20),
                                             Text(
-                                              'Warning has been send',
+                                              'Warning has been sent',
                                               style: context.normal.copyWith(
                                                 fontSize: 14,
                                               ),
@@ -1208,9 +1293,10 @@ class _HomePostContainerState extends State<HomePostContainer> {
     if (_isSubmittingReaction) return;
 
     final previousReaction = selectedReaction;
+    final nextReaction = previousReaction == reaction ? null : reaction;
     setState(() {
       _isSubmittingReaction = true;
-      selectedReaction = reaction;
+      selectedReaction = nextReaction;
     });
 
     try {
@@ -1225,17 +1311,32 @@ class _HomePostContainerState extends State<HomePostContainer> {
         throw const ApiException('User id not found');
       }
 
-      await CasePostService().createPostReaction(
-        accessToken: accessToken,
-        postId: widget.post.postId,
-        userId: userId,
-        reactionType: reaction,
-      );
+      if (nextReaction == null) {
+        await CasePostService().deletePostReaction(
+          accessToken: accessToken,
+          postId: widget.post.postId,
+        );
+      } else {
+        await CasePostService().createPostReaction(
+          accessToken: accessToken,
+          postId: widget.post.postId,
+          userId: userId,
+          reactionType: nextReaction,
+        );
+      }
 
       if (!mounted) return;
       setState(() {
-        if (previousReaction == null) {
+        if (previousReaction == null && nextReaction != null) {
           _reactionCountDelta += 1;
+        } else if (previousReaction != null && nextReaction == null) {
+          _reactionCountDelta -= 1;
+        }
+
+        if (previousReaction != 'Like' && nextReaction == 'Like') {
+          _likeCountDelta += 1;
+        } else if (previousReaction == 'Like' && nextReaction != 'Like') {
+          _likeCountDelta -= 1;
         }
       });
       widget.onPostUpdated();

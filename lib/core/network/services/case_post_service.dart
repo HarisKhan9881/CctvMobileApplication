@@ -140,6 +140,18 @@ class CasePostService {
     );
   }
 
+  Future<void> deletePostReaction({
+    required String accessToken,
+    required int postId,
+  }) async {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    final query = Uri(queryParameters: {'post_id': '$postId'}).query;
+    await _client.delete(
+      '/api/v1/case_post/deletePostReaction?$query',
+      headers: {'Authorization': 'Bearer $normalizedToken'},
+    );
+  }
+
   Future<void> createPostComment({
     required String accessToken,
     required int postId,

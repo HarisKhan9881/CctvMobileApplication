@@ -37,6 +37,26 @@ class AdminControlService {
     );
   }
 
+  Future<Map<String, dynamic>> sendWarningToUser({
+    required String accessToken,
+    required int userId,
+    required String alertNote,
+    required int attachedMetaId,
+    String isActive = 'Y',
+  }) {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    return _client.postJson(
+      '/api/v1/admin_control/sendWarningToUser',
+      headers: {'Authorization': 'Bearer $normalizedToken'},
+      body: {
+        'user_id': userId,
+        'alert_note': alertNote,
+        'attached_meta_id': attachedMetaId,
+        'is_active': isActive,
+      },
+    );
+  }
+
   Future<List<ApplicationAlert>> getAllApplicationAlerts({
     required String accessToken,
     bool onlyActive = true,

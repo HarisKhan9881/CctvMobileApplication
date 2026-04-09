@@ -713,9 +713,10 @@ class _AdPostContainerState extends State<AdPostContainer> {
     if (_isSubmittingReaction || post == null) return;
 
     final previousReaction = selectedReaction;
+    final nextReaction = previousReaction == reaction ? null : reaction;
     setState(() {
       _isSubmittingReaction = true;
-      selectedReaction = reaction;
+      selectedReaction = nextReaction;
     });
 
     try {
@@ -730,20 +731,34 @@ class _AdPostContainerState extends State<AdPostContainer> {
         throw const ApiException('User id not found');
       }
 
-      await CasePostService().createPostReaction(
-        accessToken: accessToken,
-        postId: post!.postId,
-        userId: userId,
-        reactionType: reaction,
-      );
+      if (nextReaction == null) {
+        await CasePostService().deletePostReaction(
+          accessToken: accessToken,
+          postId: post!.postId,
+        );
+      } else {
+        await CasePostService().createPostReaction(
+          accessToken: accessToken,
+          postId: post!.postId,
+          userId: userId,
+          reactionType: nextReaction,
+        );
+      }
 
       if (!mounted) return;
       setState(() {
-        if (previousReaction == null) {
+        if (previousReaction == null && nextReaction != null) {
           _reactionCountDelta += 1;
+        } else if (previousReaction != null && nextReaction == null) {
+          _reactionCountDelta -= 1;
         }
       });
-      AppAlert.showSuccess(context, '${_reactionLabel(reaction)} reaction added');
+      AppAlert.showSuccess(
+        context,
+        nextReaction == null
+            ? '${_reactionLabel(previousReaction)} reaction removed'
+            : '${_reactionLabel(nextReaction)} reaction added',
+      );
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
