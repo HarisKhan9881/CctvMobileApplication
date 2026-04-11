@@ -6,6 +6,11 @@ class AppNotificationMeta {
   final int? caseId;
   final String? caseTitle;
   final String? caseDescription;
+  final String? category;
+  final int? attachedMetaId;
+  final String? role;
+  final String? oldStatus;
+  final String? newStatus;
   final UploadedMedia? applicationMeta;
   final int? userId;
   final String? timestamp;
@@ -14,6 +19,11 @@ class AppNotificationMeta {
     this.caseId,
     this.caseTitle,
     this.caseDescription,
+    this.category,
+    this.attachedMetaId,
+    this.role,
+    this.oldStatus,
+    this.newStatus,
     this.applicationMeta,
     this.userId,
     this.timestamp,
@@ -39,6 +49,7 @@ class AppNotificationMeta {
 
   factory AppNotificationMeta.fromJson(Map<String, dynamic> json) {
     final caseId = json['case_id'];
+    final attachedMetaId = json['attached_meta_id'];
     final userId = json['user_id'];
     final applicationMeta = json['application_meta'];
 
@@ -46,6 +57,13 @@ class AppNotificationMeta {
       caseId: caseId == null ? null : int.tryParse('$caseId'),
       caseTitle: json['case_title'] as String?,
       caseDescription: json['case_description'] as String?,
+      category: json['category'] as String?,
+      attachedMetaId: attachedMetaId == null
+          ? null
+          : int.tryParse('$attachedMetaId'),
+      role: json['role'] as String?,
+      oldStatus: json['old_status'] as String?,
+      newStatus: json['new_status'] as String?,
       applicationMeta: applicationMeta is Map<String, dynamic>
           ? UploadedMedia.fromJson(applicationMeta)
           : null,

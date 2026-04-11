@@ -8,7 +8,6 @@ import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/models/active_post.dart';
 import 'package:cctv_app/core/network/models/general_parameter_option.dart';
-import 'package:cctv_app/core/network/services/admin_control_service.dart';
 import 'package:cctv_app/core/network/services/case_post_service.dart';
 import 'package:cctv_app/core/network/services/general_parameter_service.dart';
 import 'package:cctv_app/core/share/post_share_helper.dart';
@@ -50,7 +49,6 @@ class _HomePostContainerState extends State<HomePostContainer> {
   bool areCommentsVisible = false;
   bool isMuted = false;
   bool isWarning = false;
-  bool _isSendingWarning = false;
   String? selectedReaction;
   bool isReactionPopupVisible = false;
   OverlayEntry? reactionOverlay;
@@ -505,53 +503,6 @@ class _HomePostContainerState extends State<HomePostContainer> {
     }
   }
 
-  Future<void> _sendWarning() async {
-    if (_isSendingWarning) return;
-
-    final targetUserId = widget.post.authorUserId;
-    if (targetUserId == null || targetUserId <= 0) {
-      AppAlert.showError(context, 'User id not found for this post');
-      return;
-    }
-
-    setState(() {
-      _isSendingWarning = true;
-    });
-
-    try {
-      final authStorage = const AuthStorage();
-      final accessToken = await authStorage.readAccessToken();
-
-      if (accessToken == null || accessToken.trim().isEmpty) {
-        throw const ApiException('Session token not found');
-      }
-
-      await AdminControlService().sendWarningToUser(
-        accessToken: accessToken,
-        userId: targetUserId,
-        alertNote: 'Warning sent for post ${widget.post.postId}',
-        attachedMetaId: widget.post.postId,
-      );
-
-      if (!mounted) return;
-      setState(() {
-        isWarning = true;
-      });
-      AppAlert.showSuccess(context, 'Warning sent successfully');
-    } on ApiException catch (e) {
-      if (!mounted) return;
-      AppAlert.showError(context, e.message);
-    } catch (_) {
-      if (!mounted) return;
-      AppAlert.showError(context, 'Failed to send warning');
-    } finally {
-      if (!mounted) return;
-      setState(() {
-        _isSendingWarning = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final post = widget.post;
@@ -678,10 +629,33 @@ class _HomePostContainerState extends State<HomePostContainer> {
                                       Space.vertical(8),
                                       GestureDetector(
                                         onTap: () async {
-                                          if (_isSendingWarning) return;
-
-                                          await _sendWarning();
-                                          if (!mounted || !context.mounted) return;
+                                          final navigator = Navigator.of(
+                                            context,
+                                          );
+                                          final sentWarning =
+                                              await navigator.push<bool>(
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ReportAndSuspend(
+                                                    initialAction:
+                                                        ReportAction.warning,
+                                                    targetUserId: widget
+                                                        .post
+                                                        .authorUserId,
+                                                    attachedMetaId:
+                                                        widget.post.postId,
+                                                  ),
+                                            ),
+                                          );
+                                          if (!mounted || !context.mounted) {
+                                            return;
+                                          }
+                                          if (sentWarning == true) {
+                                            setState(() {
+                                              isWarning = true;
+                                              isMuted = false;
+                                            });
+                                          }
                                           setStateBottomSheet(() {});
                                         },
                                         child: Container(
@@ -693,9 +667,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
                                               ),
                                               Space.horizontal(12),
                                               Text(
-                                                _isSendingWarning
-                                                    ? 'Sending Warning...'
-                                                    : 'Send Warning',
+                                                'Send Warning',
                                                 style: context.normal.copyWith(
                                                   fontSize: 14,
                                                 ),
@@ -713,7 +685,15 @@ class _HomePostContainerState extends State<HomePostContainer> {
                                             context,
                                             MaterialPageRoute(
                                               builder: (context) =>
-                                                  ReportAndSuspend(),
+                                                  ReportAndSuspend(
+                                                    initialAction:
+                                                        ReportAction.suspend,
+                                                    targetUserId: widget
+                                                        .post
+                                                        .authorUserId,
+                                                    attachedMetaId:
+                                                        widget.post.postId,
+                                                  ),
                                             ),
                                           );
                                         },

@@ -11,6 +11,7 @@ import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/profile/pages/case_response_page.dart';
+import 'package:cctv_app/feature/profile/pages/notification_detail_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -70,7 +71,7 @@ class _NotificationPageState extends State<NotificationPage> {
         : parsed.hour;
     final minute = parsed.minute.toString().padLeft(2, '0');
     final suffix = parsed.hour >= 12 ? 'PM' : 'AM';
-    return '$month ${parsed.day}, ${parsed.year} • $hour:$minute $suffix';
+    return '$month ${parsed.day}, ${parsed.year} - $hour:$minute $suffix';
   }
 
   @override
@@ -152,6 +153,22 @@ class _NotificationPageState extends State<NotificationPage> {
     }
   }
 
+  void _openNotification(AppNotificationItem notification) {
+    final Widget destination;
+    if (notification.opensSimpleNotification) {
+      destination = NotificationDetailPage(notification: notification);
+    } else if (notification.opensCaseResponse) {
+      destination = CaseResponsePage(notification: notification);
+    } else {
+      destination = NotificationDetailPage(notification: notification);
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => destination),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -215,17 +232,7 @@ class _NotificationPageState extends State<NotificationPage> {
         final isReminder = notification.isReminder;
         final thumbnailUrl = _notificationThumbnailUrl(notification);
         return GestureDetector(
-          onTap: isReminder
-              ? null
-              : () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) =>
-                          CaseResponsePage(notification: notification),
-                    ),
-                  );
-                },
+          onTap: () => _openNotification(notification),
           child: Container(
             color: kTransparentColor,
             child: Row(

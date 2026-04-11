@@ -5,6 +5,7 @@ class AppNotificationItem {
   final int? userId;
   final String? notificationType;
   final String? notificationStatus;
+  final String? viewType;
   final String title;
   final String message;
   final String? notificationMeta;
@@ -19,6 +20,7 @@ class AppNotificationItem {
     this.userId,
     this.notificationType,
     this.notificationStatus,
+    this.viewType,
     required this.title,
     required this.message,
     this.notificationMeta,
@@ -35,6 +37,7 @@ class AppNotificationItem {
     final detail = (json['notification_detail'] as String?)?.trim();
     final type = (json['notification_type'] as String?)?.trim();
     final status = (json['notification_status'] as String?)?.trim();
+    final viewType = (json['view_type'] as String?)?.trim();
     final user = json['user'] is Map<String, dynamic>
         ? json['user'] as Map<String, dynamic>
         : null;
@@ -49,6 +52,7 @@ class AppNotificationItem {
       userId: userId == null ? null : int.tryParse('$userId'),
       notificationType: type,
       notificationStatus: status,
+      viewType: viewType,
       title: _titleFromType(type),
       message: detail == null || detail.isEmpty
           ? 'No details available'
@@ -74,6 +78,10 @@ class AppNotificationItem {
 
     return combined.contains('remind') || combined.contains('reminder');
   }
+
+  bool get opensSimpleNotification => viewType?.toUpperCase() == 'SN';
+
+  bool get opensCaseResponse => viewType?.toUpperCase() == 'RN';
 
   static String _titleFromType(String? type) {
     return switch (type) {

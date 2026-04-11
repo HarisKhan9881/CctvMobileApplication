@@ -57,6 +57,21 @@ class AdminControlService {
     );
   }
 
+  Future<Map<String, dynamic>> blockUser({
+    required String accessToken,
+    required int userId,
+    required String reason,
+  }) {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    return _client.postJson(
+      '/api/v1/admin_control/blockUser/$userId',
+      headers: {'Authorization': 'Bearer $normalizedToken'},
+      body: {
+        'reason': reason,
+      },
+    );
+  }
+
   Future<List<ApplicationAlert>> getAllApplicationAlerts({
     required String accessToken,
     bool onlyActive = true,
