@@ -736,7 +736,7 @@ class InfoCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            padding: const EdgeInsets.fromLTRB(12, 10, 12, 0),
             child: Row(
               children: [
                 Image.asset(icon),

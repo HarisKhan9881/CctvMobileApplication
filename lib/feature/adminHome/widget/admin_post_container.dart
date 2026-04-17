@@ -40,8 +40,6 @@ class AdminPostContainer extends StatelessWidget {
               ],
             ),
           ),
-          Space.horizontal(10),
-          const Icon(Icons.more_vert),
         ],
       ),
     );

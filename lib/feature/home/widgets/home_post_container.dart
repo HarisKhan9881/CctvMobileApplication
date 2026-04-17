@@ -1433,7 +1433,6 @@ class _HomePostContainerState extends State<HomePostContainer> {
                   ? null
                   : () => _submitReaction('Like'),
               icon: _getReactionIcon(),
-              isLoading: _isSubmittingReaction,
               isSelected: selectedReaction != null,
             ),
           ),

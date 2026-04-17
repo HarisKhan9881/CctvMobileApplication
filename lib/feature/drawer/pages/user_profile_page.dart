@@ -10,6 +10,7 @@ import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/models/country_option.dart';
 import 'package:cctv_app/core/network/models/general_parameter_option.dart';
+import 'package:cctv_app/core/network/models/state_option.dart';
 import 'package:cctv_app/core/network/models/uploaded_media.dart';
 import 'package:cctv_app/core/network/models/user_profile.dart';
 import 'package:cctv_app/core/network/services/application_cloud_service.dart';
@@ -56,20 +57,24 @@ class _UserProfilePageState extends State<UserProfilePage> {
   final ApplicationCloudService _applicationCloudService =
       const ApplicationCloudService();
   List<CountryOption> _countries = const [];
+  List<StateOption> _states = const [];
   List<GeneralParameterOption> _genders = const [];
   List<GeneralParameterOption> _profileTypes = const [];
   CountryOption? _selectedCountry;
+  StateOption? _selectedState;
   GeneralParameterOption? _selectedGender;
   GeneralParameterOption? _selectedProfileType;
   UserProfile? _userProfile;
   UploadedMedia? _uploadedProfileImage;
   bool _isLoadingCountries = false;
+  bool _isLoadingStates = false;
   bool _isLoadingGenders = false;
   bool _isLoadingProfileTypes = false;
   bool _isLoadingProfile = false;
   bool _isUploadingProfileImage = false;
   bool _isSavingProfile = false;
   String? _countryLoadError;
+  String? _stateLoadError;
   String? _genderLoadError;
   String? _profileTypeLoadError;
   String? _profileLoadError;
@@ -219,6 +224,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         _syncProfileTypeSelection(_profileTypes);
         _applyDob(profile.dob);
       });
+      await _loadStatesByCountryId(_selectedCountry?.countryId);
     } on ApiException catch (e) {
       if (!mounted) return;
       setState(() {
@@ -298,6 +304,76 @@ class _UserProfilePageState extends State<UserProfilePage> {
       }
     }
     _selectedCountry = null;
+  }
+
+  Future<void> _loadStatesByCountryId(int? countryId) async {
+    if (countryId == null || countryId <= 0) {
+      setState(() {
+        _states = const [];
+        _selectedState = null;
+        _stateLoadError = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _isLoadingStates = true;
+      _stateLoadError = null;
+    });
+
+    try {
+      final accessToken = await const AuthStorage().readAccessToken();
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+
+      final states = await _commonParameterService.getStatesByCountryId(
+        countryId: countryId,
+        accessToken: accessToken,
+      );
+
+      if (!mounted) return;
+      setState(() {
+        _states = states;
+        _syncStateSelection(states);
+        if (states.isEmpty) {
+          _stateLoadError = 'No states returned from API';
+        }
+      });
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _stateLoadError = e.message;
+      });
+      AppAlert.showError(context, e.message);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _stateLoadError = 'Failed to load states';
+      });
+      AppAlert.showError(context, 'Failed to load states: $e');
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingStates = false;
+      });
+    }
+  }
+
+  void _syncStateSelection(List<StateOption> states) {
+    final stateId = _userProfile?.stateId;
+    if (stateId == null) {
+      _selectedState = null;
+      return;
+    }
+
+    for (final state in states) {
+      if (state.stateId == stateId) {
+        _selectedState = state;
+        return;
+      }
+    }
+    _selectedState = null;
   }
 
   void _syncGenderSelection(List<GeneralParameterOption> genders) {
@@ -405,7 +481,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
           'first_name': firstNameController.text.trim(),
           'last_name': lastNameController.text.trim(),
           'country_id': _selectedCountry?.countryId ?? 0,
-          'state_id': _userProfile?.stateId ?? 0,
+          'state_id': _selectedState?.stateId ?? _userProfile?.stateId ?? 0,
           'city_id': _userProfile?.cityId ?? 0,
           'dob': _buildDob(),
           'gender_id': _selectedGender?.paramDetailId ?? 0,
@@ -604,16 +680,33 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     Row(
                       children: [
                         Expanded(
-                          child: CustomDropdown<String>(
-                            value: null,
-                            items: const [],
-                            hint: "City",
+                          child: CustomDropdown<StateOption>(
+                            key: ValueKey(
+                              'state-${_selectedState?.stateId ?? 'none'}',
+                            ),
+                            value: _selectedState,
+                            items: _states
+                                .map(
+                                  (state) => DropdownMenuItem<StateOption>(
+                                    value: state,
+                                    child: Text(state.stateName),
+                                  ),
+                                )
+                                .toList(),
+                            hint: _isLoadingStates ? "Loading..." : "State",
                             screenWidth: screenWidth,
                             isSmallScreen: isSmallScreen,
                             isSearchable: true,
                             openSearchInPopup: true,
-                            searchHintText: "Search city",
+                            searchHintText: "Search state",
+                            enabled: !_isLoadingStates,
+                            itemLabelBuilder: (state) => state.stateName,
                             validator: (_) => null,
+                            onChanged: (state) {
+                              setState(() {
+                                _selectedState = state;
+                              });
+                            },
                           ),
                         ),
                         Space.horizontal(8),
@@ -645,7 +738,9 @@ class _UserProfilePageState extends State<UserProfilePage> {
                             onChanged: (country) {
                               setState(() {
                                 _selectedCountry = country;
+                                _selectedState = null;
                               });
+                              _loadStatesByCountryId(country?.countryId);
                             },
                           ),
                         ),
@@ -669,6 +764,30 @@ class _UserProfilePageState extends State<UserProfilePage> {
                           onPressed: _isLoadingCountries
                               ? null
                               : _loadCountries,
+                          child: const Text('Retry'),
+                        ),
+                      ),
+                    ],
+                    if (_stateLoadError != null) ...[
+                      Space.vertical(8),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          _stateLoadError!,
+                          style: context.normal.copyWith(
+                            color: kRedColor,
+                            fontSize: 12,
+                          ),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: TextButton(
+                          onPressed: _isLoadingStates
+                              ? null
+                              : () => _loadStatesByCountryId(
+                                  _selectedCountry?.countryId,
+                                ),
                           child: const Text('Retry'),
                         ),
                       ),
