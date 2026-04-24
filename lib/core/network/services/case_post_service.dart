@@ -188,6 +188,18 @@ class CasePostService {
     );
   }
 
+  Future<void> deleteSavedPost({
+    required String accessToken,
+    required int savedPostId,
+  }) async {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    final query = Uri(queryParameters: {'record_id': '$savedPostId'}).query;
+    await _client.delete(
+      '${Endpoints.deleteSavedPost}?$query',
+      headers: {'Authorization': 'Bearer $normalizedToken'},
+    );
+  }
+
   Future<void> createPostRepost({
     required String accessToken,
     required int postId,

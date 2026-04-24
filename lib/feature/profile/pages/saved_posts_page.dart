@@ -158,9 +158,10 @@ class _SavedPostsPageState extends State<SavedPostsPage> {
         final post = _posts[index];
         return HomePostContainer(
           isAdmin: false,
+          isSavedPost: true,
           post: post,
           onClickProfile: () {},
-          onPostUpdated: () {},
+          onPostUpdated: _loadSavedPosts,
         );
       },
     );

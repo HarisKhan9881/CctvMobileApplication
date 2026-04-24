@@ -24,6 +24,7 @@ import 'package:video_player/video_player.dart';
 
 class HomePostContainer extends StatefulWidget {
   final bool isAdmin;
+  final bool isSavedPost;
   final VoidCallback onClickProfile;
   final VoidCallback onPostUpdated;
   final ActivePost post;
@@ -33,6 +34,7 @@ class HomePostContainer extends StatefulWidget {
   const HomePostContainer({
     super.key,
     required this.isAdmin,
+    this.isSavedPost = false,
     required this.onClickProfile,
     required this.onPostUpdated,
     required this.post,
@@ -488,12 +490,52 @@ class _HomePostContainerState extends State<HomePostContainer> {
 
       if (!mounted) return;
       AppAlert.showSuccess(context, 'Post saved successfully');
+      widget.onPostUpdated();
     } on ApiException catch (e) {
       if (!mounted) return;
       AppAlert.showError(context, e.message);
     } catch (_) {
       if (!mounted) return;
       AppAlert.showError(context, 'Failed to save post');
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSavingPost = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _deleteSavedPost() async {
+    if (_isSavingPost) return;
+
+    setState(() {
+      _isSavingPost = true;
+    });
+
+    try {
+      final accessToken = await const AuthStorage().readAccessToken();
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+
+      final savedPostId =
+          widget.post.savedPostMeta?.recordId ?? widget.post.postId;
+
+      await CasePostService().deleteSavedPost(
+        accessToken: accessToken,
+        savedPostId: savedPostId,
+      );
+
+      if (!mounted) return;
+      AppAlert.showSuccess(context, 'Post unsaved successfully');
+      widget.onPostUpdated();
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      AppAlert.showError(context, e.message);
+    } catch (_) {
+      if (!mounted) return;
+      AppAlert.showError(context, 'Failed to unsave post');
     } finally {
       if (mounted) {
         setState(() {
@@ -772,8 +814,12 @@ class _HomePostContainerState extends State<HomePostContainer> {
                         textDirection: TextDirection.rtl,
                         child: PopupMenuButton<String>(
                           onSelected: (value) {
-                            if (value == 'save') {
-                              _savePost();
+                            if (value == 'toggleSavedPost') {
+                              if (widget.isSavedPost) {
+                                _deleteSavedPost();
+                              } else {
+                                _savePost();
+                              }
                               return;
                             }
                             if (value == 'copy') {
@@ -793,12 +839,12 @@ class _HomePostContainerState extends State<HomePostContainer> {
                           },
                           itemBuilder: (context) => [
                             PopupMenuItem(
-                              value: 'save',
+                              value: 'toggleSavedPost',
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.end,
                                 children: [
                                   Text(
-                                    'Save',
+                                    widget.isSavedPost ? 'Unsave' : 'Save',
                                     style: context.textTheme.titleMedium!
                                         .copyWith(
                                           fontSize: 14,
@@ -807,7 +853,12 @@ class _HomePostContainerState extends State<HomePostContainer> {
                                         ),
                                   ),
                                   Space.horizontal(20),
-                                  Icon(Icons.bookmark_add_outlined, size: 18),
+                                  Icon(
+                                    widget.isSavedPost
+                                        ? Icons.bookmark_remove_outlined
+                                        : Icons.bookmark_add_outlined,
+                                    size: 18,
+                                  ),
                                 ],
                               ),
                             ),

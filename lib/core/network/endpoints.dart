@@ -19,6 +19,7 @@ class Endpoints {
   static const String getSavedPostByUserId =
       '/api/v1/case_post/getSavedPostByUserId';
   static const String createSavedPost = '/api/v1/case_post/createSavedPost';
+  static const String deleteSavedPost = '/api/v1/case_post/deleteSavedPost';
   static const String createPostRepost = '/api/v1/case_post/createPostRepost';
   static const String createPostReport = '/api/v1/case_post/createPostReport';
   static const String remindCasePending =

@@ -12,6 +12,7 @@ class ActivePost {
   final ActivePostPollCount? casePollCount;
   final int repostCount;
   final List<ActivePostRepost> reposts;
+  final ActiveSavedPostMeta? savedPostMeta;
 
   const ActivePost({
     required this.postId,
@@ -27,6 +28,7 @@ class ActivePost {
     this.casePollCount,
     this.repostCount = 0,
     this.reposts = const [],
+    this.savedPostMeta,
   });
 
   String? get authorAvatarUrl {
@@ -118,6 +120,35 @@ class ActivePost {
           .whereType<Map<String, dynamic>>()
           .map(ActivePostRepost.fromJson)
           .toList(),
+      savedPostMeta: json['saved_post_meta'] is Map<String, dynamic>
+          ? ActiveSavedPostMeta.fromJson(
+              json['saved_post_meta'] as Map<String, dynamic>,
+            )
+          : null,
+    );
+  }
+}
+
+class ActiveSavedPostMeta {
+  final int? recordId;
+  final String? savedAt;
+  final int? savedBy;
+  final bool isActive;
+
+  const ActiveSavedPostMeta({
+    this.recordId,
+    this.savedAt,
+    this.savedBy,
+    required this.isActive,
+  });
+
+  factory ActiveSavedPostMeta.fromJson(Map<String, dynamic> json) {
+    final rawIsActive = json['is_active'];
+    return ActiveSavedPostMeta(
+      recordId: int.tryParse('${json['record_id']}'),
+      savedAt: json['saved_at'] as String?,
+      savedBy: int.tryParse('${json['saved_by']}'),
+      isActive: rawIsActive == true || '$rawIsActive'.toLowerCase() == 'true',
     );
   }
 }
