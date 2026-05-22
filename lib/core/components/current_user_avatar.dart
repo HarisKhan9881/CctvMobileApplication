@@ -4,7 +4,7 @@ import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:flutter/material.dart';
 
-class CurrentUserAvatar extends StatelessWidget {
+class CurrentUserAvatar extends StatefulWidget {
   final double radius;
   final VoidCallback? onTap;
 
@@ -13,6 +13,41 @@ class CurrentUserAvatar extends StatelessWidget {
     this.radius = 24,
     this.onTap,
   });
+
+  @override
+  State<CurrentUserAvatar> createState() => _CurrentUserAvatarState();
+}
+
+class _CurrentUserAvatarState extends State<CurrentUserAvatar> {
+  late String _name = _cachedName();
+  String? _imageUrl = AuthStorage.cachedProfileImageUrl;
+
+  String _cachedName() {
+    final first = AuthStorage.cachedFirstName?.trim() ?? '';
+    final last = AuthStorage.cachedLastName?.trim() ?? '';
+    final name = [
+      if (first.isNotEmpty) first,
+      if (last.isNotEmpty) last,
+    ].join(' ');
+    return name.isEmpty ? 'User' : name;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCachedProfile();
+    _refreshUserProfile();
+  }
+
+  Future<void> _loadCachedProfile() async {
+    final name = await _loadFallbackName();
+    final imageUrl = (await const AuthStorage().readProfileImageUrl())?.trim();
+    if (!mounted) return;
+    setState(() {
+      _name = name;
+      _imageUrl = imageUrl;
+    });
+  }
 
   Future<UserProfile?> _loadUserProfile() async {
     final storage = const AuthStorage();
@@ -33,6 +68,37 @@ class CurrentUserAvatar extends StatelessWidget {
     }
   }
 
+  Future<void> _refreshUserProfile() async {
+    final profile = await _loadUserProfile();
+    if (profile == null) return;
+
+    final name = [
+      if (profile.firstName.trim().isNotEmpty) profile.firstName.trim(),
+      if (profile.lastName.trim().isNotEmpty) profile.lastName.trim(),
+    ].join(' ').trim();
+    final imageUrl = profile.applicationMeta?.metaUrl?.trim();
+
+    final storage = const AuthStorage();
+    final dashboardType = await storage.readDashboardType();
+    await storage.saveAuth(
+      accessToken: (await storage.readAccessToken()) ?? '',
+      userId: profile.userId,
+      roleId: profile.roleId,
+      roleDescription: profile.roleDescription,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      email: profile.email,
+      profileImageUrl: imageUrl,
+      dashboardType: dashboardType ?? DashboardType.user,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _name = name.isEmpty ? 'User' : name;
+      _imageUrl = imageUrl;
+    });
+  }
+
   Future<String> _loadFallbackName() async {
     final storage = const AuthStorage();
     final first = (await storage.readFirstName() ?? '').trim();
@@ -45,47 +111,20 @@ class CurrentUserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatar = FutureBuilder<UserProfile?>(
-      future: _loadUserProfile(),
-      builder: (context, snapshot) {
-        final profile = snapshot.data;
-        final imageUrl = profile?.applicationMeta?.metaUrl?.trim();
-        final name = [
-          if ((profile?.firstName ?? '').trim().isNotEmpty)
-            profile!.firstName.trim(),
-          if ((profile?.lastName ?? '').trim().isNotEmpty)
-            profile!.lastName.trim(),
-        ].join(' ').trim();
-
-        if (imageUrl != null && imageUrl.isNotEmpty) {
-          return CircleAvatar(
-            radius: radius,
+    final imageUrl = _imageUrl?.trim() ?? '';
+    final avatar = imageUrl.isNotEmpty
+        ? CircleAvatar(
+            radius: widget.radius,
             backgroundColor: kTextfieldBlueColor,
             backgroundImage: NetworkImage(imageUrl),
-          );
-        }
+          )
+        : _InitialAvatar(radius: widget.radius, name: _name);
 
-        if (name.isNotEmpty) {
-          return _InitialAvatar(radius: radius, name: name);
-        }
-
-        return FutureBuilder<String>(
-          future: _loadFallbackName(),
-          builder: (context, fallbackSnapshot) {
-            return _InitialAvatar(
-              radius: radius,
-              name: fallbackSnapshot.data ?? 'User',
-            );
-          },
-        );
-      },
-    );
-
-    if (onTap == null) {
+    if (widget.onTap == null) {
       return avatar;
     }
 
-    return GestureDetector(onTap: onTap, child: avatar);
+    return GestureDetector(onTap: widget.onTap, child: avatar);
   }
 }
 

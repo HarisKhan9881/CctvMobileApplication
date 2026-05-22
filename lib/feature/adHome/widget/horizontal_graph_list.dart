@@ -32,7 +32,7 @@ class _HorizontalGraphListState extends State<HorizontalGraphList> {
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: kGreyColor),
           ),
-          padding: EdgeInsets.all(6),
+          padding: const EdgeInsets.all(4),
           child: Row(
             children: [
               Expanded(
@@ -43,21 +43,22 @@ class _HorizontalGraphListState extends State<HorizontalGraphList> {
                     });
                   },
                   child: Container(
+                    height: 30,
                     decoration: BoxDecoration(
                       color: selectedIndex == 0 ? kPrimaryColor : kWhiteColor,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(5),
                       border: Border.all(
                         color: selectedIndex == 0
                             ? kTransparentColor
                             : kGreyColor,
                       ),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     alignment: Alignment.center,
                     child: Text(
                       "Daily",
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 12,
                         color: selectedIndex == 0 ? kWhiteColor : kBlackColor,
                         fontWeight: FontWeight.w400,
                       ),
@@ -65,7 +66,7 @@ class _HorizontalGraphListState extends State<HorizontalGraphList> {
                   ),
                 ),
               ),
-              Space.horizontal(10),
+              Space.horizontal(14),
               Expanded(
                 child: GestureDetector(
                   onTap: () {
@@ -74,21 +75,22 @@ class _HorizontalGraphListState extends State<HorizontalGraphList> {
                     });
                   },
                   child: Container(
+                    height: 30,
                     decoration: BoxDecoration(
                       color: selectedIndex == 1 ? kPrimaryColor : kWhiteColor,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(5),
                       border: Border.all(
                         color: selectedIndex == 1
                             ? kTransparentColor
                             : kGreyColor,
                       ),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     alignment: Alignment.center,
                     child: Text(
                       "Weekly",
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 12,
                         color: selectedIndex == 1 ? kWhiteColor : kBlackColor,
                         fontWeight: FontWeight.w400,
                       ),
@@ -96,7 +98,7 @@ class _HorizontalGraphListState extends State<HorizontalGraphList> {
                   ),
                 ),
               ),
-              Space.horizontal(10),
+              Space.horizontal(14),
               Expanded(
                 child: GestureDetector(
                   onTap: () {
@@ -105,21 +107,22 @@ class _HorizontalGraphListState extends State<HorizontalGraphList> {
                     });
                   },
                   child: Container(
+                    height: 30,
                     decoration: BoxDecoration(
                       color: selectedIndex == 2 ? kPrimaryColor : kWhiteColor,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(5),
                       border: Border.all(
                         color: selectedIndex == 2
                             ? kTransparentColor
                             : kGreyColor,
                       ),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     alignment: Alignment.center,
                     child: Text(
                       "Monthly",
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 12,
                         color: selectedIndex == 2 ? kWhiteColor : kBlackColor,
                         fontWeight: FontWeight.w400,
                       ),
@@ -127,7 +130,7 @@ class _HorizontalGraphListState extends State<HorizontalGraphList> {
                   ),
                 ),
               ),
-              Space.horizontal(10),
+              Space.horizontal(14),
               Expanded(
                 child: GestureDetector(
                   onTap: () {
@@ -136,21 +139,22 @@ class _HorizontalGraphListState extends State<HorizontalGraphList> {
                     });
                   },
                   child: Container(
+                    height: 30,
                     decoration: BoxDecoration(
                       color: selectedIndex == 3 ? kPrimaryColor : kWhiteColor,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(5),
                       border: Border.all(
                         color: selectedIndex == 3
                             ? kTransparentColor
                             : kGreyColor,
                       ),
                     ),
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     alignment: Alignment.center,
                     child: Text(
                       "Year",
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 12,
                         color: selectedIndex == 3 ? kWhiteColor : kBlackColor,
                         fontWeight: FontWeight.w400,
                       ),

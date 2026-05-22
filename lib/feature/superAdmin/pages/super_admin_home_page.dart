@@ -694,43 +694,58 @@ class _SuperAdminHomePageState extends State<SuperAdminHomePage> {
                   children: [
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: List.generate(_tabs.length, (index) {
-                          final isSelected = selectedTab == index;
-                          return Padding(
-                            padding: EdgeInsets.only(right: index == _tabs.length - 1 ? 0 : 8),
-                            child: InkWell(
-                              onTap: () {
-                                setState(() {
-                                  selectedTab = index;
-                                });
-                                _loadChart();
-                              },
-                              borderRadius: BorderRadius.circular(10),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 180),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isSelected ? kPrimaryColor : kWhiteColor,
-                                  borderRadius: BorderRadius.circular(10),
-                                  border: Border.all(
-                                    color: isSelected ? kPrimaryColor : kGreyColor,
+                      child: Padding(
+                        padding: const EdgeInsets.all(4),
+                        child: Row(
+                          children: List.generate(_tabs.length, (index) {
+                            final isSelected = selectedTab == index;
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                right: index == _tabs.length - 1 ? 0 : 14,
+                              ),
+                              child: InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    selectedTab = index;
+                                  });
+                                  _loadChart();
+                                },
+                                borderRadius: BorderRadius.circular(5),
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 180),
+                                  width: 78,
+                                  height: 30,
+                                  alignment: Alignment.center,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
                                   ),
-                                ),
-                                child: Text(
-                                  _tabs[index],
-                                  style: context.medium.copyWith(
-                                    fontSize: 12,
-                                    color: isSelected ? kWhiteColor : kDarkGreyColor,
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? kPrimaryColor
+                                        : kWhiteColor,
+                                    borderRadius: BorderRadius.circular(5),
+                                    border: Border.all(
+                                      color: isSelected
+                                          ? kPrimaryColor
+                                          : kGreyColor,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    _tabs[index],
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: context.normal.copyWith(
+                                      fontSize: 12,
+                                      color: isSelected
+                                          ? kWhiteColor
+                                          : kBlackColor,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                          );
-                        }),
+                            );
+                          }),
+                        ),
                       ),
                     ),
                     Space.vertical(16),

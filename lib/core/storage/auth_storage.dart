@@ -8,6 +8,7 @@ class AuthStorageKeys {
   static const firstName = 'first_name';
   static const lastName = 'last_name';
   static const email = 'user_email';
+  static const profileImageUrl = 'profile_image_url';
   static const dashboardType = 'dashboard_type';
   static const userTabIndex = 'user_tab_index';
   static const adminTabIndex = 'admin_tab_index';
@@ -19,9 +20,18 @@ enum DashboardType { user, admin, ad }
 
 class AuthStorage {
   final FlutterSecureStorage _storage;
+  static String? _cachedFirstName;
+  static String? _cachedLastName;
+  static String? _cachedEmail;
+  static String? _cachedProfileImageUrl;
 
   const AuthStorage({FlutterSecureStorage? storage})
     : _storage = storage ?? const FlutterSecureStorage();
+
+  static String? get cachedFirstName => _cachedFirstName;
+  static String? get cachedLastName => _cachedLastName;
+  static String? get cachedEmail => _cachedEmail;
+  static String? get cachedProfileImageUrl => _cachedProfileImageUrl;
 
   Future<bool> hasSession() async {
     final token = await readAccessToken();
@@ -37,8 +47,14 @@ class AuthStorage {
     String? firstName,
     String? lastName,
     String? email,
+    String? profileImageUrl,
     DashboardType dashboardType = DashboardType.user,
   }) async {
+    _cachedFirstName = firstName;
+    _cachedLastName = lastName;
+    _cachedEmail = email;
+    _cachedProfileImageUrl = profileImageUrl;
+
     await _storage.write(key: AuthStorageKeys.accessToken, value: accessToken);
     await _storage.write(key: AuthStorageKeys.userId, value: '$userId');
     await _storage.write(
@@ -52,6 +68,10 @@ class AuthStorage {
     await _storage.write(key: AuthStorageKeys.firstName, value: firstName);
     await _storage.write(key: AuthStorageKeys.lastName, value: lastName);
     await _storage.write(key: AuthStorageKeys.email, value: email);
+    await _storage.write(
+      key: AuthStorageKeys.profileImageUrl,
+      value: profileImageUrl,
+    );
     await _storage.write(
       key: AuthStorageKeys.dashboardType,
       value: dashboardType.name,
@@ -81,6 +101,16 @@ class AuthStorage {
       _storage.read(key: AuthStorageKeys.lastName);
 
   Future<String?> readEmail() => _storage.read(key: AuthStorageKeys.email);
+
+  Future<String?> readProfileImageUrl() =>
+      _storage.read(key: AuthStorageKeys.profileImageUrl);
+
+  Future<void> hydrateCache() async {
+    _cachedFirstName = await readFirstName();
+    _cachedLastName = await readLastName();
+    _cachedEmail = await readEmail();
+    _cachedProfileImageUrl = await readProfileImageUrl();
+  }
 
   Future<DashboardType?> readDashboardType() async {
     final value = await _storage.read(key: AuthStorageKeys.dashboardType);
@@ -112,6 +142,11 @@ class AuthStorage {
   }
 
   Future<void> clear() async {
+    _cachedFirstName = null;
+    _cachedLastName = null;
+    _cachedEmail = null;
+    _cachedProfileImageUrl = null;
+
     await _storage.delete(key: AuthStorageKeys.accessToken);
     await _storage.delete(key: AuthStorageKeys.userId);
     await _storage.delete(key: AuthStorageKeys.roleId);
@@ -119,6 +154,7 @@ class AuthStorage {
     await _storage.delete(key: AuthStorageKeys.firstName);
     await _storage.delete(key: AuthStorageKeys.lastName);
     await _storage.delete(key: AuthStorageKeys.email);
+    await _storage.delete(key: AuthStorageKeys.profileImageUrl);
     await _storage.delete(key: AuthStorageKeys.dashboardType);
     await _storage.delete(key: AuthStorageKeys.userTabIndex);
     await _storage.delete(key: AuthStorageKeys.adminTabIndex);

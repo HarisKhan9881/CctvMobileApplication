@@ -18,8 +18,49 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
+
+  @override
+  State<ProfilePage> createState() => _ProfilePageState();
+}
+
+class _ProfilePageState extends State<ProfilePage> {
+  late String _name = _cachedName();
+  late String _email = _cachedEmail();
+  String? _profileImageUrl = AuthStorage.cachedProfileImageUrl;
+
+  String _cachedName() {
+    final first = AuthStorage.cachedFirstName?.trim() ?? '';
+    final last = AuthStorage.cachedLastName?.trim() ?? '';
+    final name = [
+      if (first.isNotEmpty) first,
+      if (last.isNotEmpty) last,
+    ].join(' ');
+    return name.isEmpty ? 'User' : name;
+  }
+
+  String _cachedEmail() {
+    final email = AuthStorage.cachedEmail?.trim() ?? '';
+    return email.isEmpty ? 'No username' : email;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCachedProfileInfo();
+    _refreshUserProfile();
+  }
+
+  Future<void> _loadCachedProfileInfo() async {
+    final info = await _loadFallbackProfileInfo();
+    if (!mounted) return;
+    setState(() {
+      _name = info['name'] ?? 'User';
+      _email = info['email'] ?? 'No username';
+      _profileImageUrl = info['profileImageUrl'];
+    });
+  }
 
   Future<UserProfile?> _loadUserProfile() async {
     final storage = const AuthStorage();
@@ -42,16 +83,98 @@ class ProfilePage extends StatelessWidget {
     }
   }
 
+  Future<void> _refreshUserProfile() async {
+    final profile = await _loadUserProfile();
+    if (profile == null) return;
+
+    final profileImageUrl = profile.applicationMeta?.metaUrl?.trim();
+    final name = [
+      if (profile.firstName.trim().isNotEmpty) profile.firstName.trim(),
+      if (profile.lastName.trim().isNotEmpty) profile.lastName.trim(),
+    ].join(' ');
+    final email = profile.email.trim();
+
+    final storage = const AuthStorage();
+    final currentDashboardType = await storage.readDashboardType();
+    await storage.saveAuth(
+      accessToken: (await storage.readAccessToken()) ?? '',
+      userId: profile.userId,
+      roleId: profile.roleId,
+      roleDescription: profile.roleDescription,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      email: email,
+      profileImageUrl: profileImageUrl,
+      dashboardType: currentDashboardType ?? DashboardType.user,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _name = name.isEmpty ? 'User' : name;
+      _email = email.isEmpty ? 'No username' : email;
+      _profileImageUrl = profileImageUrl;
+    });
+  }
+
   Future<Map<String, String>> _loadFallbackProfileInfo() async {
     final storage = const AuthStorage();
     final first = (await storage.readFirstName() ?? '').trim();
     final last = (await storage.readLastName() ?? '').trim();
     final email = (await storage.readEmail() ?? '').trim();
-    final name = [if (first.isNotEmpty) first, if (last.isNotEmpty) last].join(' ');
+    final profileImageUrl = (await storage.readProfileImageUrl() ?? '').trim();
+    final name = [
+      if (first.isNotEmpty) first,
+      if (last.isNotEmpty) last,
+    ].join(' ');
     return {
       'name': name.isEmpty ? 'User' : name,
       'email': email.isEmpty ? 'No username' : email,
+      'profileImageUrl': profileImageUrl,
     };
+  }
+
+  Widget _buildProfileHeader(BuildContext context) {
+    final imageUrl = _profileImageUrl?.trim() ?? '';
+
+    return Column(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(50),
+          child: imageUrl.isNotEmpty
+              ? Image.network(
+                  imageUrl,
+                  width: 78,
+                  height: 78,
+                  fit: BoxFit.cover,
+                  gaplessPlayback: true,
+                  errorBuilder: (_, _, _) => Image.asset(
+                    Assets.pngHighlight1Image,
+                    width: 78,
+                    height: 78,
+                    fit: BoxFit.cover,
+                  ),
+                )
+              : Image.asset(
+                  Assets.pngHighlight1Image,
+                  width: 78,
+                  height: 78,
+                  fit: BoxFit.cover,
+                ),
+        ),
+        Space.vertical(12),
+        Text(
+          _name,
+          style: context.bold.copyWith(fontSize: 24),
+        ),
+        Text(
+          _email,
+          style: context.normal.copyWith(
+            fontSize: 12,
+            color: kDarkGreyColor,
+          ),
+        ),
+      ],
+    );
   }
 
   @override
@@ -97,99 +220,7 @@ class ProfilePage extends StatelessWidget {
               child: Column(
                 children: [
                   Space.vertical(20),
-                  FutureBuilder<UserProfile?>(
-                    future: _loadUserProfile(),
-                    builder: (context, snapshot) {
-                      final profile = snapshot.data;
-                      final profileImageUrl = profile?.applicationMeta?.metaUrl;
-                      final name = [
-                        if ((profile?.firstName ?? '').trim().isNotEmpty)
-                          profile!.firstName.trim(),
-                        if ((profile?.lastName ?? '').trim().isNotEmpty)
-                          profile!.lastName.trim(),
-                      ].join(' ');
-
-                      if (profile != null) {
-                        return Column(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(50),
-                              child: profileImageUrl != null &&
-                                      profileImageUrl.trim().isNotEmpty
-                                  ? Image.network(
-                                      profileImageUrl,
-                                      width: 78,
-                                      height: 78,
-                                      fit: BoxFit.cover,
-                                      errorBuilder: (_, _, _) => Image.asset(
-                                        Assets.pngHighlight1Image,
-                                        width: 78,
-                                        height: 78,
-                                        fit: BoxFit.cover,
-                                      ),
-                                    )
-                                  : Image.asset(
-                                      Assets.pngHighlight1Image,
-                                      width: 78,
-                                      height: 78,
-                                      fit: BoxFit.cover,
-                                    ),
-                            ),
-                            Space.vertical(12),
-                            Text(
-                              name.isEmpty ? 'User' : name,
-                              style: context.bold.copyWith(fontSize: 24),
-                            ),
-                            Text(
-                              profile.email.trim().isEmpty
-                                  ? 'No username'
-                                  : profile.email,
-                              style: context.normal.copyWith(
-                                fontSize: 12,
-                                color: kDarkGreyColor,
-                              ),
-                            ),
-                          ],
-                        );
-                      }
-
-                      return FutureBuilder<Map<String, String>>(
-                        future: _loadFallbackProfileInfo(),
-                        builder: (context, fallbackSnapshot) {
-                          final fallbackName =
-                              fallbackSnapshot.data?['name'] ?? 'User';
-                          final fallbackEmail =
-                              fallbackSnapshot.data?['email'] ?? 'No username';
-
-                          return Column(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(50),
-                                child: Image.asset(
-                                  Assets.pngHighlight1Image,
-                                  width: 78,
-                                  height: 78,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              Space.vertical(12),
-                              Text(
-                                fallbackName,
-                                style: context.bold.copyWith(fontSize: 24),
-                              ),
-                              Text(
-                                fallbackEmail,
-                                style: context.normal.copyWith(
-                                  fontSize: 12,
-                                  color: kDarkGreyColor,
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
+                  _buildProfileHeader(context),
                   Space.vertical(20),
                   ProfileTile(
                     text: "Edit profile",

@@ -627,39 +627,52 @@ class _AdminHomePageState extends State<AdminHomePage> {
               ],
             ),
             Space.vertical(10),
-            Text("Analytics", style: context.bold.copyWith(fontSize: 20)),
+            Text("User Growth", style: context.bold.copyWith(fontSize: 20)),
             Space.vertical(10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: List.generate(tabs.length, (index) {
-                final isSelected = selectedTab == index;
-                return GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      selectedTab = index;
-                    });
-                    _loadChart();
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 10,
-                      horizontal: 20,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.blue : Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.grey.shade300),
-                    ),
-                    child: Text(
-                      tabs[index],
-                      style: TextStyle(
-                        fontWeight: FontWeight.w500,
-                        color: isSelected ? Colors.white : Colors.black87,
+            Container(
+              padding: const EdgeInsets.all(4),
+              child: Row(
+                children: List.generate(tabs.length, (index) {
+                  final isSelected = selectedTab == index;
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        right: index == tabs.length - 1 ? 0 : 14,
+                      ),
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedTab = index;
+                          });
+                          _loadChart();
+                        },
+                        child: Container(
+                          height: 30,
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          decoration: BoxDecoration(
+                            color: isSelected ? kPrimaryColor : kWhiteColor,
+                            borderRadius: BorderRadius.circular(5),
+                            border: Border.all(
+                              color: isSelected ? kPrimaryColor : kGreyColor,
+                            ),
+                          ),
+                          child: Text(
+                            tabs[index],
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w400,
+                              color: isSelected ? kWhiteColor : kBlackColor,
+                            ),
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                );
-              }),
+                  );
+                }),
+              ),
             ),
             Space.vertical(10),
             SizedBox(

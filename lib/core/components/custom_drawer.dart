@@ -20,9 +20,19 @@ class CustomDrawer extends StatefulWidget {
 
 class _CustomDrawerState extends State<CustomDrawer> {
   String selectedLang = "English";
-  String displayName = "User";
-  String displayEmail = "";
-  String? profileImageUrl;
+  late String displayName = _cachedDisplayName();
+  late String displayEmail = AuthStorage.cachedEmail?.trim() ?? "";
+  String? profileImageUrl = AuthStorage.cachedProfileImageUrl?.trim();
+
+  String _cachedDisplayName() {
+    final first = AuthStorage.cachedFirstName?.trim() ?? '';
+    final last = AuthStorage.cachedLastName?.trim() ?? '';
+    final name = [
+      if (first.isNotEmpty) first,
+      if (last.isNotEmpty) last,
+    ].join(' ');
+    return name.isEmpty ? 'User' : name;
+  }
 
   @override
   void initState() {
@@ -32,6 +42,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
   Future<void> _loadName() async {
     final storage = const AuthStorage();
+    await storage.hydrateCache();
     final accessToken = await storage.readAccessToken();
     final userId = await storage.readUserId();
     final first = await storage.readFirstName();
@@ -52,6 +63,18 @@ class _CustomDrawerState extends State<CustomDrawer> {
           userId: userId,
         );
         resolvedProfileImageUrl = profile.applicationMeta?.metaUrl?.trim();
+        final dashboardType = await storage.readDashboardType();
+        await storage.saveAuth(
+          accessToken: accessToken,
+          userId: userId,
+          roleId: profile.roleId,
+          roleDescription: profile.roleDescription,
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          email: profile.email,
+          profileImageUrl: resolvedProfileImageUrl,
+          dashboardType: dashboardType ?? DashboardType.user,
+        );
       } catch (_) {
         resolvedProfileImageUrl = null;
       }
@@ -61,7 +84,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
     setState(() {
       displayName = name.isEmpty ? displayName : name;
       displayEmail = (email ?? '').trim();
-      profileImageUrl = resolvedProfileImageUrl;
+      profileImageUrl =
+          resolvedProfileImageUrl ??
+          AuthStorage.cachedProfileImageUrl?.trim() ??
+          profileImageUrl;
     });
   }
 
@@ -300,7 +326,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     value: "English",
                     child: Row(
                       children: [
-                        Image.asset(Assets.pngFlagImage, width: 18, height: 18),
+                        Image.asset(Assets.english, width: 18, height: 18),
                         const SizedBox(width: 8),
                         const Text("English"),
                       ],
@@ -310,7 +336,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     value: "German",
                     child: Row(
                       children: [
-                        Image.asset(Assets.pngFlagImage, width: 18, height: 18),
+                        Image.asset(Assets.german, width: 18, height: 18),
                         const SizedBox(width: 8),
                         const Text("German"),
                       ],
@@ -320,7 +346,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     value: "Chinese",
                     child: Row(
                       children: [
-                        Image.asset(Assets.pngFlagImage, width: 18, height: 18),
+                        Image.asset(Assets.china, width: 18, height: 18),
                         const SizedBox(width: 8),
                         const Text("Chinese"),
                       ],
@@ -330,7 +356,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     value: "Russian",
                     child: Row(
                       children: [
-                        Image.asset(Assets.pngFlagImage, width: 18, height: 18),
+                        Image.asset(Assets.russia, width: 18, height: 18),
                         const SizedBox(width: 8),
                         const Text("Russian"),
                       ],

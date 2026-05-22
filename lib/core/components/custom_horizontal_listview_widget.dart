@@ -17,32 +17,42 @@ class CustomHorizontalListViewWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
-      child: Row(
-        children: List.generate(items.length, (index) {
-          final isSelected = index == selectedItem;
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+        child: Row(
+          children: List.generate(items.length, (index) {
+            final isSelected = index == selectedItem;
 
-          return GestureDetector(
-            onTap: () => onTap(index),
-            child: Container(
-              margin: EdgeInsets.only(right: index == items.length - 1 ? 0 : 8),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: isSelected ? kPrimaryColor : kWhiteColor,
-                border: Border.all(
-                  color: isSelected ? kPrimaryColor : kGreyColor,
+            return GestureDetector(
+              onTap: () => onTap(index),
+              child: Container(
+                height: 30,
+                constraints: const BoxConstraints(minWidth: 78),
+                margin: EdgeInsets.only(
+                  right: index == items.length - 1 ? 0 : 14,
                 ),
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Text(
-                items[index],
-                style: context.semiBold.copyWith(
-                  color: isSelected ? kWhiteColor : kBlackColor,
-                  fontSize: 14,
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: isSelected ? kPrimaryColor : kWhiteColor,
+                  border: Border.all(
+                    color: isSelected ? kPrimaryColor : kGreyColor,
+                  ),
+                  borderRadius: BorderRadius.circular(5),
+                ),
+                child: Text(
+                  items[index],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.normal.copyWith(
+                    color: isSelected ? kWhiteColor : kBlackColor,
+                    fontSize: 12,
+                  ),
                 ),
               ),
-            ),
-          );
-        }),
+            );
+          }),
+        ),
       ),
     );
   }

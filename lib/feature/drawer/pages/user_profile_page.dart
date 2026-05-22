@@ -66,6 +66,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
   GeneralParameterOption? _selectedProfileType;
   UserProfile? _userProfile;
   UploadedMedia? _uploadedProfileImage;
+  String? _cachedProfileImageUrl;
   bool _isLoadingCountries = false;
   bool _isLoadingStates = false;
   bool _isLoadingGenders = false;
@@ -92,12 +93,19 @@ class _UserProfilePageState extends State<UserProfilePage> {
   @override
   void initState() {
     super.initState();
+    _applyCachedProfileInfo();
     _loadInitialData();
   }
 
+  void _applyCachedProfileInfo() {
+    final first = AuthStorage.cachedFirstName?.trim() ?? '';
+    final last = AuthStorage.cachedLastName?.trim() ?? '';
+    firstNameController.text = first;
+    lastNameController.text = last;
+    _cachedProfileImageUrl = AuthStorage.cachedProfileImageUrl?.trim();
+  }
+
   Future<void> _loadInitialData() async {
-    firstNameController.text = '';
-    lastNameController.text = '';
     phoneNumberController.text = '';
     await Future.wait([_loadCountries(), _loadGenders(), _loadProfileTypes()]);
     await _loadUserProfile();
@@ -219,11 +227,24 @@ class _UserProfilePageState extends State<UserProfilePage> {
         _userProfile = profile;
         firstNameController.text = profile.firstName;
         lastNameController.text = profile.lastName;
+        _cachedProfileImageUrl = profile.applicationMeta?.metaUrl?.trim();
         _syncCountrySelection(_countries);
         _syncGenderSelection(_genders);
         _syncProfileTypeSelection(_profileTypes);
         _applyDob(profile.dob);
       });
+      final dashboardType = await storage.readDashboardType();
+      await storage.saveAuth(
+        accessToken: accessToken,
+        userId: userId,
+        roleId: profile.roleId,
+        roleDescription: profile.roleDescription,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        email: profile.email,
+        profileImageUrl: profile.applicationMeta?.metaUrl?.trim(),
+        dashboardType: dashboardType ?? DashboardType.user,
+      );
       await _loadStatesByCountryId(_selectedCountry?.countryId);
     } on ApiException catch (e) {
       if (!mounted) return;
@@ -493,6 +514,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
         },
       );
 
+      final dashboardType = await storage.readDashboardType();
       await storage.saveAuth(
         accessToken: accessToken,
         userId: userId,
@@ -501,6 +523,11 @@ class _UserProfilePageState extends State<UserProfilePage> {
         firstName: firstNameController.text.trim(),
         lastName: lastNameController.text.trim(),
         email: _userProfile?.email,
+        profileImageUrl:
+            (_uploadedProfileImage?.metaUrl ??
+                    _userProfile?.applicationMeta?.metaUrl)
+                ?.trim(),
+        dashboardType: dashboardType ?? DashboardType.user,
       );
 
       if (!mounted) return;
@@ -548,6 +575,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
       if (!mounted) return;
       setState(() {
         _uploadedProfileImage = uploadedMedia;
+        _cachedProfileImageUrl = uploadedMedia.metaUrl?.trim();
       });
 
       AppAlert.showSuccess(context, 'Profile image uploaded successfully');
@@ -568,11 +596,22 @@ class _UserProfilePageState extends State<UserProfilePage> {
   ImageProvider _profileImageProvider() {
     final profileImageUrl =
         _uploadedProfileImage?.metaUrl ??
-        _userProfile?.applicationMeta?.metaUrl;
+        _userProfile?.applicationMeta?.metaUrl ??
+        _cachedProfileImageUrl;
     if (profileImageUrl != null && profileImageUrl.trim().isNotEmpty) {
       return NetworkImage(profileImageUrl);
     }
     return const AssetImage(Assets.pngUser1Image);
+  }
+
+  String get _displayName {
+    final name = [
+      if (firstNameController.text.trim().isNotEmpty)
+        firstNameController.text.trim(),
+      if (lastNameController.text.trim().isNotEmpty)
+        lastNameController.text.trim(),
+    ].join(' ');
+    return name.isEmpty ? 'User' : name;
   }
 
   @override
@@ -615,13 +654,28 @@ class _UserProfilePageState extends State<UserProfilePage> {
                             ),
                             Space.horizontal(16),
                             Expanded(
-                              child: Text(
-                                _isUploadingProfileImage
-                                    ? "Uploading profile photo..."
-                                    : _isLoadingProfile
-                                    ? "Loading profile..."
-                                    : "Upload Profile Photo",
-                                style: context.normal.copyWith(fontSize: 18),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    _displayName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: context.semiBold.copyWith(
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                  Space.vertical(3),
+                                  Text(
+                                    _isUploadingProfileImage
+                                        ? "Uploading profile photo..."
+                                        : "Tap to change profile photo",
+                                    style: context.normal.copyWith(
+                                      fontSize: 12,
+                                      color: kDarkGreyColor,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ],

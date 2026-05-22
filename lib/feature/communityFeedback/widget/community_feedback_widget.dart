@@ -25,20 +25,20 @@ class CommunityFeedbackWidget extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: kWhiteColor,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: kGreyColor),
       ),
-      padding: EdgeInsets.all(3),
-      margin: EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(4),
+      margin: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Container(
             width: 100,
-            height: 120,
+            height: 94,
             decoration: BoxDecoration(
               color: kWhiteColor,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(4),
               boxShadow: [
                 BoxShadow(
                   color: kBlackColor.withValues(alpha: 0.08),
@@ -50,55 +50,66 @@ class CommunityFeedbackWidget extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             child: _FeedbackImage(imageUrl: imageUrl),
           ),
-          Space.horizontal(10),
+          Space.horizontal(8),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
+            child: SizedBox(
+              height: 94,
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: context.semiBold.copyWith(fontSize: 18)),
-                  Text(
-                    categoryLabel ?? '',
-                    style: context.semiBold.copyWith(
-                      fontSize: 12,
-                      color: kDarkGreyColor,
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Text(
+                      title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: context.semiBold.copyWith(
+                        fontSize: 17,
+                        height: 1.18,
+                        color: kBlackColor,
+                      ),
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Text(
-                          createdAt,
-                          style: context.normal.copyWith(
-                            fontSize: 14,
-                            color: kDarkGreyColor,
+                  const Spacer(),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
+                        child: Center(
+                          child: Text(
+                            createdAt,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.normal.copyWith(
+                              fontSize: 10,
+                              color: kDarkGreyColor,
+                            ),
                           ),
                         ),
-                        Space.horizontal(16),
-                        GestureDetector(
-                          onTap: onView,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: kPrimaryColor,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            padding: EdgeInsets.symmetric(
-                              vertical: 8,
-                              horizontal: 12,
-                            ),
-                            child: Text(
-                              "View",
-                              style: context.normal.copyWith(
-                                fontSize: 14,
-                                color: kWhiteColor,
+                      ),
+                      Space.horizontal(10),
+                      SizedBox(
+                        width: 54,
+                        height: 44,
+                        child: Material(
+                          color: kPrimaryColor,
+                          borderRadius: BorderRadius.circular(5),
+                          child: InkWell(
+                            onTap: onView,
+                            borderRadius: BorderRadius.circular(5),
+                            child: Center(
+                              child: Text(
+                                "View",
+                                style: context.semiBold.copyWith(
+                                  fontSize: 12,
+                                  color: kWhiteColor,
+                                ),
                               ),
                             ),
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                 ],
               ),

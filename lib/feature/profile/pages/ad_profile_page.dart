@@ -15,8 +15,47 @@ import 'package:cctv_app/feature/profile/pages/terms_and_policies.dart';
 import 'package:cctv_app/feature/profile/widget/profile_tile.dart';
 import 'package:flutter/material.dart';
 
-class AdProfilePage extends StatelessWidget {
+class AdProfilePage extends StatefulWidget {
   const AdProfilePage({super.key});
+
+  @override
+  State<AdProfilePage> createState() => _AdProfilePageState();
+}
+
+class _AdProfilePageState extends State<AdProfilePage> {
+  late String _name = _cachedName();
+  late String _email = _cachedEmail();
+
+  String _cachedName() {
+    final first = AuthStorage.cachedFirstName?.trim() ?? '';
+    final last = AuthStorage.cachedLastName?.trim() ?? '';
+    final name = [
+      if (first.isNotEmpty) first,
+      if (last.isNotEmpty) last,
+    ].join(' ');
+    return name.isEmpty ? 'User' : name;
+  }
+
+  String _cachedEmail() {
+    final email = AuthStorage.cachedEmail?.trim() ?? '';
+    return email.isEmpty ? 'No username' : email;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCachedProfileInfo();
+    _refreshUserProfile();
+  }
+
+  Future<void> _loadCachedProfileInfo() async {
+    final info = await _loadFallbackProfileInfo();
+    if (!mounted) return;
+    setState(() {
+      _name = info['name'] ?? 'User';
+      _email = info['email'] ?? 'No username';
+    });
+  }
 
   Future<UserProfile?> _loadUserProfile() async {
     final storage = const AuthStorage();
@@ -35,6 +74,37 @@ class AdProfilePage extends StatelessWidget {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<void> _refreshUserProfile() async {
+    final profile = await _loadUserProfile();
+    if (profile == null) return;
+
+    final name = [
+      if (profile.firstName.trim().isNotEmpty) profile.firstName.trim(),
+      if (profile.lastName.trim().isNotEmpty) profile.lastName.trim(),
+    ].join(' ').trim();
+    final email = profile.email.trim();
+
+    final storage = const AuthStorage();
+    final dashboardType = await storage.readDashboardType();
+    await storage.saveAuth(
+      accessToken: (await storage.readAccessToken()) ?? '',
+      userId: profile.userId,
+      roleId: profile.roleId,
+      roleDescription: profile.roleDescription,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      email: email,
+      profileImageUrl: profile.applicationMeta?.metaUrl?.trim(),
+      dashboardType: dashboardType ?? DashboardType.user,
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _name = name.isEmpty ? 'User' : name;
+      _email = email.isEmpty ? 'No username' : email;
+    });
   }
 
   Future<Map<String, String>> _loadFallbackProfileInfo() async {
@@ -69,68 +139,22 @@ class AdProfilePage extends StatelessWidget {
                   child: Column(
                     children: [
                       Space.vertical(20),
-                      FutureBuilder<UserProfile?>(
-                        future: _loadUserProfile(),
-                        builder: (context, snapshot) {
-                          final profile = snapshot.data;
-                          final name = [
-                            if ((profile?.firstName ?? '').trim().isNotEmpty)
-                              profile!.firstName.trim(),
-                            if ((profile?.lastName ?? '').trim().isNotEmpty)
-                              profile!.lastName.trim(),
-                          ].join(' ').trim();
-
-                          if (profile != null) {
-                            return Column(
-                              children: [
-                                const CurrentUserAvatar(radius: 50),
-                                Space.vertical(15),
-                                Text(
-                                  name.isEmpty ? 'User' : name,
-                                  style: context.bold.copyWith(fontSize: 20),
-                                ),
-                                Text(
-                                  profile.email.trim().isEmpty
-                                      ? 'No username'
-                                      : profile.email,
-                                  style: context.normal.copyWith(
-                                    fontSize: 16,
-                                    color: kDarkGreyColor,
-                                  ),
-                                ),
-                              ],
-                            );
-                          }
-
-                          return FutureBuilder<Map<String, String>>(
-                            future: _loadFallbackProfileInfo(),
-                            builder: (context, fallbackSnapshot) {
-                              final fallbackName =
-                                  fallbackSnapshot.data?['name'] ?? 'User';
-                              final fallbackEmail =
-                                  fallbackSnapshot.data?['email'] ??
-                                  'No username';
-
-                              return Column(
-                                children: [
-                                  const CurrentUserAvatar(radius: 50),
-                                  Space.vertical(15),
-                                  Text(
-                                    fallbackName,
-                                    style: context.bold.copyWith(fontSize: 20),
-                                  ),
-                                  Text(
-                                    fallbackEmail,
-                                    style: context.normal.copyWith(
-                                      fontSize: 16,
-                                      color: kDarkGreyColor,
-                                    ),
-                                  ),
-                                ],
-                              );
-                            },
-                          );
-                        },
+                      Column(
+                        children: [
+                          const CurrentUserAvatar(radius: 50),
+                          Space.vertical(15),
+                          Text(
+                            _name,
+                            style: context.bold.copyWith(fontSize: 20),
+                          ),
+                          Text(
+                            _email,
+                            style: context.normal.copyWith(
+                              fontSize: 16,
+                              color: kDarkGreyColor,
+                            ),
+                          ),
+                        ],
                       ),
                       Space.vertical(20),
                       Align(

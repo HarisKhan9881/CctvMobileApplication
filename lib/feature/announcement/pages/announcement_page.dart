@@ -348,7 +348,7 @@ class _AnnouncementPageState extends State<AnnouncementPage> {
               maxLine: 6,
             ),
             Space.vertical(20),
-            Text("IAttached file (Optional)", style: context.normal),
+            Text("Attached File (Optional)", style: context.normal),
             Space.vertical(10),
             CustomTextField(
               controller: _attachmentController,
@@ -402,6 +402,7 @@ class _AnnouncementPageState extends State<AnnouncementPage> {
                 ),
               ],
             ),
+            Space.vertical(24),
           ],
         ),
       ),

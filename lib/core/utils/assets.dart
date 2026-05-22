@@ -64,6 +64,11 @@ class Assets {
   static const String pngActiveBottomImage = 'assets/images/active_bottom.png';
   static const String pngViewImage = 'assets/images/view.png';
 
+  static const String english = 'assets/images/english.png';
+  static const String german = 'assets/images/german.png';
+  static const String china = 'assets/images/china.png';
+  static const String russia = 'assets/images/russia.png';
+
   ///SVG Images
   static const String svgNotificationImage = 'assets/images/notification.svg';
 

@@ -36,6 +36,7 @@ class SessionGate extends StatelessWidget {
       return const SplashPage();
     }
 
+    await storage.hydrateCache();
     await AppWebSocketService.instance.connect();
 
     final dashboardType = await storage.readDashboardType();

@@ -118,7 +118,7 @@ class _AdHomePageState extends State<AdHomePage> {
             ),
             Space.vertical(20),
             Text(
-              "Analytics",
+              "User Growth",
               style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,

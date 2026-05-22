@@ -117,7 +117,7 @@ class NotificationDetailPage extends StatelessWidget {
             if (mediaUrl.isNotEmpty) ...[
               Space.vertical(20),
               Text(
-                'Attachment',
+                'Attached File',
                 style: context.bold.copyWith(fontSize: 16),
               ),
               Space.vertical(10),
