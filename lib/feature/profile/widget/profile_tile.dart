@@ -34,7 +34,7 @@ class ProfileTile extends StatelessWidget {
                     colorFilter: colorFilter(color: kPrimaryColor),
                   )
                 else
-                  Icon(iconData, color: kPrimaryColor, size: 20),
+                  Icon(iconData, color: kPrimaryColor, size: 26),
                 Space.horizontal(20),
                 Text(text, style: context.normal.copyWith(fontSize: 16)),
               ],

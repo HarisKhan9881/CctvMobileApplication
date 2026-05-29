@@ -734,68 +734,76 @@ class _UserProfilePageState extends State<UserProfilePage> {
                     Row(
                       children: [
                         Expanded(
-                          child: CustomDropdown<StateOption>(
-                            key: ValueKey(
-                              'state-${_selectedState?.stateId ?? 'none'}',
+                          child: SizedBox(
+                            height: 52,
+                            child: CustomDropdown<StateOption>(
+                              key: ValueKey(
+                                'state-${_selectedState?.stateId ?? 'none'}',
+                              ),
+                              value: _selectedState,
+                              items: _states
+                                  .map(
+                                    (state) => DropdownMenuItem<StateOption>(
+                                      value: state,
+                                      child: Text(state.stateName),
+                                    ),
+                                  )
+                                  .toList(),
+                              hint: _isLoadingStates ? "Loading..." : "State",
+                              screenWidth: screenWidth,
+                              isSmallScreen: isSmallScreen,
+                              isSearchable: true,
+                              openSearchInPopup: true,
+                              searchHintText: "Search state",
+                              enabled: !_isLoadingStates,
+                              itemLabelBuilder: (state) => state.stateName,
+                              validator: (_) => null,
+                              onChanged: (state) {
+                                setState(() {
+                                  _selectedState = state;
+                                });
+                              },
                             ),
-                            value: _selectedState,
-                            items: _states
-                                .map(
-                                  (state) => DropdownMenuItem<StateOption>(
-                                    value: state,
-                                    child: Text(state.stateName),
-                                  ),
-                                )
-                                .toList(),
-                            hint: _isLoadingStates ? "Loading..." : "State",
-                            screenWidth: screenWidth,
-                            isSmallScreen: isSmallScreen,
-                            isSearchable: true,
-                            openSearchInPopup: true,
-                            searchHintText: "Search state",
-                            enabled: !_isLoadingStates,
-                            itemLabelBuilder: (state) => state.stateName,
-                            validator: (_) => null,
-                            onChanged: (state) {
-                              setState(() {
-                                _selectedState = state;
-                              });
-                            },
                           ),
                         ),
                         Space.horizontal(8),
                         Expanded(
-                          child: CustomDropdown<CountryOption>(
-                            key: ValueKey(
-                              'country-${_selectedCountry?.countryId ?? 'none'}',
+                          child: SizedBox(
+                            height: 52,
+                            child: CustomDropdown<CountryOption>(
+                              key: ValueKey(
+                                'country-${_selectedCountry?.countryId ?? 'none'}',
+                              ),
+                              value: _selectedCountry,
+                              items: _countries
+                                  .map(
+                                    (country) =>
+                                        DropdownMenuItem<CountryOption>(
+                                          value: country,
+                                          child: Text(country.countryName),
+                                        ),
+                                  )
+                                  .toList(),
+                              hint: _isLoadingCountries
+                                  ? "Loading..."
+                                  : "Country",
+                              screenWidth: screenWidth,
+                              isSmallScreen: isSmallScreen,
+                              isSearchable: true,
+                              openSearchInPopup: true,
+                              searchHintText: "Search country",
+                              enabled: !_isLoadingCountries,
+                              itemLabelBuilder: (country) =>
+                                  country.countryName,
+                              validator: (_) => null,
+                              onChanged: (country) {
+                                setState(() {
+                                  _selectedCountry = country;
+                                  _selectedState = null;
+                                });
+                                _loadStatesByCountryId(country?.countryId);
+                              },
                             ),
-                            value: _selectedCountry,
-                            items: _countries
-                                .map(
-                                  (country) => DropdownMenuItem<CountryOption>(
-                                    value: country,
-                                    child: Text(country.countryName),
-                                  ),
-                                )
-                                .toList(),
-                            hint: _isLoadingCountries
-                                ? "Loading..."
-                                : "Country",
-                            screenWidth: screenWidth,
-                            isSmallScreen: isSmallScreen,
-                            isSearchable: true,
-                            openSearchInPopup: true,
-                            searchHintText: "Search country",
-                            enabled: !_isLoadingCountries,
-                            itemLabelBuilder: (country) => country.countryName,
-                            validator: (_) => null,
-                            onChanged: (country) {
-                              setState(() {
-                                _selectedCountry = country;
-                                _selectedState = null;
-                              });
-                              _loadStatesByCountryId(country?.countryId);
-                            },
                           ),
                         ),
                       ],

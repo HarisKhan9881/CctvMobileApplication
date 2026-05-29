@@ -68,6 +68,7 @@ class _HomePageState extends State<HomePage> {
   bool _postsRefreshQueued = false;
   bool _reelsRefreshQueued = false;
   final Map<int, GlobalKey> _postKeys = <int, GlobalKey>{};
+  final ScrollController _feedScrollController = ScrollController();
   int? _highlightedPostId;
 
   List<String> get _categoryItems =>
@@ -146,7 +147,17 @@ class _HomePageState extends State<HomePage> {
   void dispose() {
     _postsEventSubscription?.cancel();
     _reelsEventSubscription?.cancel();
+    _feedScrollController.dispose();
     super.dispose();
+  }
+
+  void _scrollFeedToTop() {
+    if (!_feedScrollController.hasClients) return;
+    _feedScrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOut,
+    );
   }
 
   Future<void> _loadInitialData() async {
@@ -374,6 +385,7 @@ class _HomePageState extends State<HomePage> {
               setState(() {
                 selectedIndex = index;
               });
+              _scrollFeedToTop();
             },
           ),
         ),
@@ -384,6 +396,7 @@ class _HomePageState extends State<HomePage> {
               await _loadPostsAndCategories();
             },
             child: SingleChildScrollView(
+              controller: _feedScrollController,
               physics: const AlwaysScrollableScrollPhysics(),
               child: Column(
                 children: [

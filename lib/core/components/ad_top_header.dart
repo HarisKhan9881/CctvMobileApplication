@@ -1,13 +1,11 @@
 import 'package:cctv_app/core/components/current_user_avatar.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
+import 'package:cctv_app/core/components/notification_icon_button.dart';
 import 'package:cctv_app/core/components/space.dart';
-import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/home/pages/history_screen.dart';
 import 'package:cctv_app/feature/profile/pages/ad_profile_page.dart';
-import 'package:cctv_app/feature/profile/pages/notification_page.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
 
 class AdTopHeader extends StatelessWidget {
   const AdTopHeader({super.key});
@@ -40,22 +38,13 @@ class AdTopHeader extends StatelessWidget {
           ),
         ),
         Space.horizontal(10),
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => NotificationPage()),
-            );
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              color: kWhiteColor,
-              shape: BoxShape.circle,
-              border: Border.all(color: kDarkGreyColor),
-            ),
-            padding: EdgeInsets.all(10),
-            child: SvgPicture.asset(Assets.svgNotificationIcon),
+        NotificationIconButton(
+          decoration: BoxDecoration(
+            color: kWhiteColor,
+            shape: BoxShape.circle,
+            border: Border.all(color: kDarkGreyColor),
           ),
+          padding: const EdgeInsets.all(10),
         ),
       ],
     );

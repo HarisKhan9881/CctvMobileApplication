@@ -1,4 +1,5 @@
 import 'package:cctv_app/core/components/current_user_avatar.dart';
+import 'package:cctv_app/core/components/notification_icon_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/extensions/context.dart';
@@ -9,7 +10,6 @@ import 'package:cctv_app/core/network/services/user_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/profile/pages/ad_profile_page.dart';
-import 'package:cctv_app/feature/profile/pages/notification_page.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
@@ -635,25 +635,13 @@ class _SuperAdminHomePageState extends State<SuperAdminHomePage> {
                     },
                   ),
                   const Spacer(),
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => NotificationPage()),
-                      );
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: kWhiteColor,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: kGreyColor),
-                      ),
-                      padding: const EdgeInsets.all(10),
-                      child: const Icon(
-                        Icons.notifications_none_rounded,
-                        color: kBlackColor,
-                      ),
+                  NotificationIconButton(
+                    decoration: BoxDecoration(
+                      color: kWhiteColor,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: kGreyColor),
                     ),
+                    padding: const EdgeInsets.all(10),
                   ),
                 ],
               ),

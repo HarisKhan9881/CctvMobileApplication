@@ -630,7 +630,7 @@ class _AdminHomePageState extends State<AdminHomePage> {
             Text("User Growth", style: context.bold.copyWith(fontSize: 20)),
             Space.vertical(10),
             Container(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 6),
               child: Row(
                 children: List.generate(tabs.length, (index) {
                   final isSelected = selectedTab == index;
@@ -647,9 +647,9 @@ class _AdminHomePageState extends State<AdminHomePage> {
                           _loadChart();
                         },
                         child: Container(
-                          height: 30,
+                          height: 34,
                           alignment: Alignment.center,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
                           decoration: BoxDecoration(
                             color: isSelected ? kPrimaryColor : kWhiteColor,
                             borderRadius: BorderRadius.circular(5),

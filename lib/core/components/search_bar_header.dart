@@ -1,9 +1,9 @@
 import 'package:cctv_app/core/components/custom_textfield.dart';
+import 'package:cctv_app/core/components/notification_icon_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/home/pages/history_screen.dart';
-import 'package:cctv_app/feature/profile/pages/notification_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -56,25 +56,12 @@ class SearchBarHeader extends StatelessWidget {
           ),
         ),
         Space.horizontal(10),
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const NotificationPage()),
-            );
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border.all(color: kGreyColor),
-              borderRadius: BorderRadius.circular(20.0),
-            ),
-            padding: EdgeInsets.all(8.0),
-            child: SvgPicture.asset(
-              Assets.svgNotificationIcon,
-              width: 24,
-              height: 24,
-            ),
+        NotificationIconButton(
+          decoration: BoxDecoration(
+            border: Border.all(color: kGreyColor),
+            borderRadius: BorderRadius.circular(20.0),
           ),
+          padding: const EdgeInsets.all(8.0),
         ),
       ],
     );

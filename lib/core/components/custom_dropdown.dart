@@ -288,14 +288,16 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>> {
                 child: InputDecorator(
                   decoration: InputDecoration(
                     hintText: widget.hint,
+                    isDense: true,
                     filled: true,
                     fillColor: widget.enabled
                         ? effectiveFillColor
                         : effectiveFillColor.withValues(alpha: 0.7),
                     contentPadding: EdgeInsets.symmetric(
                       horizontal: widget.screenWidth * 0.04,
-                      vertical: widget.screenWidth * 0.02,
+                      vertical: 0,
                     ),
+                    constraints: const BoxConstraints(minHeight: 52),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(13),
                       borderSide: BorderSide(color: effectiveBorderColor),
@@ -313,18 +315,27 @@ class _CustomDropdownState<T> extends State<CustomDropdown<T>> {
                       Icons.arrow_drop_down,
                       color: widget.enabled ? null : Colors.grey,
                     ),
+                    suffixIconConstraints: const BoxConstraints(
+                      minWidth: 40,
+                      minHeight: 40,
+                    ),
                   ),
-                  child: Text(
-                    field.value == null
-                        ? widget.hint
-                        : _labelForValue(field.value),
-                    style: TextStyle(
-                      fontSize: widget.screenWidth * 0.04,
-                      color: !widget.enabled
-                          ? Colors.grey
-                          : field.value == null
-                          ? Colors.grey
-                          : AppColors.blackColor,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      field.value == null
+                          ? widget.hint
+                          : _labelForValue(field.value),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: widget.screenWidth * 0.04,
+                        color: !widget.enabled
+                            ? Colors.grey
+                            : field.value == null
+                            ? Colors.grey
+                            : AppColors.blackColor,
+                      ),
                     ),
                   ),
                 ),

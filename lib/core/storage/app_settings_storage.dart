@@ -44,6 +44,15 @@ class AppSettingsStorage {
     return _storage.write(key: key, value: value.toString());
   }
 
+  Future<int?> readInt(String key) async {
+    final value = await _storage.read(key: key);
+    return value == null ? null : int.tryParse(value);
+  }
+
+  Future<void> writeInt(String key, int value) {
+    return _storage.write(key: key, value: '$value');
+  }
+
   Future<Map<String, bool>> readAll() async {
     final result = <String, bool>{};
     for (final key in AppSettingsKeys.all) {

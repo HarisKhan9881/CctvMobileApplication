@@ -1,10 +1,18 @@
 import 'package:cctv_app/core/components/space.dart';
-import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:flutter/material.dart';
 
 class RegionContainer extends StatelessWidget {
-  const RegionContainer({super.key});
+  final String flagAsset;
+  final String countryName;
+  final String views;
+
+  const RegionContainer({
+    super.key,
+    required this.flagAsset,
+    required this.countryName,
+    required this.views,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -15,16 +23,16 @@ class RegionContainer extends StatelessWidget {
           children: [
             Row(
               children: [
-                Image.asset(Assets.pngFlagImage),
+                Image.asset(flagAsset, width: 28, height: 28),
                 Space.horizontal(10),
                 Text(
-                  "United States",
+                  countryName,
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
                 ),
               ],
             ),
             Text(
-              "8,678,989",
+              views,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w400,
