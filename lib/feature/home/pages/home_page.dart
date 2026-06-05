@@ -522,6 +522,8 @@ class _AddReelCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final profileImageUrl = AuthStorage.cachedProfileImageUrl?.trim() ?? '';
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -545,11 +547,21 @@ class _AddReelCard extends StatelessWidget {
                         offset: const Offset(0, 4),
                       ),
                     ],
-                    image: const DecorationImage(
-                      image: AssetImage(Assets.pngHighlight1Image),
-                      fit: BoxFit.cover,
-                    ),
                   ),
+                  clipBehavior: Clip.antiAlias,
+                  child: profileImageUrl.isNotEmpty
+                      ? Image.network(
+                          profileImageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, _, _) => Image.asset(
+                            Assets.pngHighlight1Image,
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                      : Image.asset(
+                          Assets.pngHighlight1Image,
+                          fit: BoxFit.cover,
+                        ),
                 ),
                 Positioned(
                   bottom: -20,
@@ -642,7 +654,13 @@ class _ReelUserAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final avatarUrl = reel.userAvatarUrl;
+    final cachedAvatarUrl = AuthStorage.cachedProfileImageUrl?.trim();
+    final avatarUrl =
+        _isCurrentUserReel &&
+            cachedAvatarUrl != null &&
+            cachedAvatarUrl.isNotEmpty
+        ? cachedAvatarUrl
+        : reel.userAvatarUrl;
     if (avatarUrl != null && avatarUrl.trim().isNotEmpty) {
       return CircleAvatar(
         radius: radius,
@@ -662,6 +680,15 @@ class _ReelUserAvatar extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  bool get _isCurrentUserReel {
+    final currentUserId = AuthStorage.cachedUserId;
+    if (currentUserId == null) return false;
+
+    return reel.userInfo?.userId == currentUserId ||
+        reel.userId == currentUserId ||
+        reel.createdBy == currentUserId;
   }
 
   String _buildInitials(String name) {

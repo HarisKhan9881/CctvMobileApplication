@@ -186,20 +186,7 @@ class _ProfilePageState extends State<ProfilePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              CupertinoButton(
-                child: Text(
-                  "Edit",
-                  style: context.normal.copyWith(fontSize: 20),
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const UserProfilePage(),
-                    ),
-                  );
-                },
-              ),
+              const SizedBox(width: 48),
               Text("My Profile", style: context.bold.copyWith(fontSize: 20)),
               CupertinoButton(
                 padding: EdgeInsets.zero,
@@ -225,13 +212,17 @@ class _ProfilePageState extends State<ProfilePage> {
                   ProfileTile(
                     text: "Edit profile",
                     icon: Assets.svgEditProfileIcon,
-                    onTap: () {
-                      Navigator.push(
+                    onTap: () async {
+                      final updated = await Navigator.push<bool>(
                         context,
                         MaterialPageRoute(
                           builder: (context) => const UserProfilePage(),
                         ),
                       );
+                      if (updated == true) {
+                        await _loadCachedProfileInfo();
+                        await _refreshUserProfile();
+                      }
                     },
                   ),
                   Space.vertical(8),

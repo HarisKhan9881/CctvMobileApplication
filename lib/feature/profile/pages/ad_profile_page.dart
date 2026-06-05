@@ -168,13 +168,17 @@ class _AdProfilePageState extends State<AdProfilePage> {
                       ProfileTile(
                         text: "Edit profile",
                         icon: Assets.svgEditProfileIcon,
-                        onTap: () {
-                          Navigator.push(
+                        onTap: () async {
+                          final updated = await Navigator.push<bool>(
                             context,
                             MaterialPageRoute(
                               builder: (context) => const UserProfilePage(),
                             ),
                           );
+                          if (updated == true) {
+                            await _loadCachedProfileInfo();
+                            await _refreshUserProfile();
+                          }
                         },
                       ),
                       Space.vertical(8),

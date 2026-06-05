@@ -24,6 +24,7 @@ class AuthStorage {
   static String? _cachedLastName;
   static String? _cachedEmail;
   static String? _cachedProfileImageUrl;
+  static int? _cachedUserId;
 
   const AuthStorage({FlutterSecureStorage? storage})
     : _storage = storage ?? const FlutterSecureStorage();
@@ -32,6 +33,7 @@ class AuthStorage {
   static String? get cachedLastName => _cachedLastName;
   static String? get cachedEmail => _cachedEmail;
   static String? get cachedProfileImageUrl => _cachedProfileImageUrl;
+  static int? get cachedUserId => _cachedUserId;
 
   Future<bool> hasSession() async {
     final token = await readAccessToken();
@@ -50,6 +52,7 @@ class AuthStorage {
     String? profileImageUrl,
     DashboardType dashboardType = DashboardType.user,
   }) async {
+    _cachedUserId = userId;
     _cachedFirstName = firstName;
     _cachedLastName = lastName;
     _cachedEmail = email;
@@ -106,6 +109,7 @@ class AuthStorage {
       _storage.read(key: AuthStorageKeys.profileImageUrl);
 
   Future<void> hydrateCache() async {
+    _cachedUserId = await readUserId();
     _cachedFirstName = await readFirstName();
     _cachedLastName = await readLastName();
     _cachedEmail = await readEmail();
@@ -142,6 +146,7 @@ class AuthStorage {
   }
 
   Future<void> clear() async {
+    _cachedUserId = null;
     _cachedFirstName = null;
     _cachedLastName = null;
     _cachedEmail = null;

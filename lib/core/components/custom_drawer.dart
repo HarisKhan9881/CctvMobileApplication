@@ -1,6 +1,9 @@
+import 'package:cctv_app/core/components/app_alert.dart';
+import 'package:cctv_app/core/components/app_bottom_sheet.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
+import 'package:cctv_app/core/network/api_config.dart';
 import 'package:cctv_app/core/network/services/user_service.dart';
 import 'package:cctv_app/core/session/app_session_manager.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
@@ -10,6 +13,10 @@ import 'package:cctv_app/feature/drawer/pages/post_history.dart';
 import 'package:cctv_app/feature/profile/pages/help_and_support.dart';
 import 'package:cctv_app/feature/profile/pages/settings_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_svg/flutter_svg.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class CustomDrawer extends StatefulWidget {
   const CustomDrawer({super.key});
@@ -170,7 +177,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 height: 22,
               ),
               text: "Invite Friends",
-              onTap: () {},
+              onTap: _showInviteFriendsSheet,
             ),
             _buildDrawerItem(
               leading: Image.asset(Assets.pngInfoImage, width: 22, height: 22),
@@ -283,6 +290,136 @@ class _CustomDrawerState extends State<CustomDrawer> {
         );
       },
     );
+  }
+
+  void _showInviteFriendsSheet() {
+    AppBottomSheet.show(
+      context,
+      borderRadius: 28,
+      body: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Invite Friends',
+              style: context.bold.copyWith(fontSize: 20),
+            ),
+            Space.vertical(6),
+            Text(
+              'Share Cctv with your friends.',
+              style: context.normal.copyWith(color: kDarkGreyColor),
+            ),
+            Space.vertical(18),
+            _buildInviteOption(
+              icon: const Icon(Icons.share_outlined, size: 20),
+              title: 'More',
+              onTap: () => _shareInvite('system'),
+            ),
+            _buildInviteOption(
+              icon: SvgPicture.asset(Assets.svgWhatsappIcon),
+              title: 'Whatsapp',
+              onTap: () => _shareInvite('whatsapp'),
+            ),
+            _buildInviteOption(
+              icon: const Icon(Icons.camera_alt_outlined, size: 20),
+              title: 'Instagram',
+              onTap: () => _shareInvite('instagram'),
+            ),
+            _buildInviteOption(
+              icon: SvgPicture.asset(Assets.svgTwitterIcon),
+              title: 'Twitter/X',
+              onTap: () => _shareInvite('twitter'),
+            ),
+            _buildInviteOption(
+              icon: SvgPicture.asset(Assets.svgCopyIcon),
+              title: 'Copy Link',
+              onTap: () => _shareInvite('copy'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInviteOption({
+    required Widget icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: SizedBox(width: 28, height: 28, child: Center(child: icon)),
+      title: Text(title, style: context.semiBold.copyWith(fontSize: 16)),
+      onTap: onTap,
+    );
+  }
+
+  Future<void> _shareInvite(String target) async {
+    final shareText =
+        'Join me on Cctv and check out the latest community updates.\n\n'
+        '${ApiConfig.baseUrl}';
+
+    Navigator.pop(context);
+
+    try {
+      switch (target) {
+        case 'copy':
+          await Clipboard.setData(
+            const ClipboardData(text: ApiConfig.baseUrl),
+          );
+          if (mounted) {
+            AppAlert.showInfo(context, 'Invite link copied to clipboard');
+          }
+          return;
+        case 'whatsapp':
+          await _launchWithFallbacks([
+            Uri.parse('whatsapp://send?text=${Uri.encodeComponent(shareText)}'),
+            Uri.parse('https://wa.me/?text=${Uri.encodeComponent(shareText)}'),
+          ]);
+          return;
+        case 'instagram':
+          await _launchWithFallbacks([
+            Uri.parse('instagram://app'),
+            Uri.parse('https://www.instagram.com/'),
+          ]);
+          return;
+        case 'twitter':
+          await _launchWithFallbacks([
+            Uri.parse(
+              'twitter://post?message=${Uri.encodeComponent(shareText)}',
+            ),
+            Uri.parse('x://post?message=${Uri.encodeComponent(shareText)}'),
+            Uri.parse(
+              'https://twitter.com/intent/tweet?text=${Uri.encodeComponent(shareText)}',
+            ),
+            Uri.parse(
+              'https://x.com/intent/post?text=${Uri.encodeComponent(shareText)}',
+            ),
+          ]);
+          return;
+        case 'system':
+        default:
+          await Share.share(shareText, subject: 'Join me on Cctv');
+      }
+    } catch (_) {
+      if (mounted) {
+        AppAlert.showError(context, 'Unable to share invite right now');
+      }
+    }
+  }
+
+  Future<void> _launchWithFallbacks(List<Uri> uris) async {
+    for (final uri in uris) {
+      final didLaunch = await launchUrl(
+        uri,
+        mode: LaunchMode.externalApplication,
+      );
+      if (didLaunch) return;
+    }
+
+    throw Exception('Unable to launch share target');
   }
 
   Widget _buildDrawerItem({

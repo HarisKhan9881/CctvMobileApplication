@@ -37,7 +37,9 @@ class _AdPostContainerState extends State<AdPostContainer> {
   int _nextLocalCommentId = -1;
   late final TextEditingController _commentController;
   late final TextEditingController _replyController;
+  late final FocusNode _commentFocusNode;
   late final FocusNode _replyFocusNode;
+  final GlobalKey _commentsSectionKey = GlobalKey();
   late List<ActivePostComment> _comments;
   int? _replyingToCommentId;
   String? _replyingToAuthor;
@@ -53,6 +55,7 @@ class _AdPostContainerState extends State<AdPostContainer> {
     super.initState();
     _commentController = TextEditingController();
     _replyController = TextEditingController();
+    _commentFocusNode = FocusNode();
     _replyFocusNode = FocusNode();
     _comments = List<ActivePostComment>.from(post?.comments ?? const []);
     _loadCurrentUserReaction();
@@ -66,6 +69,7 @@ class _AdPostContainerState extends State<AdPostContainer> {
       _comments = List<ActivePostComment>.from(post?.comments ?? const []);
       _commentController.clear();
       _replyController.clear();
+      _commentFocusNode.unfocus();
       _replyFocusNode.unfocus();
       _replyingToCommentId = null;
       _replyingToAuthor = null;
@@ -194,6 +198,7 @@ class _AdPostContainerState extends State<AdPostContainer> {
           if (areCommentsVisible) ...[
             Space.vertical(12),
             Container(
+              key: _commentsSectionKey,
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
@@ -294,6 +299,7 @@ class _AdPostContainerState extends State<AdPostContainer> {
                         Expanded(
                           child: CustomTextField(
                             controller: _commentController,
+                            focusNode: _commentFocusNode,
                             hintText: 'Share your thoughts...',
                             hintTextColor: kDarkGreyColor,
                             fieldColor: kWhiteColor,
@@ -450,9 +456,7 @@ class _AdPostContainerState extends State<AdPostContainer> {
           child: _buildActionButton(
             text: 'Comment',
             onTap: () {
-              setState(() {
-                areCommentsVisible = !areCommentsVisible;
-              });
+              _toggleComments();
             },
             icon: Icons.mode_comment_outlined,
           ),
@@ -465,61 +469,87 @@ class _AdPostContainerState extends State<AdPostContainer> {
   }
 
   Widget _buildShareActionButton() {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: PopupMenuButton<String>(
-        onSelected: _handleShareSelection,
-        itemBuilder: (context) => [
-          PopupMenuItem(
-            value: 'system',
-            child: CustomMenuButton(
-              onTap: () {},
-              icon: const Icon(Icons.share_outlined, size: 16),
-              title: 'More',
-            ),
+    return PopupMenuButton<String>(
+      color: kWhiteColor,
+      elevation: 22,
+      shadowColor: kBlackColor.withValues(alpha: 0.55),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      offset: const Offset(-8, -190),
+      constraints: const BoxConstraints(minWidth: 170, maxWidth: 190),
+      onSelected: _handleShareSelection,
+      itemBuilder: (context) => [
+        _buildShareMenuHeader(),
+        _buildShareMenuItem(
+          value: 'whatsapp',
+          label: 'WhatsApp',
+          icon: SvgPicture.asset(
+            Assets.svgWhatsappIcon,
+            width: 18,
+            height: 18,
+            colorFilter: const ColorFilter.mode(kBlackColor, BlendMode.srcIn),
           ),
-          PopupMenuItem(
-            value: 'whatsapp',
-            child: CustomMenuButton(
-              onTap: () {},
-              icon: SvgPicture.asset(Assets.svgWhatsappIcon),
-              iconSize: 15,
-              title: 'Whatsapp',
-            ),
-          ),
-          PopupMenuItem(
-            value: 'twitter',
-            child: CustomMenuButton(
-              onTap: () {},
-              icon: SvgPicture.asset(Assets.svgTwitterIcon),
-              iconSize: 15,
-              title: 'Twitter/X',
-            ),
-          ),
-          PopupMenuItem(
-            value: 'facebook',
-            child: CustomMenuButton(
-              onTap: () {},
-              icon: SvgPicture.asset(Assets.svgFacebookIcon),
-              iconSize: 15,
-              title: 'Facebook',
-            ),
-          ),
-          PopupMenuItem(
-            value: 'copy',
-            child: CustomMenuButton(
-              onTap: () {},
-              icon: SvgPicture.asset(Assets.svgCopyIcon),
-              iconSize: 15,
-              title: 'CopyLink',
-            ),
-          ),
-        ],
-        child: _buildActionButton(
-          text: 'Share',
-          onTap: null,
-          icon: Icons.share_outlined,
         ),
+        _buildShareMenuItem(
+          value: 'twitter',
+          label: 'Twitter/X',
+          icon: SvgPicture.asset(
+            Assets.svgTwitterIcon,
+            width: 18,
+            height: 18,
+            colorFilter: const ColorFilter.mode(kBlackColor, BlendMode.srcIn),
+          ),
+        ),
+        _buildShareMenuItem(
+          value: 'facebook',
+          label: 'Facebook',
+          icon: SvgPicture.asset(
+            Assets.svgFacebookIcon,
+            width: 18,
+            height: 18,
+            colorFilter: const ColorFilter.mode(kBlackColor, BlendMode.srcIn),
+          ),
+        ),
+        _buildShareMenuItem(
+          value: 'copy',
+          label: 'Copy Link',
+          icon: const Icon(Icons.copy_all_outlined, size: 20),
+        ),
+      ],
+      child: _buildActionButton(
+        text: 'Share',
+        onTap: null,
+        icon: Icons.share_outlined,
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildShareMenuHeader() {
+    return PopupMenuItem<String>(
+      enabled: false,
+      height: 30,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Text(
+        'Quick Actions',
+        style: context.normal.copyWith(color: kDarkGreyColor, fontSize: 12),
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildShareMenuItem({
+    required String value,
+    required String label,
+    required Widget icon,
+  }) {
+    return PopupMenuItem<String>(
+      value: value,
+      height: 38,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          SizedBox(width: 24, child: Center(child: icon)),
+          Space.horizontal(10),
+          Text(label, style: context.normal.copyWith(fontSize: 12)),
+        ],
       ),
     );
   }
@@ -564,6 +594,34 @@ class _AdPostContainerState extends State<AdPostContainer> {
           target: PostShareTarget.copy,
         );
         return;
+    }
+  }
+
+  Future<void> _toggleComments() async {
+    if (areCommentsVisible) {
+      setState(() {
+        areCommentsVisible = false;
+      });
+      _commentFocusNode.unfocus();
+      return;
+    }
+
+    setState(() {
+      areCommentsVisible = true;
+    });
+
+    await WidgetsBinding.instance.endOfFrame;
+    final commentsContext = _commentsSectionKey.currentContext;
+    if (commentsContext != null && mounted) {
+      await Scrollable.ensureVisible(
+        commentsContext,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+        alignment: 0.08,
+      );
+    }
+    if (mounted) {
+      _commentFocusNode.requestFocus();
     }
   }
 
@@ -854,6 +912,7 @@ class _AdPostContainerState extends State<AdPostContainer> {
   @override
   void dispose() {
     reactionOverlay?.remove();
+    _commentFocusNode.dispose();
     _commentController.dispose();
     _replyController.dispose();
     _replyFocusNode.dispose();

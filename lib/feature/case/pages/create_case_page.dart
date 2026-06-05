@@ -27,7 +27,9 @@ import 'package:flutter_svg/svg.dart';
 import 'package:image_picker/image_picker.dart';
 
 class CreateCasePage extends StatefulWidget {
-  const CreateCasePage({super.key});
+  final VoidCallback? onCaseCreated;
+
+  const CreateCasePage({super.key, this.onCaseCreated});
 
   @override
   State<CreateCasePage> createState() => _CreateCasePageState();
@@ -510,6 +512,7 @@ class _CreateCasePageState extends State<CreateCasePage> {
       if (!mounted) return;
       AppAlert.showSuccess(context, 'Case uploaded successfully');
       _clearForm();
+      widget.onCaseCreated?.call();
     } on ApiException catch (e) {
       if (!mounted) return;
       AppAlert.showError(context, e.message);

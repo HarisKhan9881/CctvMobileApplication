@@ -21,18 +21,24 @@ class UserBottomNavBar extends StatefulWidget {
 
 class _UserBottomNavBarState extends State<UserBottomNavBar> {
   late int selectedIndex;
+  int _homeRefreshKey = 0;
 
-  final List<Widget> pages = [
-    HomePage(isAdmin: false),
-    CreateCasePage(),
-    PendingPage(),
-    ProfilePage(),
-  ];
+  late List<Widget> pages;
 
   @override
   void initState() {
     super.initState();
+    pages = _buildPages();
     selectedIndex = widget.initialIndex.clamp(0, pages.length - 1);
+  }
+
+  List<Widget> _buildPages() {
+    return [
+      HomePage(key: ValueKey('home-$_homeRefreshKey'), isAdmin: false),
+      CreateCasePage(onCaseCreated: _returnToHomeAfterCaseCreated),
+      PendingPage(),
+      ProfilePage(),
+    ];
   }
 
   void onItemTapped(int index) {
@@ -40,6 +46,15 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
       selectedIndex = index;
     });
     const AuthStorage().saveLastTabIndex(DashboardType.user, index);
+  }
+
+  void _returnToHomeAfterCaseCreated() {
+    setState(() {
+      _homeRefreshKey++;
+      pages = _buildPages();
+      selectedIndex = 0;
+    });
+    const AuthStorage().saveLastTabIndex(DashboardType.user, 0);
   }
 
   @override

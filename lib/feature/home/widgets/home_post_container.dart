@@ -1,6 +1,5 @@
 import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/components/app_bottom_sheet.dart';
-import 'package:cctv_app/core/components/custom_menu_button.dart';
 import 'package:cctv_app/core/components/custom_textfield.dart';
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
@@ -66,6 +65,8 @@ class _HomePostContainerState extends State<HomePostContainer> {
   final Set<int> _expandedReplyCommentIds = <int>{};
   final TextEditingController _commentController = TextEditingController();
   final TextEditingController _replyController = TextEditingController();
+  final FocusNode _commentFocusNode = FocusNode();
+  final GlobalKey _commentsSectionKey = GlobalKey();
   late List<ActivePostComment> _comments;
 
   int get _reactionCount =>
@@ -810,109 +811,71 @@ class _HomePostContainerState extends State<HomePostContainer> {
                           child: Icon(Icons.more_horiz, color: kBlackColor),
                         ),
                       )
-                    : Directionality(
-                        textDirection: TextDirection.rtl,
-                        child: PopupMenuButton<String>(
-                          onSelected: (value) {
-                            if (value == 'toggleSavedPost') {
-                              if (widget.isSavedPost) {
-                                _deleteSavedPost();
-                              } else {
-                                _savePost();
-                              }
-                              return;
+                    : PopupMenuButton<String>(
+                        color: kWhiteColor,
+                        elevation: 22,
+                        shadowColor: kBlackColor.withValues(alpha: 0.55),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(22),
+                        ),
+                        offset: const Offset(-12, 40),
+                        constraints: const BoxConstraints(
+                          minWidth: 220,
+                          maxWidth: 240,
+                        ),
+                        onSelected: (value) {
+                          if (value == 'toggleSavedPost') {
+                            if (widget.isSavedPost) {
+                              _deleteSavedPost();
+                            } else {
+                              _savePost();
                             }
-                            if (value == 'copy') {
-                              PostShareHelper.sharePost(
-                                context,
-                                post: widget.post,
-                                target: PostShareTarget.copy,
-                              );
-                              return;
-                            }
-                            if (value == 'report') {
-                              WidgetsBinding.instance.addPostFrameCallback((_) {
-                                if (!mounted) return;
-                                _showReportBottomSheet(context, post);
-                              });
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'toggleSavedPost',
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    widget.isSavedPost ? 'Unsave' : 'Save',
-                                    style: context.textTheme.titleMedium!
-                                        .copyWith(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color: kBlackColor,
-                                        ),
-                                  ),
-                                  Space.horizontal(20),
-                                  Icon(
-                                    widget.isSavedPost
-                                        ? Icons.bookmark_remove_outlined
-                                        : Icons.bookmark_add_outlined,
-                                    size: 18,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'copy',
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    'Copy Link',
-                                    style: context.textTheme.titleMedium!
-                                        .copyWith(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color: kBlackColor,
-                                        ),
-                                  ),
-                                  Space.horizontal(20),
-                                  Icon(Icons.copy_all, size: 18),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'report',
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    'Report',
-                                    style: context.textTheme.titleMedium!
-                                        .copyWith(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color: kRedColor,
-                                        ),
-                                  ),
-                                  Space.horizontal(20),
-                                  Icon(
-                                    Icons.report,
-                                    size: 18,
-                                    color: kRedColor,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: kWhiteColor,
-                              border: Border.all(color: kGreyColor),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            padding: EdgeInsets.all(6.0),
-                            child: Icon(Icons.more_horiz, color: kBlackColor),
+                            return;
+                          }
+
+                          if (value == 'copy') {
+                            PostShareHelper.sharePost(
+                              context,
+                              post: post,
+                              target: PostShareTarget.copy,
+                            );
+                            return;
+                          }
+
+                          if (value == 'report') {
+                            _showReportBottomSheet(context, post);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          _buildPostMenuItem(
+                            value: 'toggleSavedPost',
+                            label: widget.isSavedPost ? 'Unsave' : 'Save',
+                            icon: widget.isSavedPost
+                                ? Icons.bookmark_remove_outlined
+                                : Icons.bookmark_border_rounded,
+                          ),
+                          _buildPostMenuItem(
+                            value: 'copy',
+                            label: 'Copy Link',
+                            icon: Icons.copy_all_outlined,
+                          ),
+                          _buildPostMenuItem(
+                            value: 'report',
+                            label: 'Report',
+                            icon: Icons.report_gmailerrorred_rounded,
+                            color: kRedColor,
+                          ),
+                        ],
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: kWhiteColor,
+                            border: Border.all(color: kGreyColor),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.all(6.0),
+                          child: const Icon(
+                            Icons.more_horiz,
+                            color: kBlackColor,
                           ),
                         ),
                       ),
@@ -978,6 +941,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
             const SizedBox(height: 16),
             if (areCommentsVisible) ...[
               Container(
+                key: _commentsSectionKey,
                 width: double.infinity,
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
@@ -1073,6 +1037,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
                         children: [
                           CustomTextField(
                             controller: _commentController,
+                            focusNode: _commentFocusNode,
                             hintText: "Share your thoughts...",
                             hintTextColor: kDarkGreyColor,
                             fieldColor: kWhiteColor,
@@ -1124,6 +1089,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
   @override
   void dispose() {
     reactionOverlay?.remove();
+    _commentFocusNode.dispose();
     _commentController.dispose();
     _replyController.dispose();
     super.dispose();
@@ -1493,9 +1459,7 @@ class _HomePostContainerState extends State<HomePostContainer> {
           child: _buildActionButton(
             text: _comments.length.toString(),
             onTap: () {
-              setState(() {
-                areCommentsVisible = !areCommentsVisible;
-              });
+              _toggleComments();
             },
             icon: Icons.mode_comment_outlined,
           ),
@@ -1547,6 +1511,61 @@ class _HomePostContainerState extends State<HomePostContainer> {
         ),
       ),
     );
+  }
+
+  PopupMenuItem<String> _buildPostMenuItem({
+    required String value,
+    required String label,
+    required IconData icon,
+    Color color = kBlackColor,
+  }) {
+    return PopupMenuItem<String>(
+      value: value,
+      height: 72,
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Row(
+        children: [
+          Icon(icon, color: color, size: 34),
+          Space.horizontal(22),
+          Text(
+            label,
+            style: context.normal.copyWith(
+              color: color,
+              fontSize: 24,
+              height: 1.1,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _toggleComments() async {
+    if (areCommentsVisible) {
+      setState(() {
+        areCommentsVisible = false;
+      });
+      _commentFocusNode.unfocus();
+      return;
+    }
+
+    setState(() {
+      areCommentsVisible = true;
+    });
+
+    await WidgetsBinding.instance.endOfFrame;
+    final commentsContext = _commentsSectionKey.currentContext;
+    if (commentsContext != null && mounted) {
+      await Scrollable.ensureVisible(
+        commentsContext,
+        duration: const Duration(milliseconds: 320),
+        curve: Curves.easeOutCubic,
+        alignment: 0.08,
+      );
+    }
+    if (mounted) {
+      _commentFocusNode.requestFocus();
+    }
   }
 
   void _showRepostBottomSheet(BuildContext context, ActivePost post) {
@@ -1610,61 +1629,87 @@ class _HomePostContainerState extends State<HomePostContainer> {
   }
 
   Widget _buildShareActionButton() {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: PopupMenuButton<String>(
-        onSelected: _handleShareSelection,
-        itemBuilder: (context) => [
-          PopupMenuItem(
-            value: 'system',
-            child: CustomMenuButton(
-              onTap: () {},
-              icon: const Icon(Icons.share_outlined, size: 16),
-              title: 'More',
-            ),
+    return PopupMenuButton<String>(
+      color: kWhiteColor,
+      elevation: 22,
+      shadowColor: kBlackColor.withValues(alpha: 0.55),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+      offset: const Offset(-8, -190),
+      constraints: const BoxConstraints(minWidth: 170, maxWidth: 190),
+      onSelected: _handleShareSelection,
+      itemBuilder: (context) => [
+        _buildShareMenuHeader(),
+        _buildShareMenuItem(
+          value: 'whatsapp',
+          label: 'WhatsApp',
+          icon: SvgPicture.asset(
+            Assets.svgWhatsappIcon,
+            width: 18,
+            height: 18,
+            colorFilter: const ColorFilter.mode(kBlackColor, BlendMode.srcIn),
           ),
-          PopupMenuItem(
-            value: 'whatsapp',
-            child: CustomMenuButton(
-              onTap: () {},
-              icon: SvgPicture.asset(Assets.svgWhatsappIcon),
-              iconSize: 15,
-              title: 'Whatsapp',
-            ),
-          ),
-          PopupMenuItem(
-            value: 'twitter',
-            child: CustomMenuButton(
-              onTap: () {},
-              icon: SvgPicture.asset(Assets.svgTwitterIcon),
-              iconSize: 15,
-              title: 'Twitter/X',
-            ),
-          ),
-          PopupMenuItem(
-            value: 'facebook',
-            child: CustomMenuButton(
-              onTap: () {},
-              icon: SvgPicture.asset(Assets.svgFacebookIcon),
-              iconSize: 15,
-              title: 'Facebook',
-            ),
-          ),
-          PopupMenuItem(
-            value: 'copy',
-            child: CustomMenuButton(
-              onTap: () {},
-              icon: SvgPicture.asset(Assets.svgCopyIcon),
-              iconSize: 15,
-              title: 'CopyLink',
-            ),
-          ),
-        ],
-        child: _buildActionButton(
-          text: 'Share',
-          onTap: null,
-          icon: Icons.share_outlined,
         ),
+        _buildShareMenuItem(
+          value: 'twitter',
+          label: 'Twitter/X',
+          icon: SvgPicture.asset(
+            Assets.svgTwitterIcon,
+            width: 18,
+            height: 18,
+            colorFilter: const ColorFilter.mode(kBlackColor, BlendMode.srcIn),
+          ),
+        ),
+        _buildShareMenuItem(
+          value: 'facebook',
+          label: 'Facebook',
+          icon: SvgPicture.asset(
+            Assets.svgFacebookIcon,
+            width: 18,
+            height: 18,
+            colorFilter: const ColorFilter.mode(kBlackColor, BlendMode.srcIn),
+          ),
+        ),
+        _buildShareMenuItem(
+          value: 'copy',
+          label: 'Copy Link',
+          icon: const Icon(Icons.copy_all_outlined, size: 20),
+        ),
+      ],
+      child: _buildActionButton(
+        text: 'Share',
+        onTap: null,
+        icon: Icons.share_outlined,
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildShareMenuHeader() {
+    return PopupMenuItem<String>(
+      enabled: false,
+      height: 30,
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Text(
+        'Quick Actions',
+        style: context.normal.copyWith(color: kDarkGreyColor, fontSize: 12),
+      ),
+    );
+  }
+
+  PopupMenuItem<String> _buildShareMenuItem({
+    required String value,
+    required String label,
+    required Widget icon,
+  }) {
+    return PopupMenuItem<String>(
+      value: value,
+      height: 38,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        children: [
+          SizedBox(width: 24, child: Center(child: icon)),
+          Space.horizontal(10),
+          Text(label, style: context.normal.copyWith(fontSize: 12)),
+        ],
       ),
     );
   }

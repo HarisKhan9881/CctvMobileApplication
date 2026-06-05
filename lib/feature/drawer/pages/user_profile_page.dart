@@ -532,7 +532,7 @@ class _UserProfilePageState extends State<UserProfilePage> {
 
       if (!mounted) return;
       AppAlert.showSuccess(context, 'Profile updated successfully');
-      await _loadUserProfile();
+      Navigator.pop(context, true);
     } on ApiException catch (e) {
       if (!mounted) return;
       AppAlert.showError(context, e.message);
