@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:cctv_app/core/components/app_alert.dart';
 import 'package:cctv_app/core/components/admin_top_header.dart';
 import 'package:cctv_app/core/components/custom_horizontal_listview_widget.dart';
 import 'package:cctv_app/core/components/space.dart';
@@ -357,7 +358,12 @@ class _HomePageState extends State<HomePage> {
         }
 
         final reel = _reels[index - 1];
-        return _ActiveReelCard(reel: reel);
+        return _ActiveReelCard(
+          reel: reel,
+          onDeleted: () {
+            _loadReels();
+          },
+        );
       },
     );
   }
@@ -584,16 +590,20 @@ class _AddReelCard extends StatelessWidget {
 
 class _ActiveReelCard extends StatelessWidget {
   final ActiveReel reel;
+  final VoidCallback onDeleted;
 
-  const _ActiveReelCard({required this.reel});
+  const _ActiveReelCard({required this.reel, required this.onDeleted});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        Navigator.of(context).push(
+      onTap: () async {
+        final deleted = await Navigator.of(context).push<bool>(
           MaterialPageRoute(builder: (_) => _FullscreenReelViewer(reel: reel)),
         );
+        if (deleted == true) {
+          onDeleted();
+        }
       },
       child: SizedBox(
         width: 100,
@@ -714,8 +724,17 @@ class _FullscreenReelViewer extends StatefulWidget {
 class _FullscreenReelViewerState extends State<_FullscreenReelViewer> {
   VideoPlayerController? _controller;
   Future<void>? _initialization;
+  bool _isDeleting = false;
 
   bool get _isImage => widget.reel.isImage;
+  bool get _isCurrentUserReel {
+    final currentUserId = AuthStorage.cachedUserId;
+    if (currentUserId == null) return false;
+
+    return widget.reel.userInfo?.userId == currentUserId ||
+        widget.reel.userId == currentUserId ||
+        widget.reel.createdBy == currentUserId;
+  }
 
   @override
   void initState() {
@@ -770,13 +789,64 @@ class _FullscreenReelViewerState extends State<_FullscreenReelViewer> {
             Positioned(
               top: 8,
               right: 8,
-              child: Material(
-                color: Colors.black.withValues(alpha: 0.35),
-                shape: const CircleBorder(),
-                child: IconButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  icon: const Icon(Icons.close, color: kWhiteColor),
-                ),
+              child: Row(
+                children: [
+                  if (_isCurrentUserReel)
+                    PopupMenuButton<String>(
+                      color: kWhiteColor,
+                      elevation: 18,
+                      shadowColor: kBlackColor.withValues(alpha: 0.45),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      offset: const Offset(-8, 42),
+                      enabled: !_isDeleting,
+                      onSelected: (value) {
+                        if (value == 'delete') {
+                          _confirmDeleteReel();
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem<String>(
+                          value: 'delete',
+                          height: 46,
+                          child: Row(
+                            children: [
+                              const Icon(
+                                Icons.delete_outline,
+                                color: kRedColor,
+                              ),
+                              Space.horizontal(10),
+                              Text(
+                                _isDeleting ? 'Deleting...' : 'Delete',
+                                style: const TextStyle(color: kRedColor),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                      child: Material(
+                        color: Colors.black.withValues(alpha: 0.35),
+                        shape: const CircleBorder(),
+                        child: const Padding(
+                          padding: EdgeInsets.all(12),
+                          child: Icon(
+                            Icons.more_horiz,
+                            color: kWhiteColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (_isCurrentUserReel) Space.horizontal(8),
+                  Material(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    shape: const CircleBorder(),
+                    child: IconButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      icon: const Icon(Icons.close, color: kWhiteColor),
+                    ),
+                  ),
+                ],
               ),
             ),
             Positioned(
@@ -822,6 +892,68 @@ class _FullscreenReelViewerState extends State<_FullscreenReelViewer> {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDeleteReel() async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: kWhiteColor,
+          title: const Text('Delete reel?'),
+          content: const Text('This reel will be removed from your story.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: const Text('Delete', style: TextStyle(color: kRedColor)),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldDelete == true) {
+      await _deleteReel();
+    }
+  }
+
+  Future<void> _deleteReel() async {
+    if (_isDeleting) return;
+
+    setState(() {
+      _isDeleting = true;
+    });
+
+    try {
+      final accessToken = await const AuthStorage().readAccessToken();
+      if (accessToken == null || accessToken.trim().isEmpty) {
+        throw const ApiException('Session token not found');
+      }
+
+      await UserCaseService().deleteUserReel(
+        accessToken: accessToken,
+        reelId: widget.reel.reelId,
+      );
+
+      if (!mounted) return;
+      AppAlert.showSuccess(context, 'Reel deleted successfully');
+      Navigator.of(context).pop(true);
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      AppAlert.showError(context, e.message);
+    } catch (e) {
+      if (!mounted) return;
+      AppAlert.showError(context, 'Failed to delete reel: $e');
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        _isDeleting = false;
+      });
+    }
   }
 
   Widget _buildImage() {

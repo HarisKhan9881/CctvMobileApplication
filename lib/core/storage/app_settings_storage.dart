@@ -11,6 +11,7 @@ class AppSettingsKeys {
   static const paymentRequest = 'app_setting_payment_request';
   static const newServiceAvailable = 'app_setting_new_service_available';
   static const newTipsAvailable = 'app_setting_new_tips_available';
+  static const drawerCountryPrefix = 'drawer_country_user_';
 
   static const all = <String>{
     generalNotification,
@@ -30,9 +31,14 @@ class AppSettingsKeys {
 
 class AppSettingsStorage {
   final FlutterSecureStorage _storage;
+  static final Map<int, String> _cachedDrawerCountries = <int, String>{};
 
   const AppSettingsStorage({FlutterSecureStorage? storage})
       : _storage = storage ?? const FlutterSecureStorage();
+
+  static String? cachedDrawerCountry(int userId) {
+    return _cachedDrawerCountries[userId];
+  }
 
   Future<bool> readBool(String key, {bool fallback = false}) async {
     final value = await _storage.read(key: key);
@@ -51,6 +57,31 @@ class AppSettingsStorage {
 
   Future<void> writeInt(String key, int value) {
     return _storage.write(key: key, value: '$value');
+  }
+
+  Future<String?> readString(String key) {
+    return _storage.read(key: key);
+  }
+
+  Future<void> writeString(String key, String value) {
+    return _storage.write(key: key, value: value);
+  }
+
+  String drawerCountryKey(int userId) {
+    return '${AppSettingsKeys.drawerCountryPrefix}$userId';
+  }
+
+  Future<String?> readDrawerCountry(int userId) async {
+    final value = await readString(drawerCountryKey(userId));
+    if (value != null) {
+      _cachedDrawerCountries[userId] = value;
+    }
+    return value;
+  }
+
+  Future<void> writeDrawerCountry(int userId, String value) async {
+    _cachedDrawerCountries[userId] = value;
+    await writeString(drawerCountryKey(userId), value);
   }
 
   Future<Map<String, bool>> readAll() async {

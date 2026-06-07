@@ -81,6 +81,17 @@ class UserCaseService {
     return ActiveReel.fromJson(content);
   }
 
+  Future<Map<String, dynamic>> deleteUserReel({
+    required String accessToken,
+    required int reelId,
+  }) {
+    final normalizedToken = _normalizeBearerToken(accessToken);
+    return _client.delete(
+      '${Endpoints.deleteUserReel}?reel_id=$reelId',
+      headers: {'Authorization': 'Bearer $normalizedToken'},
+    );
+  }
+
   Future<List<PendingCase>> getPendingCases({
     required String accessToken,
     required int userId,

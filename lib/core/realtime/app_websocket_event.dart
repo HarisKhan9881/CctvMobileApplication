@@ -5,6 +5,7 @@ enum AppWebSocketEventType {
   post('POST_EVENT'),
   comment('COMMENT_EVENT'),
   poll('POLL_EVENT'),
+  userStatus('USER_STATUS_EVENT'),
   unknown('');
 
   final String value;
@@ -70,4 +71,8 @@ const Set<AppWebSocketEventType> reelRefreshEventTypes = {
 
 const Set<AppWebSocketEventType> notificationRefreshEventTypes = {
   AppWebSocketEventType.notification,
+};
+
+const Set<AppWebSocketEventType> userStatusEventTypes = {
+  AppWebSocketEventType.userStatus,
 };

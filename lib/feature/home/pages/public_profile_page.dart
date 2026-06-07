@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cctv_app/core/components/primary_button.dart';
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
@@ -5,6 +7,8 @@ import 'package:cctv_app/core/network/api_exception.dart';
 import 'package:cctv_app/core/network/models/active_post.dart';
 import 'package:cctv_app/core/network/models/active_reel.dart';
 import 'package:cctv_app/core/network/services/case_post_service.dart';
+import 'package:cctv_app/core/realtime/app_websocket_event.dart';
+import 'package:cctv_app/core/realtime/app_websocket_service.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/home/widgets/home_post_container.dart';
@@ -34,12 +38,49 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
   List<ActivePost> _posts = const [];
   bool _isLoadingReel = true;
   ActiveReel? _userReel;
+  String _userStatus = 'Offline';
+  StreamSubscription<AppWebSocketEvent>? _userStatusSubscription;
 
   @override
   void initState() {
     super.initState();
+    _bindUserStatusEvents();
     _loadPosts();
     _loadUserReel();
+  }
+
+  @override
+  void dispose() {
+    _userStatusSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _bindUserStatusEvents() {
+    _userStatusSubscription?.cancel();
+    _userStatusSubscription = AppWebSocketService.instance
+        .eventsFor(userStatusEventTypes)
+        .listen(_handleUserStatusEvent);
+  }
+
+  void _handleUserStatusEvent(AppWebSocketEvent event) {
+    final users = event.data['users'];
+    if (users is! List) return;
+
+    for (final user in users) {
+      if (user is! Map) continue;
+
+      final userId = int.tryParse('${user['user_id']}');
+      if (userId != widget.userId) continue;
+
+      final status = '${user['status'] ?? ''}'.trim().toUpperCase();
+      if (status != 'ONLINE' && status != 'OFFLINE') return;
+      if (!mounted) return;
+
+      setState(() {
+        _userStatus = status == 'ONLINE' ? 'Online' : 'Offline';
+      });
+      return;
+    }
   }
 
   Future<void> _loadPosts() async {
@@ -150,7 +191,7 @@ class _PublicProfilePageState extends State<PublicProfilePage> {
                           style: context.bold.copyWith(fontSize: 16),
                         ),
                         Text(
-                          'Online',
+                          _userStatus,
                           style: context.normal.copyWith(
                             fontSize: 12,
                             color: kDarkGreyColor,

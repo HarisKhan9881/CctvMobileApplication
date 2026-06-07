@@ -6,6 +6,7 @@ import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/network/api_config.dart';
 import 'package:cctv_app/core/network/services/user_service.dart';
 import 'package:cctv_app/core/session/app_session_manager.dart';
+import 'package:cctv_app/core/storage/app_settings_storage.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
@@ -26,10 +27,28 @@ class CustomDrawer extends StatefulWidget {
 }
 
 class _CustomDrawerState extends State<CustomDrawer> {
-  String selectedLang = "English";
+  static const Set<String> _countryOptions = {
+    'English',
+    'German',
+    'Chinese',
+    'Russian',
+  };
+
+  late String selectedLang = _cachedSelectedCountry();
   late String displayName = _cachedDisplayName();
   late String displayEmail = AuthStorage.cachedEmail?.trim() ?? "";
   String? profileImageUrl = AuthStorage.cachedProfileImageUrl?.trim();
+
+  String _cachedSelectedCountry() {
+    final userId = AuthStorage.cachedUserId;
+    final cachedCountry = userId == null
+        ? null
+        : AppSettingsStorage.cachedDrawerCountry(userId);
+    if (cachedCountry != null && _countryOptions.contains(cachedCountry)) {
+      return cachedCountry;
+    }
+    return 'English';
+  }
 
   String _cachedDisplayName() {
     final first = AuthStorage.cachedFirstName?.trim() ?? '';
@@ -49,12 +68,16 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
   Future<void> _loadName() async {
     final storage = const AuthStorage();
+    final settingsStorage = const AppSettingsStorage();
     await storage.hydrateCache();
     final accessToken = await storage.readAccessToken();
     final userId = await storage.readUserId();
     final first = await storage.readFirstName();
     final last = await storage.readLastName();
     final email = await storage.readEmail();
+    final savedCountry = userId == null
+        ? null
+        : await settingsStorage.readDrawerCountry(userId);
     final name = [
       if (first != null && first.trim().isNotEmpty) first.trim(),
       if (last != null && last.trim().isNotEmpty) last.trim(),
@@ -91,6 +114,9 @@ class _CustomDrawerState extends State<CustomDrawer> {
     setState(() {
       displayName = name.isEmpty ? displayName : name;
       displayEmail = (email ?? '').trim();
+      if (savedCountry != null && _countryOptions.contains(savedCountry)) {
+        selectedLang = savedCountry;
+      }
       profileImageUrl =
           resolvedProfileImageUrl ??
           AuthStorage.cachedProfileImageUrl?.trim() ??
@@ -422,6 +448,13 @@ class _CustomDrawerState extends State<CustomDrawer> {
     throw Exception('Unable to launch share target');
   }
 
+  Future<void> _saveSelectedCountry(String value) async {
+    final userId = await const AuthStorage().readUserId();
+    if (userId == null) return;
+
+    await const AppSettingsStorage().writeDrawerCountry(userId, value);
+  }
+
   Widget _buildDrawerItem({
     required Widget leading,
     required String text,
@@ -505,6 +538,7 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     setState(() {
                       selectedLang = value; // 👈 update karte hain
                     });
+                    _saveSelectedCountry(value);
                   }
                 },
               ),

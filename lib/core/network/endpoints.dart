@@ -12,6 +12,7 @@ class Endpoints {
   static const String getAllActiveReels =
       '/api/v1/user_case/get_all_active_reels';
   static const String getUserReel = '/api/v1/user_case/get_user_reel';
+  static const String deleteUserReel = '/api/v1/user_case/delete_user_reel';
   static const String getPendingCasesByUserId =
       '/api/v1/user_case/getPendingCasesByUserId';
   static const String deleteUserCase = '/api/v1/user_case/delete_user_case';

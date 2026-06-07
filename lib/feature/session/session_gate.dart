@@ -1,5 +1,6 @@
 import 'package:cctv_app/core/deeplink/post_link_manager.dart';
 import 'package:cctv_app/core/realtime/app_websocket_service.dart';
+import 'package:cctv_app/core/storage/app_settings_storage.dart';
 import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/feature/bottomNavBar/ad_bottom_nav_bar.dart';
 import 'package:cctv_app/feature/bottomNavBar/admin_bottom_nav_bar.dart';
@@ -37,6 +38,10 @@ class SessionGate extends StatelessWidget {
     }
 
     await storage.hydrateCache();
+    final userId = await storage.readUserId();
+    if (userId != null) {
+      await const AppSettingsStorage().readDrawerCountry(userId);
+    }
     await AppWebSocketService.instance.connect();
 
     final dashboardType = await storage.readDashboardType();
