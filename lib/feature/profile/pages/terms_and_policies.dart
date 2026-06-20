@@ -1,6 +1,7 @@
 import 'package:cctv_app/core/components/space.dart';
 import 'package:cctv_app/core/extensions/context.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
+import 'package:cctv_app/core/utils/legal_documents.dart';
 import 'package:flutter/material.dart';
 
 class TermsAndPolicies extends StatelessWidget {
@@ -11,58 +12,68 @@ class TermsAndPolicies extends StatelessWidget {
     return Scaffold(
       backgroundColor: kWhiteColor,
       appBar: AppBar(backgroundColor: kWhiteColor),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "AGREEMENT",
-                style: context.normal.copyWith(
-                  color: kDarkGreyColor,
-                  fontSize: 14,
-                ),
-              ),
-              Space.vertical(10),
-              Text(
-                "Terms of Service",
-                style: context.bold.copyWith(fontSize: 18),
-              ),
-              Space.vertical(10),
-              Text(
-                "Last updated on 5/08/2025",
-                style: context.semiBold.copyWith(
-                  color: kDarkGreyColor,
-                  fontSize: 16,
-                ),
-              ),
-              Space.vertical(10),
-              Divider(color: kGreyColor, thickness: 1),
-              Space.vertical(10),
-              Text("Clause 1", style: context.bold.copyWith(fontSize: 24)),
-              Space.vertical(10),
-              Text(
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Viverra condimentum eget purus in. Consectetur eget id morbi amet amet, in. Ipsum viverra pretium tellus neque. Ullamcorper suspendisse aenean leo pharetra in sit semper et. Amet quam placerat sem.",
-                style: context.normal.copyWith(
-                  color: kDarkGreyColor,
-                  fontSize: 14,
-                ),
-              ),
-              Space.vertical(10),
-              Text("Clause 2", style: context.bold.copyWith(fontSize: 24)),
-              Space.vertical(10),
-              Text(
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Viverra condimentum eget purus in. Consectetur eget id morbi amet amet, in. Ipsum viverra pretium tellus neque. Ullamcorper suspendisse aenean leo pharetra in sit semper et. Amet quam placerat sem.",
-                style: context.normal.copyWith(
-                  color: kDarkGreyColor,
-                  fontSize: 14,
-                ),
-              ),
-              Space.vertical(10),
-            ],
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: const [
+            _LegalDocumentSection(
+              eyebrow: 'USER LICENSE',
+              title: 'End User License Agreement',
+              body: cctvEndUserLicenseAgreementText,
+            ),
+            _LegalDocumentSection(
+              eyebrow: 'PRIVACY POLICY',
+              title: 'Privacy Policy',
+              body: cctvPrivacyPolicyText,
+            ),
+            SizedBox(height: 24),
+          ],
         ),
+      ),
+    );
+  }
+}
+
+class _LegalDocumentSection extends StatelessWidget {
+  final String eyebrow;
+  final String title;
+  final String body;
+
+  const _LegalDocumentSection({
+    required this.eyebrow,
+    required this.title,
+    required this.body,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            eyebrow,
+            style: context.normal.copyWith(
+              color: kDarkGreyColor,
+              fontSize: 14,
+            ),
+          ),
+          Space.vertical(10),
+          Text(title, style: context.bold.copyWith(fontSize: 18)),
+          Space.vertical(10),
+          Divider(color: kGreyColor, thickness: 1),
+          Space.vertical(10),
+          SelectableText(
+            body,
+            style: context.normal.copyWith(
+              color: kDarkGreyColor,
+              fontSize: 14,
+              height: 1.45,
+            ),
+          ),
+        ],
       ),
     );
   }
