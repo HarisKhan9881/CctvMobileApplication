@@ -10,13 +10,9 @@ import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/drawer/pages/user_profile_page.dart';
 import 'package:cctv_app/feature/profile/pages/help_and_support.dart';
-import 'package:cctv_app/feature/profile/pages/saved_posts_page.dart';
 import 'package:cctv_app/feature/profile/pages/settings_page.dart';
 import 'package:cctv_app/feature/profile/pages/terms_and_policies.dart';
-import 'package:cctv_app/feature/profile/widget/profile_tile.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -143,33 +139,33 @@ class _ProfilePageState extends State<ProfilePage> {
           child: imageUrl.isNotEmpty
               ? Image.network(
                   imageUrl,
-                  width: 78,
-                  height: 78,
+                  width: 62,
+                  height: 62,
                   fit: BoxFit.cover,
                   gaplessPlayback: true,
                   errorBuilder: (_, _, _) => Image.asset(
                     Assets.pngHighlight1Image,
-                    width: 78,
-                    height: 78,
+                    width: 62,
+                    height: 62,
                     fit: BoxFit.cover,
                   ),
                 )
               : Image.asset(
                   Assets.pngHighlight1Image,
-                  width: 78,
-                  height: 78,
+                  width: 62,
+                  height: 62,
                   fit: BoxFit.cover,
                 ),
         ),
-        Space.vertical(12),
+        Space.vertical(8),
         Text(
           _name,
-          style: context.bold.copyWith(fontSize: 24),
+          style: context.bold.copyWith(fontSize: 18),
         ),
         Text(
           _email,
           style: context.normal.copyWith(
-            fontSize: 12,
+            fontSize: 13,
             color: kDarkGreyColor,
           ),
         ),
@@ -179,104 +175,150 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const SizedBox(width: 48),
-              Text("My Profile", style: context.bold.copyWith(fontSize: 20)),
-              CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const SettingsPage(),
-                    ),
-                  );
-                },
-                child: SvgPicture.asset(Assets.svgSettingsIcon),
-              ),
-            ],
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
+    return Container(
+      color: kWhiteColor,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Space.vertical(12),
+            SizedBox(
+              height: 42,
+              child: Row(
                 children: [
-                  Space.vertical(20),
-                  _buildProfileHeader(context),
-                  Space.vertical(20),
-                  ProfileTile(
-                    text: "Edit profile",
-                    icon: Assets.svgEditProfileIcon,
-                    onTap: () async {
-                      final updated = await Navigator.push<bool>(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const UserProfilePage(),
-                        ),
-                      );
-                      if (updated == true) {
-                        await _loadCachedProfileInfo();
-                        await _refreshUserProfile();
-                      }
-                    },
+                  _buildTopIconButton(
+                    icon: Icons.arrow_back,
+                    onTap: () => Navigator.maybePop(context),
                   ),
-                  Space.vertical(8),
-                  ProfileTile(
-                    text: "Help & Support",
-                    icon: Assets.svgHelpAndSupportIcon,
+                  Expanded(
+                    child: Center(
+                      child: Text(
+                        "My Profile",
+                        style: context.bold.copyWith(fontSize: 18),
+                      ),
+                    ),
+                  ),
+                  _buildTopIconButton(
+                    icon: Icons.settings_outlined,
+                    iconSize: 22,
+                    iconColor: kDarkGreyColor,
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const HelpAndSupport(),
+                          builder: (context) => const SettingsPage(),
                         ),
                       );
                     },
                   ),
-                  Space.vertical(8),
-                  ProfileTile(
-                    text: "Saved Posts",
-                    iconData: Icons.bookmark_border_rounded,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SavedPostsPage(),
-                        ),
-                      );
-                    },
-                  ),
-                  Space.vertical(8),
-                  ProfileTile(
-                    text: "Terms and Policies",
-                    icon: Assets.svgTermAndPoliciesIcon,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const TermsAndPolicies(),
-                        ),
-                      );
-                    },
-                  ),
-                  Space.vertical(8),
-                  ProfileTile(
-                    text: "Logout",
-                    icon: Assets.svgLogoutIcon,
-                    onTap: () {
-                      showLogoutDialog(context);
-                    },
-                  ),
-                  Space.vertical(8),
                 ],
               ),
             ),
+            Space.vertical(8),
+            Center(child: _buildProfileHeader(context)),
+            Space.vertical(16),
+            Text(
+              "Account setting",
+              style: context.bold.copyWith(fontSize: 22),
+            ),
+            Space.vertical(12),
+            _buildSettingRow(
+              icon: Icons.person_outline,
+              text: "Edit profile",
+              onTap: () async {
+                final updated = await Navigator.push<bool>(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const UserProfilePage(),
+                  ),
+                );
+                if (updated == true) {
+                  await _loadCachedProfileInfo();
+                  await _refreshUserProfile();
+                }
+              },
+            ),
+            _buildSettingRow(
+              icon: Icons.help_outline,
+              text: "Help & Support",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HelpAndSupport(),
+                  ),
+                );
+              },
+            ),
+            _buildSettingRow(
+              icon: Icons.info_outline,
+              text: "Terms and Policies",
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TermsAndPolicies(),
+                  ),
+                );
+              },
+            ),
+            _buildSettingRow(
+              icon: Icons.logout,
+              text: "Log out",
+              onTap: () {
+                showLogoutDialog(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTopIconButton({
+    required IconData icon,
+    required VoidCallback onTap,
+    double iconSize = 24,
+    Color iconColor = kBlackColor,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(20),
+      child: SizedBox(
+        width: 34,
+        height: 34,
+        child: Icon(icon, color: iconColor, size: iconSize),
+      ),
+    );
+  }
+
+  Widget _buildSettingRow({
+    required IconData icon,
+    required String text,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      child: Column(
+        children: [
+          SizedBox(
+            height: 52,
+            child: Row(
+              children: [
+                Icon(icon, color: kPrimaryColor, size: 23),
+                Space.horizontal(20),
+                Text(
+                  text,
+                  style: context.normal.copyWith(
+                    fontSize: 14,
+                    color: kBlackColor,
+                  ),
+                ),
+              ],
+            ),
           ),
+          const Divider(height: 1, color: Color(0xFFEDEDED)),
         ],
       ),
     );

@@ -60,7 +60,10 @@ class _UserBottomNavBarState extends State<UserBottomNavBar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: CustomDrawer(),
+      drawer: CustomDrawer(
+        onHomeTap: () => onItemTapped(0),
+        onRunningCaseTap: () => onItemTapped(2),
+      ),
       body: SafeArea(bottom: false, child: pages[selectedIndex]),
       backgroundColor: kWhiteColor,
       bottomNavigationBar: Container(

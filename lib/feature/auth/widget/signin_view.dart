@@ -57,6 +57,14 @@ class _SigninViewState extends State<SigninView> {
     };
   }
 
+  bool _matchesSelectedLoginType(DashboardType dashboardType) {
+    if (widget.isAdminTab) {
+      return dashboardType != DashboardType.user;
+    }
+
+    return dashboardType == DashboardType.user;
+  }
+
   String _loginErrorMessage(ApiException error) {
     final message = error.message.toLowerCase();
     final isCredentialIssue =
@@ -103,6 +111,12 @@ class _SigninViewState extends State<SigninView> {
         roleDescription: user.roleDescription,
         roleId: user.roleId,
       );
+      if (!_matchesSelectedLoginType(dashboardType)) {
+        throw const ApiException(
+          'Please select the correct login type for this account',
+        );
+      }
+
       await AuthStorage().saveAuth(
         accessToken: accessToken,
         userId: user.userId,

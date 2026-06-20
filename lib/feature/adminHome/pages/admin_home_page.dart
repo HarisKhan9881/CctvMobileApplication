@@ -586,7 +586,10 @@ class _AdminHomePageState extends State<AdminHomePage> {
       physics: const NeverScrollableScrollPhysics(),
       itemCount: posts.length,
       separatorBuilder: (context, index) => Space.vertical(10),
-      itemBuilder: (context, index) => AdminPostContainer(post: posts[index]),
+      itemBuilder: (context, index) => AdminPostContainer(
+        post: posts[index],
+        onPostUpdated: _loadRecentPostsAndCategories,
+      ),
     );
   }
 

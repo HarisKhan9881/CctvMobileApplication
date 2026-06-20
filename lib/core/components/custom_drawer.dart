@@ -11,6 +11,7 @@ import 'package:cctv_app/core/storage/auth_storage.dart';
 import 'package:cctv_app/core/utils/assets.dart';
 import 'package:cctv_app/core/utils/color_constants.dart';
 import 'package:cctv_app/feature/drawer/pages/post_history.dart';
+import 'package:cctv_app/feature/pending/pages/pending_page.dart';
 import 'package:cctv_app/feature/profile/pages/help_and_support.dart';
 import 'package:cctv_app/feature/profile/pages/settings_page.dart';
 import 'package:flutter/material.dart';
@@ -20,7 +21,10 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class CustomDrawer extends StatefulWidget {
-  const CustomDrawer({super.key});
+  final VoidCallback? onHomeTap;
+  final VoidCallback? onRunningCaseTap;
+
+  const CustomDrawer({super.key, this.onHomeTap, this.onRunningCaseTap});
 
   @override
   State<CustomDrawer> createState() => _CustomDrawerState();
@@ -36,7 +40,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
 
   late String selectedLang = _cachedSelectedCountry();
   late String displayName = _cachedDisplayName();
-  late String displayEmail = AuthStorage.cachedEmail?.trim() ?? "";
   String? profileImageUrl = AuthStorage.cachedProfileImageUrl?.trim();
 
   String _cachedSelectedCountry() {
@@ -74,7 +77,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
     final userId = await storage.readUserId();
     final first = await storage.readFirstName();
     final last = await storage.readLastName();
-    final email = await storage.readEmail();
     final savedCountry = userId == null
         ? null
         : await settingsStorage.readDrawerCountry(userId);
@@ -113,7 +115,6 @@ class _CustomDrawerState extends State<CustomDrawer> {
     if (!mounted) return;
     setState(() {
       displayName = name.isEmpty ? displayName : name;
-      displayEmail = (email ?? '').trim();
       if (savedCountry != null && _countryOptions.contains(savedCountry)) {
         selectedLang = savedCountry;
       }
@@ -127,8 +128,10 @@ class _CustomDrawerState extends State<CustomDrawer> {
   @override
   Widget build(BuildContext context) {
     return Drawer(
+      width: MediaQuery.sizeOf(context).width * 0.88,
       backgroundColor: kWhiteColor,
       child: SafeArea(
+        top: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -136,12 +139,12 @@ class _CustomDrawerState extends State<CustomDrawer> {
             GestureDetector(
               onTap: () {},
               child: Container(
-                decoration: BoxDecoration(color: kTransparentColor),
-                padding: EdgeInsets.all(16.0),
+                decoration: const BoxDecoration(color: kTransparentColor),
+                padding: const EdgeInsets.fromLTRB(8, 16, 12, 22),
                 child: Row(
                   children: [
                     CircleAvatar(
-                      radius: 35,
+                      radius: 36,
                       backgroundColor: kTextfieldBlueColor,
                       backgroundImage:
                           profileImageUrl != null && profileImageUrl!.isNotEmpty
@@ -154,38 +157,49 @@ class _CustomDrawerState extends State<CustomDrawer> {
                               _buildInitials(displayName),
                               style: context.bold.copyWith(
                                 color: kWhiteColor,
-                                fontSize: 20,
+                                fontSize: 18,
                               ),
                             ),
                     ),
-                    Space.horizontal(12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          displayName,
-                          style: context.bold.copyWith(fontSize: 24),
-                        ),
-                        Text(
-                          displayEmail.isEmpty ? "Online" : displayEmail,
-                          style: context.normal.copyWith(color: kDarkGreyColor),
-                        ),
-                      ],
+                    Space.horizontal(14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            displayName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.bold.copyWith(fontSize: 13),
+                          ),
+                          Space.vertical(6),
+                          Text(
+                            "Online",
+                            style: context.normal.copyWith(
+                              color: kDarkGreyColor,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-            const Divider(),
+            const SizedBox.shrink(),
 
             // ✅ Drawer Items
             _buildDrawerItem(
-              leading: Image.asset(Assets.pngHomeImage, width: 22, height: 22),
+              leading: Image.asset(Assets.pngHomeImage, width: 20, height: 20),
               text: "Home",
-              onTap: () {},
+              onTap: () {
+                Navigator.pop(context);
+                widget.onHomeTap?.call();
+              },
             ),
             _buildDrawerItem(
-              leading: Image.asset(Assets.pngFileImage, width: 22, height: 22),
+              leading: Image.asset(Assets.pngFileImage, width: 20, height: 20),
               text: "Post History",
               onTap: () {
                 Navigator.push(
@@ -194,19 +208,27 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 );
               },
             ),
-            Space.vertical(10),
             _buildLanguageDropdown(context),
             _buildDrawerItem(
               leading: Image.asset(
                 Assets.pngRedirectImage,
-                width: 22,
-                height: 22,
+                width: 20,
+                height: 20,
               ),
               text: "Invite Friends",
               onTap: _showInviteFriendsSheet,
             ),
             _buildDrawerItem(
-              leading: Image.asset(Assets.pngInfoImage, width: 22, height: 22),
+              leading: const Icon(
+                Icons.cases_outlined,
+                size: 20,
+                color: Color(0xFF4A4A4A),
+              ),
+              text: "Running Case",
+              onTap: _openRunningCase,
+            ),
+            _buildDrawerItem(
+              leading: Image.asset(Assets.pngInfoImage, width: 20, height: 20),
               text: "Help & Support",
               onTap: () {
                 Navigator.push(
@@ -218,8 +240,8 @@ class _CustomDrawerState extends State<CustomDrawer> {
             _buildDrawerItem(
               leading: Image.asset(
                 Assets.pngSettingImage,
-                width: 22,
-                height: 22,
+                width: 20,
+                height: 20,
               ),
               text: "Setting",
               onTap: () {
@@ -229,37 +251,25 @@ class _CustomDrawerState extends State<CustomDrawer> {
                 );
               },
             ),
-
-            const Spacer(),
-
-            // ✅ Logout Button at Bottom
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.blue,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                  onPressed: () {
-                    showLogoutDialog(context);
-                  },
-                  icon: const Icon(Icons.logout, color: Colors.white),
-                  label: const Text(
-                    "Logout",
-                    style: TextStyle(color: Colors.white, fontSize: 16),
-                  ),
-                ),
-              ),
-            ),
           ],
         ),
       ),
     );
+  }
+
+  void _openRunningCase() {
+    final navigator = Navigator.of(context);
+    navigator.pop();
+
+    if (widget.onRunningCaseTap != null) {
+      widget.onRunningCaseTap!();
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      navigator.push(MaterialPageRoute(builder: (_) => const PendingPage()));
+    });
   }
 
   void showLogoutDialog(BuildContext context) {
@@ -462,15 +472,27 @@ class _CustomDrawerState extends State<CustomDrawer> {
   }) {
     return Column(
       children: [
-        ListTile(
-          leading: leading,
-          title: Text(
-            text,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
+        const Divider(height: 1, thickness: 0.7, color: Color(0xFFE9E9E9)),
+        SizedBox(
+          height: 52,
+          child: ListTile(
+            dense: true,
+            minLeadingWidth: 20,
+            horizontalTitleGap: 18,
+            contentPadding: const EdgeInsets.symmetric(horizontal: 32),
+            visualDensity: VisualDensity.compact,
+            leading: leading,
+            title: Text(
+              text,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w400,
+                color: Color(0xFF3F3F3F),
+              ),
+            ),
+            onTap: onTap,
           ),
-          onTap: onTap,
         ),
-        const Divider(height: 1),
       ],
     );
   }
@@ -478,27 +500,36 @@ class _CustomDrawerState extends State<CustomDrawer> {
   Widget _buildLanguageDropdown(BuildContext context) {
     return Column(
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Container(
-            decoration: const BoxDecoration(color: kWhiteColor),
+        const Divider(height: 1, thickness: 0.7, color: Color(0xFFE9E9E9)),
+        SizedBox(
+          height: 52,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: selectedLang,
                 isExpanded: true,
                 dropdownColor: kWhiteColor,
                 icon: const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: Colors.black,
+                  Icons.arrow_drop_down,
+                  color: kBlackColor,
+                  size: 20,
                 ),
                 items: [
                   DropdownMenuItem(
                     value: "English",
                     child: Row(
                       children: [
-                        Image.asset(Assets.english, width: 18, height: 18),
-                        const SizedBox(width: 8),
-                        const Text("English"),
+                        Image.asset(Assets.english, width: 16, height: 16),
+                        const SizedBox(width: 18),
+                        const Text(
+                          "English",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            color: Color(0xFF3F3F3F),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -506,9 +537,16 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     value: "German",
                     child: Row(
                       children: [
-                        Image.asset(Assets.german, width: 18, height: 18),
-                        const SizedBox(width: 8),
-                        const Text("German"),
+                        Image.asset(Assets.german, width: 16, height: 16),
+                        const SizedBox(width: 18),
+                        const Text(
+                          "German",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            color: Color(0xFF3F3F3F),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -516,9 +554,16 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     value: "Chinese",
                     child: Row(
                       children: [
-                        Image.asset(Assets.china, width: 18, height: 18),
-                        const SizedBox(width: 8),
-                        const Text("Chinese"),
+                        Image.asset(Assets.china, width: 16, height: 16),
+                        const SizedBox(width: 18),
+                        const Text(
+                          "Chinese",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            color: Color(0xFF3F3F3F),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -526,9 +571,16 @@ class _CustomDrawerState extends State<CustomDrawer> {
                     value: "Russian",
                     child: Row(
                       children: [
-                        Image.asset(Assets.russia, width: 18, height: 18),
-                        const SizedBox(width: 8),
-                        const Text("Russian"),
+                        Image.asset(Assets.russia, width: 16, height: 16),
+                        const SizedBox(width: 18),
+                        const Text(
+                          "Russian",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w400,
+                            color: Color(0xFF3F3F3F),
+                          ),
+                        ),
                       ],
                     ),
                   ),
